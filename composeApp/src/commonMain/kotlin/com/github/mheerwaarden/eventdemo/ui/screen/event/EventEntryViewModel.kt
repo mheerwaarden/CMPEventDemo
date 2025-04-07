@@ -1,0 +1,74 @@
+/*
+ * Copyright (c) 2025. Marcel Van Heerwaarden
+ * @Author Marcel van Heerwaarden
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ */
+
+package com.github.mheerwaarden.eventdemo.ui.screen.event
+
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import com.github.mheerwaarden.eventdemo.data.database.EventRepository
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+
+class EventEntryViewModel(
+    private val eventRepository: EventRepository,
+) : ViewModel() {
+
+    var eventUiState by mutableStateOf(EventUiState())
+        private set
+
+    fun updateDescription(description: String) {
+        eventUiState = eventUiState.copy(description = description, isEntryValid = validateInput())
+    }
+
+    fun updateEventDate(selectedDate: LocalDateTime) {
+        eventUiState = eventUiState.copy(
+            startDateTime = LocalDateTime(
+                date = selectedDate.date,
+                time = eventUiState.startDateTime.time
+            ),
+            endDateTime = LocalDateTime(
+                date = selectedDate.date,
+                time = eventUiState.endDateTime.time
+            ),
+            isEntryValid = validateInput()
+        )
+    }
+
+    fun updateEventStartTime(time: LocalTime) {
+        eventUiState = eventUiState.copy(
+            startDateTime = LocalDateTime(
+                date = eventUiState.startDateTime.date,
+                time = time
+            ),
+            isEntryValid = validateInput()
+        )
+    }
+
+    fun updateEventEndTime(time: LocalTime) {
+        eventUiState = eventUiState.copy(
+            endDateTime = LocalDateTime(
+                date = eventUiState.endDateTime.date,
+                time = time
+            ),
+            isEntryValid = validateInput()
+        )
+    }
+
+    fun addEvent() {
+        eventRepository.addEvent(eventUiState.toEvent())
+    }
+
+    private fun validateInput(): Boolean {
+        return eventUiState.description.isNotBlank()
+    }
+
+}
+

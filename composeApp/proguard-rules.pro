@@ -1,0 +1,3 @@
+-keep class org.jetbrains.skiko.** { *; }
+-dontwarn **$Preview*
+-dontwarn **$DefaultImpls
