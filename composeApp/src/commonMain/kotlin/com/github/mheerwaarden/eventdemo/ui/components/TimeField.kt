@@ -10,6 +10,8 @@
 package com.github.mheerwaarden.eventdemo.ui.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.TimePickerLayoutType
@@ -23,7 +25,6 @@ import com.github.mheerwaarden.eventdemo.AppContext
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.select_time
 import com.github.mheerwaarden.eventdemo.resources.show_time_picker
-import com.github.mheerwaarden.eventdemo.ui.icons.filled.Schedule
 import com.github.mheerwaarden.eventdemo.util.format
 import kotlinx.datetime.LocalTime
 import org.jetbrains.compose.resources.StringResource
@@ -67,7 +68,7 @@ fun TimeField(
         isRequired = true,
         trailingIcon = {
             Icon(
-                imageVector = Schedule,
+                imageVector = Icons.Filled.Schedule,
                 contentDescription = stringResource(Res.string.show_time_picker),
             )
         },

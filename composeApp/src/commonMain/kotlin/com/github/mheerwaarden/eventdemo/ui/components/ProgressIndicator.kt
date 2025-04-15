@@ -22,7 +22,7 @@ import androidx.compose.ui.Modifier
 import com.github.mheerwaarden.eventdemo.Dimensions
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.busy
-import com.github.mheerwaarden.eventdemo.resources.ic_launcher_foreground
+import com.github.mheerwaarden.eventdemo.resources.calendar
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -36,7 +36,7 @@ fun ProgressIndicator(modifier: Modifier = Modifier, action: StringResource?) {
     ) {
         Box {
             Image(
-                painter = painterResource(resource = Res.drawable.ic_launcher_foreground),
+                painter = painterResource(resource = Res.drawable.calendar),
                 contentDescription = stringResource(Res.string.busy),
                 modifier = Modifier.size(Dimensions.progress_indicator_size)
             )

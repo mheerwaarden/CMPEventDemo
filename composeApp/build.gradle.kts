@@ -1,6 +1,5 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
@@ -17,14 +16,14 @@ ksp {
 }
 
 kotlin {
+    jvmToolchain(17)
+
     androidTarget {
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
             freeCompilerArgs.addAll(
                 listOf(
-                    /* Generate metadata classes for enabling certain recomposition optimizations
-                       in Compose.
-                     */
+                    // Generate metadata classes for enabling certain recomposition optimizations
+                    // in Compose.
                     "-P",
                     "plugin:org.jetbrains.compose.compiler:generateFunctionKeyMetaClass=true",
                 )
@@ -53,7 +52,18 @@ kotlin {
         }
     }
 
-    jvm("desktop")
+    jvm("desktop")  {
+        compilerOptions {
+            freeCompilerArgs.addAll(
+                listOf(
+                    // Generate metadata classes for enabling certain recomposition optimizations
+                    // in Compose.
+                    "-P",
+                    "plugin:org.jetbrains.compose.compiler:generateFunctionKeyMetaClass=true",
+                )
+            )
+        }
+    }
 
     js(IR) { // Regular JS target (for Safari)
         // Add support for the ES2015 features
@@ -83,6 +93,7 @@ kotlin {
                 }
             }
         }
+        // Define nodejs to get tests working
         nodejs {
             testTask {
                 // No special configuration needed here.
@@ -124,8 +135,6 @@ kotlin {
 
     sourceSets {
         val commonMain by getting {
-            // KSP Common sourceSet
-            kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
             dependencies {
                 implementation(compose.runtime)
                 implementation(compose.foundation)
@@ -135,6 +144,9 @@ kotlin {
                 implementation(compose.components.uiToolingPreview)
                 implementation(libs.androidx.lifecycle.viewmodel)
                 implementation(libs.androidx.lifecycle.runtime.compose)
+
+                // Extended icons set
+                implementation(compose.materialIconsExtended)
 
                 // Dependency injection
                 implementation(libs.koin.core)
@@ -152,9 +164,6 @@ kotlin {
                 implementation(libs.kotlinx.dateTime)
                 // Logging
                 api(libs.touchlab.kermit)
-                // Skie does not work for wasmJs, so define where it does work
-                // implementation(libs.touchlab.skie.annotations)
-
             }
         }
         val commonTest by getting {
@@ -177,8 +186,6 @@ kotlin {
                 implementation(libs.androidx.preference.ktx)
                 // ViewModel
                 implementation(libs.androidx.lifecycle.viewmodel)
-                // Conversion of enum, sealed classes and coroutines to native iOS
-                implementation(libs.touchlab.skie.annotations)
                 // Window size calculation
                 implementation(libs.androidx.material3.window.size.clazz)
             }
@@ -232,6 +239,8 @@ kotlin {
                 // Logging
                 api(libs.touchlab.kermit.simple)
                 // Conversion of enum, sealed classes and coroutines to native iOS
+                // Skie only works for iOS targets and may error for other platforms, so define
+                // where it does work
                 implementation(libs.touchlab.skie.annotations)
             }
         }
@@ -256,8 +265,6 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutines.swing)
-                // Conversion of enum, sealed classes and coroutines to native iOS
-                implementation(libs.touchlab.skie.annotations)
             }
         }
         val desktopTest by getting
@@ -327,8 +334,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
         compose = true
@@ -352,13 +359,30 @@ dependencies {
 }
 
 compose.desktop {
+
     application {
         mainClass = "com.github.mheerwaarden.eventdemo.MainKt"
+
+        buildTypes.release.proguard {
+            version.set("7.5.0")
+            configurationFiles.from("proguard-rules.pro")
+        }
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "com.github.mheerwaarden.eventdemo"
             packageVersion = "1.0.0"
+            description = "Compose Multiplatform Demo with an Event Calendar"
+            linux {
+                iconFile.set(project.file("src/desktopMain/resources/desktopicon.png"))
+            }
+            macOS {
+                iconFile.set(project.file("src/desktopMain/resources/desktopicon.icns"))
+            }
+            windows {
+                iconFile.set(project.file("src/desktopMain/resources/desktopicon.ico"))
+            }
+
         }
     }
 }

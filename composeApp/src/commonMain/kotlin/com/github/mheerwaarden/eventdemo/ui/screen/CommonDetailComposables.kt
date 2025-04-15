@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
@@ -36,7 +37,6 @@ import com.github.mheerwaarden.eventdemo.resources.delete
 import com.github.mheerwaarden.eventdemo.resources.edit
 import com.github.mheerwaarden.eventdemo.resources.remove
 import com.github.mheerwaarden.eventdemo.ui.components.DeleteConfirmationDialog
-import com.github.mheerwaarden.eventdemo.ui.icons.filled.Remove
 import com.github.mheerwaarden.eventdemo.ui.util.DISABLED_ICON_OPACITY
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -127,7 +127,7 @@ fun RemoveItemButton(
             onClick = { deleteConfirmationDialogRequired = true }, colors = editIconButtonColors
         ) {
             Icon(
-                imageVector = Remove,
+                imageVector = Icons.Filled.Remove,
                 contentDescription = stringResource(removeContentDescription)
             )
         }

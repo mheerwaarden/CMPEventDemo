@@ -10,6 +10,8 @@
 package com.github.mheerwaarden.eventdemo.ui.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerState
@@ -30,7 +32,6 @@ import com.github.mheerwaarden.eventdemo.resources.cancel
 import com.github.mheerwaarden.eventdemo.resources.ok
 import com.github.mheerwaarden.eventdemo.resources.select_date
 import com.github.mheerwaarden.eventdemo.resources.show_date_picker
-import com.github.mheerwaarden.eventdemo.ui.icons.filled.EditCalendar
 import com.github.mheerwaarden.eventdemo.util.formatDate
 import com.github.mheerwaarden.eventdemo.util.ofEpochMilli
 import kotlinx.datetime.LocalDateTime
@@ -64,7 +65,7 @@ fun DateField(
         isRequired = true,
         trailingIcon = {
             Icon(
-                EditCalendar,
+                Icons.Filled.EditCalendar,
                 contentDescription = stringResource(Res.string.show_date_picker),
             )
         },

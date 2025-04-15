@@ -5,6 +5,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import com.github.mheerwaarden.eventdemo.di.initKoin
+import com.github.mheerwaarden.eventdemo.resources.Res
+import com.github.mheerwaarden.eventdemo.resources.calendar
+import org.jetbrains.compose.resources.painterResource
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.text.DateFormat
@@ -43,6 +46,7 @@ fun main() = application {
     Window(
         onCloseRequest = ::exitApplication,
         title = "Event Demo",
+        icon = painterResource(Res.drawable.calendar)
     ) {
         EventDemoApp(modifier = Modifier.fillMaxSize())
     }

@@ -19,6 +19,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Keyboard
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -48,8 +51,6 @@ import com.github.mheerwaarden.eventdemo.resources.clock
 import com.github.mheerwaarden.eventdemo.resources.keyboard
 import com.github.mheerwaarden.eventdemo.resources.ok
 import com.github.mheerwaarden.eventdemo.resources.select_time
-import com.github.mheerwaarden.eventdemo.ui.icons.filled.Keyboard
-import com.github.mheerwaarden.eventdemo.ui.icons.filled.Schedule
 import com.github.mheerwaarden.eventdemo.ui.theme.EventDemoAppTheme
 import com.github.mheerwaarden.eventdemo.util.now
 import kotlinx.datetime.LocalTime
@@ -98,12 +99,12 @@ fun ShowTimePickerDialog(
             }) {
                 if (isKeyboardInput) {
                     Icon(
-                        Schedule,
+                        Icons.Filled.Schedule,
                         contentDescription = stringResource(Res.string.clock)
                     )
                 } else {
                     Icon(
-                        Keyboard,
+                        Icons.Filled.Keyboard,
                         contentDescription = stringResource(Res.string.keyboard)
                     )
                 }
