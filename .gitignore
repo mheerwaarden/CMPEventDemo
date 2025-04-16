@@ -13,7 +13,7 @@ captures/
 .cxx/
 output.json
 # Since Kotlin 2.0.0, folder named ".kotlin" is created at compile time
-.kotlin
+.kotlin/
 
 # Google Services (e.g. APIs or Firebase)
 google-services.json
