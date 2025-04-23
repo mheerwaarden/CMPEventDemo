@@ -148,7 +148,7 @@ fun SelectionDialogPreview() {
         SelectionDialog(
             label = "Event",
             currentDisplayValue = "Birthday",
-            items = DummyEventRepository().getDummyEvents(6),
+            items = DummyEventRepository().getDefaultEvents(6),
             onChange = { },
             onDismissRequest = { },
             modifier = Modifier.fillMaxSize().background(Color.LightGray) // showBackground = true

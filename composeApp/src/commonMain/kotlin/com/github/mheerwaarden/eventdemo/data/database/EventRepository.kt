@@ -16,11 +16,13 @@ import kotlinx.datetime.Instant
 
 interface EventRepository {
     fun getAllEvents(): Flow<Map<Long, Event>>
+    /** Return events from start up to end date */
     fun getEvents(start: Instant, end: Instant): List<Event>
     fun getEvent(id: Long): Event?
     fun getEventsForPeriod(): Flow<List<Event>>
     fun addEvent(event: Event): Long
     fun updateEvent(event: Event)
+    /** Set period for selected events from start up to end date */
     fun updateEventsForPeriod(
         start: Instant,
         end: Instant,

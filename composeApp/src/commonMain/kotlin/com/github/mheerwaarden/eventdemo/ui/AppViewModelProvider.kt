@@ -14,6 +14,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.github.mheerwaarden.eventdemo.EventDemoApplication
 import com.github.mheerwaarden.eventdemo.data.preferences.UserPreferencesRepository
+import com.github.mheerwaarden.eventdemo.ui.screen.event.EventCalendarViewModel
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventEditViewModel
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventEntryViewModel
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventViewModel
@@ -31,6 +32,12 @@ object AppViewModelProvider : KoinComponent {
             EventViewModel(
                 appContainer.eventRepository,
                 userPreferencesRepository
+            )
+        }
+        initializer {
+            val appContainer = EventDemoApplication.container
+            EventCalendarViewModel(
+                appContainer.eventRepository,
             )
         }
         initializer {

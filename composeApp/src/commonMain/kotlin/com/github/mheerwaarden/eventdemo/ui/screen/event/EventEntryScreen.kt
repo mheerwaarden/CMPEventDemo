@@ -176,7 +176,7 @@ fun EventInputForm(
 @Preview
 @Composable
 fun EventEntryScreenPreview() {
-    val event = DummyEventRepository().getDummyEvents(1).first()
+    val event = DummyEventRepository().getDefaultEvents(1).first()
     EventEntryBody(
         eventUiState = event.toEventUiState(),
         onDescriptionChange = {},

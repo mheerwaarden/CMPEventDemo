@@ -41,11 +41,25 @@ import kotlinx.datetime.toLocalDateTime
 /** Now as Instant */
 fun nowInstant(): Instant = Clock.System.now()
 
+fun startOfMonthInstant(): Instant = startOfMonth().toInstant()
+
+fun endOfMonthInstant(): Instant = endOfMonth().toInstant()
+
 /** Now as LocalDateTime */
 fun now(): LocalDateTime = nowInstant().toLocalDateTime(TimeZone.currentSystemDefault())
 
 /** Now in UTC milliseconds */
 fun nowMillis(): Long = nowInstant().toEpochMilliseconds()
+
+fun startOfMonth(): LocalDate {
+    val now = now()
+    return LocalDate(now.year, now.month, 1)
+}
+
+fun endOfMonth(): LocalDate {
+    return startOfMonth().plus(1, DateTimeUnit.MONTH)
+}
+
 
 // endregion
 

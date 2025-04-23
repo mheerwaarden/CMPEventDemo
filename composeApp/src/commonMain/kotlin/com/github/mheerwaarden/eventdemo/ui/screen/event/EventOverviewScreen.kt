@@ -20,7 +20,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -39,6 +43,7 @@ import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.add_extra_event
 import com.github.mheerwaarden.eventdemo.resources.cancel_event
 import com.github.mheerwaarden.eventdemo.resources.change_event
+import com.github.mheerwaarden.eventdemo.resources.event_calendar
 import com.github.mheerwaarden.eventdemo.resources.event_overview
 import com.github.mheerwaarden.eventdemo.ui.AppViewModelProvider
 import com.github.mheerwaarden.eventdemo.ui.navigation.NavigationDestination
@@ -66,6 +71,7 @@ fun EventOverviewScreen(
     onUpdateTopAppBar: (String, @Composable (RowScope.() -> Unit)) -> Unit,
     navigateToAddEvent: () -> Unit,
     navigateToEditEvent: (Long) -> Unit,
+    navigateToEventCalendar: () -> Unit,
     modifier: Modifier = Modifier,
     eventViewModel: EventViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
@@ -73,7 +79,23 @@ fun EventOverviewScreen(
     val preferencesState by eventViewModel.preferencesState.collectAsState()
 
     val title = stringResource(EventOverviewDestination.titleRes)
-    onUpdateTopAppBar(title) {}
+    onUpdateTopAppBar(title) {
+        val foregroundColor = MaterialTheme.colorScheme.primary
+        IconButton(
+            onClick = navigateToEventCalendar,
+            colors = IconButtonColors(
+                containerColor = Color.Transparent,
+                contentColor = foregroundColor,
+                disabledContainerColor = Color.Transparent,
+                disabledContentColor = foregroundColor.copy(alpha = DISABLED_ICON_OPACITY)
+            ),
+        ) {
+            Icon(
+                imageVector = Icons.Filled.CalendarMonth,
+                contentDescription = stringResource(Res.string.event_calendar),
+            )
+        }
+    }
 
     val isReadOnly = preferencesState.isReadOnly
     EventOverviewBody(
@@ -88,7 +110,7 @@ fun EventOverviewScreen(
 
 private class OverviewConfig(colorScheme: ColorScheme) {
     val columnTimeWeight = .15f // 30% for both time columns together
-    val columnWorkerWeight = .3f // 30% for the worker column
+    val columnEventTypeWeight = .3f // 30% for the worker column
     val columnDescriptionWeight = .4f // 40%
     val editIconButtonColors = IconButtonColors(
         containerColor = Color.Transparent,
@@ -194,7 +216,7 @@ private fun EventRow(
         Row(
             horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(overviewConfig.columnWorkerWeight)
+            modifier = Modifier.weight(overviewConfig.columnEventTypeWeight)
         ) {
             Text(
                 text = "•",
@@ -223,7 +245,7 @@ private fun EventRow(
 @Preview
 @Composable
 fun EventOverviewScreenPreview() {
-    val events = DummyEventRepository().getDummyEvents(6)
+    val events = DummyEventRepository().getDefaultEvents(6)
     EventDemoAppTheme {
         EventOverviewBody(
             eventScheme = events,
@@ -239,7 +261,7 @@ fun EventOverviewScreenPreview() {
 @Preview
 @Composable
 fun EventOverviewScreenReadOnlyPreview() {
-    val events = DummyEventRepository().getDummyEvents(6)
+    val events = DummyEventRepository().getDefaultEvents(6)
     EventDemoAppTheme {
         EventOverviewBody(
             eventScheme = events,

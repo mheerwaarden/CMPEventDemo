@@ -23,6 +23,7 @@
     <string name="events">Events</string>
     <string name="event">Event</string>
     <string name="event_overview">Event overview</string>
+    <string name="event_calendar">Event calendar</string>
     <string name="edit_event_title">Edit event</string>
     <string name="add_event_title">Add event</string>
     <string name="add_extra_event">Add extra event</string>
@@ -53,6 +54,7 @@
     <string name="friday">Friday</string>
     <string name="saturday">Saturday</string>
     <string name="sunday">Sunday</string>
+    <string name="day">Day</string>
     <string name="unknown_day">Unknown day</string>
     <string name="about_event_demo">About Event</string>
     <string name="team_member">Team member</string>
@@ -103,4 +105,6 @@
     <string name="event_category_corporate">Corporate</string>
     <string name="event_category_private">Private</string>
     <string name="event_category_charity">Charity</string>
+    <string name="previous_month">Previous Month</string>
+    <string name="next_month">Next Month</string>
 </resources>

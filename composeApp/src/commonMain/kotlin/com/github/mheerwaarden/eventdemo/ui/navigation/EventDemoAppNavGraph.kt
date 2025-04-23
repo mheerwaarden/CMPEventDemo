@@ -20,6 +20,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.github.mheerwaarden.eventdemo.ui.screen.about.AboutDestination
 import com.github.mheerwaarden.eventdemo.ui.screen.about.AboutScreen
+import com.github.mheerwaarden.eventdemo.ui.screen.event.EventCalendarDestination
+import com.github.mheerwaarden.eventdemo.ui.screen.event.EventCalendarScreen
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventOverviewDestination
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventEditDestination
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventEditScreen
@@ -50,6 +52,14 @@ fun EventDemoAppNavHost(
                 onUpdateTopAppBar = onUpdateTopAppBar,
                 navigateToAddEvent = { navController.navigate(EventEntryDestination.route) },
                 navigateToEditEvent = { id -> navController.navigate("${EventEditDestination.route}/${id}") },
+                navigateToEventCalendar = { navController.navigate(EventCalendarDestination.route) },
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+        composable(route = EventCalendarDestination.route) {
+            EventCalendarScreen(
+                onUpdateTopAppBar = onUpdateTopAppBar,
+                navigateToEventOverview = { navController.navigate(EventOverviewDestination.route) },
                 modifier = Modifier.fillMaxSize()
             )
         }

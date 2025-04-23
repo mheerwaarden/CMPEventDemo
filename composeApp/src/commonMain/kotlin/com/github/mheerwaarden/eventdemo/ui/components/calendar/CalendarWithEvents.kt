@@ -33,10 +33,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,8 +46,18 @@ import androidx.compose.ui.text.withStyle
 import com.github.mheerwaarden.eventdemo.Dimensions
 import com.github.mheerwaarden.eventdemo.data.model.Event
 import com.github.mheerwaarden.eventdemo.resources.Res
+import com.github.mheerwaarden.eventdemo.resources.day
 import com.github.mheerwaarden.eventdemo.resources.events
+import com.github.mheerwaarden.eventdemo.resources.friday
+import com.github.mheerwaarden.eventdemo.resources.monday
+import com.github.mheerwaarden.eventdemo.resources.next_month
+import com.github.mheerwaarden.eventdemo.resources.previous_month
+import com.github.mheerwaarden.eventdemo.resources.saturday
+import com.github.mheerwaarden.eventdemo.resources.sunday
+import com.github.mheerwaarden.eventdemo.resources.thursday
 import com.github.mheerwaarden.eventdemo.resources.time
+import com.github.mheerwaarden.eventdemo.resources.tuesday
+import com.github.mheerwaarden.eventdemo.resources.wednesday
 import com.github.mheerwaarden.eventdemo.util.INSTANT_DATETIME_FORMAT
 import com.github.mheerwaarden.eventdemo.util.daysInMonth
 import com.github.mheerwaarden.eventdemo.util.formatTime
@@ -71,8 +79,7 @@ private const val MONTHS_IN_YEAR = 12
 
 // Allow scrolling one year back and one year ahead
 private const val INITIAL_PAGE = MONTHS_IN_YEAR + 1
-private const val PAGE_COUNT = 2 * MONTHS_IN_YEAR * 1
-
+private const val PAGE_COUNT = 2 * MONTHS_IN_YEAR + 1
 
 /*
  * Based on the example on https://androidkaleempatel.medium.com/creating-a-monthly-calendar-view-with-event-indicators-in-jetpack-compose-4dffcf0359ca
@@ -83,10 +90,10 @@ fun CalendarWithEvents(
     setPeriod: (LocalDate, LocalDate) -> Unit,
     modifier: Modifier = Modifier,
     startDate: LocalDate = now().date,
-    actions: @Composable () -> Unit = {}
+    actions: @Composable () -> Unit = {},
 ) {
-    // MutableState for selected date events
-    var selectedDateEvents by remember { mutableStateOf<List<Event>>(listOf()) }
+    // MutableState for selected date
+    var selectedDay by remember { mutableIntStateOf(startDate.dayOfMonth) }
 
     // UI Layout
     val scrollScope = rememberCoroutineScope()
@@ -97,7 +104,15 @@ fun CalendarWithEvents(
         verticalAlignment = Alignment.Top
     ) { page ->
         val month = LocalDate(startDate.year, startDate.month, startDate.dayOfMonth)
-        month.plus(page - INITIAL_PAGE, DateTimeUnit.MONTH)
+        val currentMonth = month.plus(page - INITIAL_PAGE, DateTimeUnit.MONTH)
+
+        if (selectedDay > currentMonth.daysInMonth()) selectedDay = currentMonth.daysInMonth()
+
+        val selectedDateEvents = getEventsForDay(
+            events = events,
+            day = selectedDay,
+            currentMonth = currentMonth.monthNumber
+        )
 
         Column(
             modifier = Modifier
@@ -105,7 +120,7 @@ fun CalendarWithEvents(
                 .padding(Dimensions.padding_small)
         ) {
             // Calendar controls
-            CalendarControls(month) {
+            CalendarControls(currentMonth) {
                 scrollScope.launch {
                     pagerState.scrollToPage(pagerState.currentPage + it)
                 }
@@ -113,16 +128,13 @@ fun CalendarWithEvents(
 
             actions()
 
-            // Calendar grid with events
-            val daysInMonth = month.daysInMonth()
-            val days = (1..daysInMonth).toList()
-
-            CalendarGrid(events, setPeriod, month) { eventsForDay ->
-                selectedDateEvents = eventsForDay
+            // Display the calendar grid
+            CalendarGrid(events, setPeriod, currentMonth, selectedDay) { day ->
+                selectedDay = day
             }
 
             // Display events for selected date at the bottom
-            EventList(selectedDateEvents)
+            EventList(selectedDay, selectedDateEvents)
         }
     }
 }
@@ -135,14 +147,20 @@ fun CalendarControls(currentMonth: LocalDate, toNextMonth: (Int) -> Unit) {
         modifier = Modifier.fillMaxWidth()
     ) {
         IconButton(onClick = { toNextMonth(-1) }) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous Month")
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = stringResource(Res.string.previous_month)
+            )
         }
         // Display month and year
         Text(
             text = "${currentMonth.month.name} ${currentMonth.year}"
         )
         IconButton(onClick = { toNextMonth(1) }) {
-            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next Month")
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = stringResource(Res.string.next_month)
+            )
         }
     }
 }
@@ -152,9 +170,9 @@ fun CalendarGrid(
     events: List<Event>,
     setPeriod: (LocalDate, LocalDate) -> Unit,
     currentMonth: LocalDate,
-    onSelectDate: (List<Event>) -> Unit,
+    selectedDay: Int,
+    onSelectDate: (Int) -> Unit,
 ) {
-    var selectedDay by rememberSaveable { mutableIntStateOf(NO_SELECTION) }
     val daysInMonth = currentMonth.daysInMonth()
     val firstDayOfMonth = LocalDate(currentMonth.year, currentMonth.month, 1)
     val lastDayOfMonth = LocalDate(currentMonth.year, currentMonth.month, daysInMonth)
@@ -167,9 +185,17 @@ fun CalendarGrid(
                 DAY_OUTSIDE_MONTH
             }
     val allDays = paddingDaysBefore + days + paddingDaysAfter
-    setPeriod(firstDayOfMonth, lastDayOfMonth)
+    setPeriod(firstDayOfMonth, lastDayOfMonth.plus(1, DateTimeUnit.DAY))
 
-    val weekdays = listOf("Su", "Mo", "Tu", "We", "Th", "Fr", "Sa")
+    val weekdays = listOf(
+        stringResource(Res.string.sunday).take(2),
+        stringResource(Res.string.monday).take(2),
+        stringResource(Res.string.tuesday).take(2),
+        stringResource(Res.string.wednesday).take(2),
+        stringResource(Res.string.thursday).take(2),
+        stringResource(Res.string.friday).take(2),
+        stringResource(Res.string.saturday).take(2),
+    )
     LazyVerticalGrid(columns = GridCells.Fixed(DAYS_IN_WEEK)) {
         items(DAYS_IN_WEEK) { index ->
             Text(
@@ -184,15 +210,17 @@ fun CalendarGrid(
             val currentDay = if (day <= 0) "" else day.toString()
 
             // Determine the events for this day
-            val eventsForDay = events.filter { event ->
-                val startDate = event.startInstant.toLocalDateTime()
-                startDate.dayOfMonth == day && startDate.month == currentMonth.month
-            }
+            val eventsForDay = getEventsForDay(events, day, currentMonth.monthNumber)
 
             // Display dots for each event
             val coloredEventDots = buildAnnotatedString {
                 eventsForDay.forEach { event ->
-                    withStyle(style = SpanStyle(color = event.color, fontSize = MaterialTheme.typography.headlineLarge.fontSize)) {
+                    withStyle(
+                        style = SpanStyle(
+                            color = event.color,
+                            fontSize = MaterialTheme.typography.headlineLarge.fontSize
+                        )
+                    ) {
                         append("• ")
                     }
                 }
@@ -203,9 +231,8 @@ fun CalendarGrid(
                 modifier = Modifier
                     .padding(Dimensions.padding_extra_small)
                     .clickable {
-                        selectedDay = if (selectedDay == day) NO_SELECTION else day
                         // On day click, update selected date events
-                        onSelectDate(eventsForDay)
+                        onSelectDate(if (selectedDay == day) NO_SELECTION else day)
                     }
                     .background(
                         if (selectedDay == day) MaterialTheme.colorScheme.surfaceContainerHighest else Color.Transparent
@@ -222,8 +249,14 @@ fun CalendarGrid(
     }
 }
 
+private fun getEventsForDay(events: List<Event>, day: Int, currentMonth: Int) =
+        events.filter { event ->
+            val startDate = event.startInstant.toLocalDateTime()
+            startDate.dayOfMonth == day && startDate.monthNumber == currentMonth
+        }
+
 @Composable
-fun EventList(events: List<Event>) {
+fun EventList(selectedDay: Int, events: List<Event>) {
     val titleText = stringResource(Res.string.events)
     val columnTimeWeight = .2f // 20%
     val columnDescriptionWeight = .6f // 60%
@@ -243,10 +276,10 @@ fun EventList(events: List<Event>) {
                     color = foregroundColor,
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
-                    modifier = Modifier.weight(columnTimeWeight)
+                    modifier = Modifier.weight(columnTimeWeight * 2)
                 )
                 Text(
-                    text = titleText,
+                    text = if (selectedDay > 0) "$titleText (${stringResource(Res.string.day)} $selectedDay)" else "",
                     color = foregroundColor,
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
@@ -280,7 +313,18 @@ fun EventList(events: List<Event>) {
                     text = item.endInstant.formatTime(),
                     modifier = Modifier.weight(columnTimeWeight)
                 )
-                Text(text = item.description, modifier = Modifier.weight(columnDescriptionWeight))
+                Row(
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(columnDescriptionWeight)
+                ) {
+                    Text(
+                        text = "•",
+                        color = item.color,
+                        fontSize = MaterialTheme.typography.headlineLarge.fontSize
+                    )
+                    Text(text = item.description)
+                }
             }
         }
     }

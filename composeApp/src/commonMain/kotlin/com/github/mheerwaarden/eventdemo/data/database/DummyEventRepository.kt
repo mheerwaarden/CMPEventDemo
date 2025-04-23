@@ -14,8 +14,10 @@ import com.github.mheerwaarden.eventdemo.data.model.EventCategory
 import com.github.mheerwaarden.eventdemo.data.model.EventType
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventFilter
 import com.github.mheerwaarden.eventdemo.util.daysInMonth
+import com.github.mheerwaarden.eventdemo.util.endOfMonthInstant
 import com.github.mheerwaarden.eventdemo.util.now
 import com.github.mheerwaarden.eventdemo.util.plus
+import com.github.mheerwaarden.eventdemo.util.startOfMonthInstant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.datetime.DateTimeUnit
@@ -32,7 +34,7 @@ class DummyEventRepository : EventRepository {
     private val _events = MutableStateFlow<Map<Long, Event>>(defaultEvents)
     private val events: Flow<Map<Long, Event>> = _events
 
-    private val _eventForPeriod = MutableStateFlow<List<Event>>(emptyList())
+    private val _eventForPeriod = MutableStateFlow(getEvents(startOfMonthInstant(), endOfMonthInstant()))
     private val eventForPeriod: Flow<List<Event>> = _eventForPeriod
 
     override fun getEventsForPeriod(): Flow<List<Event>> {
@@ -80,7 +82,7 @@ class DummyEventRepository : EventRepository {
         _events.value -= id
     }
 
-    fun getDummyEvents(count: Int): List<Event> = defaultEvents.values.take(count)
+    fun getDefaultEvents(count: Int): List<Event> = defaultEvents.values.take(count)
 
     private fun initDefaultEvents(): MutableMap<Long, Event> {
         val result = mutableMapOf<Long, Event>()
@@ -100,17 +102,32 @@ class DummyEventRepository : EventRepository {
             EventType.VIRTUAL_RECRUITING_EVENT,
         )
 
+        // One event on the last day of the previous month
+        var type = EventType.entries[0]
+        val previousMonth = now.plus(-1, DateTimeUnit.MONTH)
+        val previousDay = LocalDateTime(previousMonth.year, previousMonth.month, previousMonth.daysInMonth(), 13, 0).toInstant(timeZone)
+        result[++key] = createDummyEvent(type, previousDay, corporateTypes.contains(type))
+
+        // Four events on the first day of this month
         for (i in 0..< 3) {
-            val type = EventType.entries[i % EventType.entries.size]
+            type = EventType.entries[i % EventType.entries.size]
             val at = LocalDateTime(now.year, now.month, 1, i, 0).toInstant(timeZone)
             result[++key] = createDummyEvent(type, at, corporateTypes.contains(type))
         }
 
+        // One event on every other day of the month
         for (i in 0..< now.daysInMonth()) {
-            val type = EventType.entries[i % EventType.entries.size]
+            type = EventType.entries[i % EventType.entries.size]
             val at = firstDayOfMonth.plus(i, DateTimeUnit.DAY).toInstant(timeZone)
             result[++key] = createDummyEvent(type, at, corporateTypes.contains(type))
         }
+
+        // One event on the first day of the next month
+        type = EventType.entries[1]
+        val nextMonth = now.plus(1, DateTimeUnit.MONTH)
+        val nextDay = LocalDateTime(nextMonth.year, nextMonth.month, 1, 13, 0).toInstant(timeZone)
+        result[++key] = createDummyEvent(type, nextDay, corporateTypes.contains(type))
+
         return result
     }
 
