@@ -9,9 +9,10 @@
 
 package com.github.mheerwaarden.eventdemo.ui.screen.event
 
-import androidx.compose.ui.graphics.Color
 import com.github.mheerwaarden.eventdemo.data.model.Event
-import com.github.mheerwaarden.eventdemo.ui.theme.eventDemoLightColorScheme
+import com.github.mheerwaarden.eventdemo.data.model.EventCategory
+import com.github.mheerwaarden.eventdemo.data.model.EventType
+import com.github.mheerwaarden.eventdemo.ui.util.HtmlColors
 import com.github.mheerwaarden.eventdemo.util.now
 import com.github.mheerwaarden.eventdemo.util.plus
 import kotlinx.datetime.DateTimeUnit
@@ -29,7 +30,9 @@ data class EventUiState(
     val contact: String? = null,
     val notes: String? = null,
     val isOnline: Boolean = false,
-    val color: Color = eventDemoLightColorScheme.primary,
+    val eventType: EventType = EventType.ACTIVITY,
+    val eventCategory: EventCategory = EventCategory.PRIVATE,
+    val htmlColor: HtmlColors = HtmlColors.OLIVE_DRAB,
     val isEntryValid: Boolean = false,
 ) {
     fun toEvent(): Event {
@@ -43,7 +46,9 @@ data class EventUiState(
             contact = contact,
             notes = notes,
             isOnline = isOnline,
-            color = color,
+            eventType = eventType,
+            eventCategory = eventCategory,
+            htmlColor = htmlColor,
         )
     }
 
@@ -60,7 +65,9 @@ fun Event.toEventUiState(isEntryValid: Boolean = false): EventUiState {
         contact = contact,
         notes = notes,
         isOnline = isOnline,
-        color = color,
+        eventType = eventType,
+        eventCategory = eventCategory,
+        htmlColor = htmlColor,
         isEntryValid = isEntryValid,
     )
 }

@@ -9,10 +9,9 @@
 
 package com.github.mheerwaarden.eventdemo.data.model
 
-import androidx.compose.ui.graphics.Color
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.event
-import com.github.mheerwaarden.eventdemo.ui.theme.eventDemoLightColorScheme
+import com.github.mheerwaarden.eventdemo.ui.util.HtmlColors
 import com.github.mheerwaarden.eventdemo.util.nowInstant
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
@@ -29,7 +28,7 @@ data class Event(
     val eventType: EventType = EventType.ACTIVITY,
     val eventCategory: EventCategory = EventCategory.PRIVATE,
     val isOnline: Boolean = false,
-    val color: Color = eventDemoLightColorScheme.primary
+    val htmlColor: HtmlColors = HtmlColors.OLIVE_DRAB,
 ) : ModelItem(id) {
     companion object {
         val typeNameResId = Res.string.event

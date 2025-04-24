@@ -148,7 +148,7 @@ class DummyEventRepository : EventRepository {
         else EventCategory.PRIVATE,
         isOnline = type.name.contains(other = "online", ignoreCase = true)
                 || type.name.contains(other = "virtual", ignoreCase = true),
-        color = type.color
+        htmlColor = type.htmlColor
     )
 
     private fun getRandomPhoneNr(): String {

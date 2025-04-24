@@ -11,6 +11,7 @@ package com.github.mheerwaarden.eventdemo.ui.screen.event
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -69,6 +70,7 @@ object EventOverviewDestination : NavigationDestination {
 @Composable
 fun EventOverviewScreen(
     onUpdateTopAppBar: (String, @Composable (RowScope.() -> Unit)) -> Unit,
+    navigateToEvent: (Long) -> Unit,
     navigateToAddEvent: () -> Unit,
     navigateToEditEvent: (Long) -> Unit,
     navigateToEventCalendar: () -> Unit,
@@ -102,6 +104,7 @@ fun EventOverviewScreen(
         eventScheme = eventUiState,
         isReadOnly = isReadOnly,
         deleteEvent = eventViewModel::deleteEvent,
+        navigateToEvent = navigateToEvent,
         navigateToAddEvent = navigateToAddEvent,
         navigateToEditEvent = navigateToEditEvent,
         modifier = modifier,
@@ -130,6 +133,7 @@ fun EventOverviewBody(
     eventScheme: List<Event>,
     isReadOnly: Boolean,
     deleteEvent: (Long) -> Unit,
+    navigateToEvent: (Long) -> Unit,
     navigateToAddEvent: () -> Unit,
     navigateToEditEvent: (Long) -> Unit,
     modifier: Modifier = Modifier,
@@ -144,12 +148,13 @@ fun EventOverviewBody(
             stickyHeader { EventHeader(entry.key, isReadOnly, overviewConfig, navigateToAddEvent) }
             itemsIndexed(entry.value) { index, event ->
                 EventRow(
-                    index,
-                    event,
-                    isReadOnly,
-                    overviewConfig,
-                    deleteEvent,
-                    navigateToEditEvent
+                    index = index,
+                    item = event,
+                    isReadOnly = isReadOnly,
+                    overviewConfig = overviewConfig,
+                    navigateToEvent = navigateToEvent,
+                    deleteEvent = deleteEvent,
+                    navigateToEditEvent = navigateToEditEvent
                 )
             }
         }
@@ -192,6 +197,7 @@ private fun EventRow(
     item: Event,
     isReadOnly: Boolean,
     overviewConfig: OverviewConfig,
+    navigateToEvent: (Long) -> Unit,
     deleteEvent: (Long) -> Unit,
     navigateToEditEvent: (Long) -> Unit,
     modifier: Modifier = Modifier,
@@ -202,6 +208,7 @@ private fun EventRow(
         modifier = modifier.fillMaxWidth()
             .background(color = if (index % 2 == 0) overviewConfig.evenColor else overviewConfig.oddColor)
             .padding(Dimensions.padding_small)
+            .clickable { navigateToEvent(item.id) }
     ) {
         Text(
             text = item.startInstant.toLocalDateTime(overviewConfig.timeZone).formatTime(),
@@ -220,7 +227,7 @@ private fun EventRow(
         ) {
             Text(
                 text = "•",
-                color = item.color,
+                color = item.htmlColor.color,
                 fontSize = MaterialTheme.typography.headlineLarge.fontSize
             )
             Text(text = stringResource(item.eventType.text))
@@ -250,6 +257,7 @@ fun EventOverviewScreenPreview() {
         EventOverviewBody(
             eventScheme = events,
             isReadOnly = false,
+            navigateToEvent = {},
             deleteEvent = {},
             navigateToAddEvent = {},
             navigateToEditEvent = {},
@@ -266,6 +274,7 @@ fun EventOverviewScreenReadOnlyPreview() {
         EventOverviewBody(
             eventScheme = events,
             isReadOnly = true,
+            navigateToEvent = {},
             deleteEvent = {},
             navigateToAddEvent = {},
             navigateToEditEvent = {},

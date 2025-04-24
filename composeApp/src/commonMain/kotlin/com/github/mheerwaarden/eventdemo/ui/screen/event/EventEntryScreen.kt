@@ -42,6 +42,7 @@ import com.github.mheerwaarden.eventdemo.ui.components.TimeFieldPreferences
 import com.github.mheerwaarden.eventdemo.ui.navigation.NavigationDestination
 import com.github.mheerwaarden.eventdemo.ui.screen.LoadingScreen
 import com.github.mheerwaarden.eventdemo.ui.screen.settings.SettingsViewModel
+import com.github.mheerwaarden.eventdemo.ui.theme.EventDemoAppTheme
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import org.jetbrains.compose.resources.stringResource
@@ -177,17 +178,19 @@ fun EventInputForm(
 @Composable
 fun EventEntryScreenPreview() {
     val event = DummyEventRepository().getDefaultEvents(1).first()
-    EventEntryBody(
-        eventUiState = event.toEventUiState(),
-        onDescriptionChange = {},
-        onDateChange = {},
-        onStartTimeChange = {},
-        onEndTimeChange = {},
-        onSaveClick = {},
-        dateFieldPreferences = DateFieldPreferences(),
-        timeFieldPreferences = TimeFieldPreferences(),
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.LightGray) // showBackground = true
-    )
+    EventDemoAppTheme {
+        EventEntryBody(
+            eventUiState = event.toEventUiState(),
+            onDescriptionChange = {},
+            onDateChange = {},
+            onStartTimeChange = {},
+            onEndTimeChange = {},
+            onSaveClick = {},
+            dateFieldPreferences = DateFieldPreferences(),
+            timeFieldPreferences = TimeFieldPreferences(),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.LightGray) // showBackground = true
+        )
+    }
 }

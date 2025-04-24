@@ -40,6 +40,7 @@ object EventCalendarDestination : NavigationDestination {
 fun EventCalendarScreen(
     onUpdateTopAppBar: (String, @Composable (RowScope.() -> Unit)) -> Unit,
     navigateToEventOverview: () -> Unit,
+    navigateToEvent: (Long) -> Unit,
     modifier: Modifier = Modifier,
     eventViewModel: EventCalendarViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
@@ -67,6 +68,7 @@ fun EventCalendarScreen(
     EventCalendarBody(
         events = eventUiState,
         setPeriod = eventViewModel::setPeriod,
+        navigateToEvent = navigateToEvent,
         modifier = modifier,
     )
 }
@@ -75,6 +77,7 @@ fun EventCalendarScreen(
 fun EventCalendarBody(
     events: List<Event>,
     setPeriod: (LocalDate, LocalDate) -> Unit,
+    navigateToEvent: (Long) -> Unit,
     modifier: Modifier = Modifier,
     startDate: LocalDate = now().date,
 ) {
@@ -82,6 +85,7 @@ fun EventCalendarBody(
         events = events,
         startDate = startDate,
         setPeriod = setPeriod,
+        navigateToEvent = navigateToEvent,
         modifier = modifier,
     )
 }
@@ -96,6 +100,7 @@ fun EventCalendarScreenPreview() {
             // The first event is in the previous month
             startDate = events[1].startInstant.toLocalDateTime().date,
             setPeriod = { _, _ -> },
+            navigateToEvent = {},
             modifier = Modifier.fillMaxSize().background(Color.LightGray) // showBackground = true
         )
     }

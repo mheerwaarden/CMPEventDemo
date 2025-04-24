@@ -94,6 +94,10 @@ class EventEditViewModel(
         }
     }
 
+    fun deleteEvent(id: Long) {
+        eventRepository.deleteEvent(id)
+    }
+
     private fun validateInput(
         newStartDateTime: LocalDateTime = eventUiState.startDateTime,
         newDescription: String = eventUiState.description

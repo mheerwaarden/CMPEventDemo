@@ -39,9 +39,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.navigation.compose.rememberNavController
 import com.github.mheerwaarden.eventdemo.resources.Res
+import com.github.mheerwaarden.eventdemo.resources.about
 import com.github.mheerwaarden.eventdemo.resources.app_name
 import com.github.mheerwaarden.eventdemo.resources.back_button
 import com.github.mheerwaarden.eventdemo.resources.more
+import com.github.mheerwaarden.eventdemo.resources.settings
 import com.github.mheerwaarden.eventdemo.ui.navigation.EventDemoAppNavHost
 import com.github.mheerwaarden.eventdemo.ui.navigation.MenuNavigator
 import com.github.mheerwaarden.eventdemo.ui.navigation.MenuNavigatorImpl
@@ -76,7 +78,7 @@ fun EventDemoApp(
                 EventDemoAppBar(
                     menuNavigator = MenuNavigatorImpl(navController),
                     title = updatedTitle,
-                    canNavigateBack = navController.currentBackStackEntry != null,
+                    canNavigateBack = { navController.currentBackStackEntry != null },
                     scrollBehavior = scrollBehavior,
                     navigateUp = { navController.navigateUp() },
                     actions = actions.value
@@ -107,7 +109,7 @@ fun EventDemoApp(
 fun EventDemoAppBar(
     menuNavigator: MenuNavigator,
     title: String,
-    canNavigateBack: Boolean,
+    canNavigateBack: () -> Boolean,
     modifier: Modifier = Modifier,
     scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(),
     navigateUp: () -> Unit = {},
@@ -121,7 +123,7 @@ fun EventDemoAppBar(
         modifier = modifier,
         scrollBehavior = scrollBehavior,
         navigationIcon = {
-            if (canNavigateBack) {
+            if (canNavigateBack()) {
                 IconButton(onClick = navigateUp) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -140,11 +142,11 @@ fun EventDemoAppBar(
                 onDismissRequest = { expanded = false }
             ) {
                 DropdownMenuItem(
-                    text = { Text("Settings") },
+                    text = { Text(stringResource(Res.string.settings)) },
                     onClick = { menuNavigator.navigateToSettings(); expanded = false }
                 )
                 DropdownMenuItem(
-                    text = { Text("About") },
+                    text = { Text(stringResource(Res.string.about)) },
                     onClick = { menuNavigator.navigateToAbout(); expanded = false }
                 )
             }

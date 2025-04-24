@@ -13,6 +13,13 @@
     <string name="add">Add</string>
     <string name="time">Time</string>
     <string name="description">Description</string>
+    <string name="location">Location</string>
+    <string name="is_online">Is online</string>
+    <string name="contact">Contact</string>
+    <string name="notes">Notes</string>
+    <string name="event_type">Event type</string>
+    <string name="event_category">Event category</string>
+    <string name="color">Color</string>
     <string name="edit">Edit</string>
     <string name="save_action">Save</string>
     <string name="delete">Delete</string>
@@ -24,6 +31,7 @@
     <string name="event">Event</string>
     <string name="event_overview">Event overview</string>
     <string name="event_calendar">Event calendar</string>
+    <string name="event_title">Event</string>
     <string name="edit_event_title">Edit event</string>
     <string name="add_event_title">Add event</string>
     <string name="add_extra_event">Add extra event</string>

@@ -88,6 +88,7 @@ private const val PAGE_COUNT = 2 * MONTHS_IN_YEAR + 1
 fun CalendarWithEvents(
     events: List<Event>,
     setPeriod: (LocalDate, LocalDate) -> Unit,
+    navigateToEvent: (Long) -> Unit,
     modifier: Modifier = Modifier,
     startDate: LocalDate = now().date,
     actions: @Composable () -> Unit = {},
@@ -134,7 +135,7 @@ fun CalendarWithEvents(
             }
 
             // Display events for selected date at the bottom
-            EventList(selectedDay, selectedDateEvents)
+            EventList(selectedDay, selectedDateEvents, navigateToEvent)
         }
     }
 }
@@ -217,7 +218,7 @@ fun CalendarGrid(
                 eventsForDay.forEach { event ->
                     withStyle(
                         style = SpanStyle(
-                            color = event.color,
+                            color = event.htmlColor.color,
                             fontSize = MaterialTheme.typography.headlineLarge.fontSize
                         )
                     ) {
@@ -256,7 +257,7 @@ private fun getEventsForDay(events: List<Event>, day: Int, currentMonth: Int) =
         }
 
 @Composable
-fun EventList(selectedDay: Int, events: List<Event>) {
+fun EventList(selectedDay: Int, events: List<Event>, navigateToEvent: (Long) -> Unit) {
     val titleText = stringResource(Res.string.events)
     val columnTimeWeight = .2f // 20%
     val columnDescriptionWeight = .6f // 60%
@@ -296,7 +297,7 @@ fun EventList(selectedDay: Int, events: List<Event>) {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(onClick = { /* navigateToEvent(item.id) */ })
+                    .clickable(onClick = { navigateToEvent(item.id) })
                     .background(
                         color = if (index % 2 == 0) {
                             MaterialTheme.colorScheme.surfaceContainer
@@ -320,7 +321,7 @@ fun EventList(selectedDay: Int, events: List<Event>) {
                 ) {
                     Text(
                         text = "•",
-                        color = item.color,
+                        color = item.htmlColor.color,
                         fontSize = MaterialTheme.typography.headlineLarge.fontSize
                     )
                     Text(text = item.description)
@@ -368,8 +369,9 @@ fun CalendarWithEventsScreenPreview() {
     val startDate = LocalDate(2024, 10, 1)
     CalendarWithEvents(
         events = events,
-        setPeriod = { _, _ -> },
         startDate = startDate,
+        setPeriod = { _, _ -> },
+        navigateToEvent = {},
         modifier = Modifier
             .fillMaxSize()
             .background(Color.LightGray) // showBackground = true

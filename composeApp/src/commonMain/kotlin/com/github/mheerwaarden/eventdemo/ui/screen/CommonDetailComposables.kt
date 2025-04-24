@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.github.mheerwaarden.eventdemo.Dimensions
 import com.github.mheerwaarden.eventdemo.data.model.ModelItem
 import com.github.mheerwaarden.eventdemo.resources.Res
@@ -48,16 +49,36 @@ fun AddItemButton(
     foregroundColor: Color = MaterialTheme.colorScheme.surface,
     contentDescription: StringResource = Res.string.add,
 ) {
+    HeaderButton(
+        onClick = navigateToAddScreen,
+        foregroundColor = foregroundColor,
+        imageVector = Icons.Filled.Add,
+        contentDescription = contentDescription,
+        modifier = modifier
+    )
+}
+
+@Composable
+fun HeaderButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    foregroundColor: Color = MaterialTheme.colorScheme.surface,
+    imageVector: ImageVector = Icons.Filled.Add,
+    contentDescription: StringResource = Res.string.add,
+) {
+
     IconButton(
-        onClick = navigateToAddScreen, colors = IconButtonColors(
+        onClick = onClick,
+        colors = IconButtonColors(
             containerColor = Color.Transparent,
             contentColor = foregroundColor,
             disabledContainerColor = Color.Transparent,
             disabledContentColor = foregroundColor.copy(alpha = DISABLED_ICON_OPACITY)
-        ), modifier = modifier
+        ),
+        modifier = modifier
     ) {
         Icon(
-            imageVector = Icons.Filled.Add,
+            imageVector = imageVector,
             contentDescription = stringResource(contentDescription)
         )
     }
