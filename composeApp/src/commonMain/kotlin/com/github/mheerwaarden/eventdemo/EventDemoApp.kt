@@ -37,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.about
@@ -68,12 +69,17 @@ fun EventDemoApp(
         val defaultAction: @Composable (RowScope.() -> Unit) = {}
         val actions = remember { mutableStateOf(defaultAction) }
 
-        val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-
         val navController = rememberNavController()
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry?.destination?.route ?: startDestination
+        val scrollBehavior = if (currentRoute == EventOverviewDestination.route) {
+            TopAppBarDefaults.enterAlwaysScrollBehavior()
+        } else {
+            null
+        }
 
         Scaffold(
-            modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            modifier = if (scrollBehavior != null) modifier.nestedScroll(scrollBehavior.nestedScrollConnection) else modifier,
             topBar = {
                 EventDemoAppBar(
                     menuNavigator = MenuNavigatorImpl(navController),
@@ -108,14 +114,15 @@ fun EventDemoApp(
 @Composable
 fun EventDemoAppBar(
     menuNavigator: MenuNavigator,
+    scrollBehavior: TopAppBarScrollBehavior?,
     title: String,
     canNavigateBack: () -> Boolean,
     modifier: Modifier = Modifier,
-    scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(),
     navigateUp: () -> Unit = {},
     actions: @Composable (RowScope.() -> Unit) = {},
     colors: TopAppBarColors = TopAppBarDefaults.centerAlignedTopAppBarColors(),
 ) {
+    // The expanded state of the dropdown menu.
     var expanded by remember { mutableStateOf(false) }
 
     CenterAlignedTopAppBar(
