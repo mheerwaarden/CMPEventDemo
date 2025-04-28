@@ -24,7 +24,7 @@
     <string name="save_action">Save</string>
     <string name="delete">Delete</string>
     <string name="attention">Attention</string>
-    <string name="delete_question">Are you sure you want to delete %s?</string>
+    <string name="delete_question">Are you sure you want to delete %1$s?</string>
     <string name="no">No</string>
     <string name="yes">Yes</string>
     <string name="events">Events</string>
@@ -52,7 +52,7 @@
     <string name="select_start_time">Select start time</string>
     <string name="select_end_date">Select end date</string>
     <string name="select_end_time">Select end time</string>
-    <string name="select_object_type">Select %s</string>
+    <string name="select_object_type">Select %1$s</string>
     <string name="show_selection_dialog">Show selection dialog</string>
     <string name="select">Select</string>
     <string name="monday">Monday</string>

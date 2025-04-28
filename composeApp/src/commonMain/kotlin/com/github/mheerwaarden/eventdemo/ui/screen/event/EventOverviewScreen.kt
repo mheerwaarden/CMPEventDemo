@@ -149,7 +149,7 @@ fun EventOverviewBody(
             itemsIndexed(entry.value) { index, event ->
                 EventRow(
                     index = index,
-                    item = event,
+                    event = event,
                     isReadOnly = isReadOnly,
                     overviewConfig = overviewConfig,
                     navigateToEvent = navigateToEvent,
@@ -194,7 +194,7 @@ private fun EventHeader(
 @Composable
 private fun EventRow(
     index: Int,
-    item: Event,
+    event: Event,
     isReadOnly: Boolean,
     overviewConfig: OverviewConfig,
     navigateToEvent: (Long) -> Unit,
@@ -208,15 +208,15 @@ private fun EventRow(
         modifier = modifier.fillMaxWidth()
             .background(color = if (index % 2 == 0) overviewConfig.evenColor else overviewConfig.oddColor)
             .padding(Dimensions.padding_small)
-            .clickable { navigateToEvent(item.id) }
+            .clickable { navigateToEvent(event.id) }
     ) {
         Text(
-            text = item.startInstant.toLocalDateTime(overviewConfig.timeZone).formatTime(),
+            text = event.startInstant.toLocalDateTime(overviewConfig.timeZone).formatTime(),
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(overviewConfig.columnTimeWeight)
         )
         Text(
-            text = item.endInstant.toLocalDateTime(overviewConfig.timeZone).formatTime(),
+            text = event.endInstant.toLocalDateTime(overviewConfig.timeZone).formatTime(),
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(overviewConfig.columnTimeWeight)
         )
@@ -227,18 +227,18 @@ private fun EventRow(
         ) {
             Text(
                 text = "•",
-                color = item.htmlColor.color,
+                color = event.htmlColor.color,
                 fontSize = MaterialTheme.typography.headlineLarge.fontSize
             )
-            Text(text = stringResource(item.eventType.text))
+            Text(text = stringResource(event.eventType.text))
         }
         Text(
-            text = item.description,
+            text = event.description,
             modifier = Modifier.weight(overviewConfig.columnDescriptionWeight)
         )
         if (!isReadOnly) {
             EditItemButtons(
-                item = item,
+                event = event,
                 editIconButtonColors = overviewConfig.editIconButtonColors,
                 onDelete = deleteEvent,
                 navigateToEditScreen = navigateToEditEvent,

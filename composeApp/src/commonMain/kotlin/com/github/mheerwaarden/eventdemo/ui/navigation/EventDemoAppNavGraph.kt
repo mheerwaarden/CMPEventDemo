@@ -77,6 +77,7 @@ fun EventDemoAppNavHost(
                 onUpdateTopAppBar = onUpdateTopAppBar,
                 navigateToEventOverview = { navController.navigate(EventOverviewDestination.route) },
                 navigateToEditEvent = { id -> navController.navigate("${EventEditDestination.route}/${id}") },
+                navigateBack = { navController.popBackStack() },
                 modifier = Modifier.fillMaxSize()
             )
         }

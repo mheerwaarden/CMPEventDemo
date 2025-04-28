@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
@@ -32,6 +31,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.mheerwaarden.eventdemo.Dimensions
 import com.github.mheerwaarden.eventdemo.data.database.DummyEventRepository
+import com.github.mheerwaarden.eventdemo.data.model.Event
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.color
 import com.github.mheerwaarden.eventdemo.resources.contact
@@ -47,6 +47,7 @@ import com.github.mheerwaarden.eventdemo.resources.location
 import com.github.mheerwaarden.eventdemo.resources.notes
 import com.github.mheerwaarden.eventdemo.ui.AppViewModelProvider
 import com.github.mheerwaarden.eventdemo.ui.navigation.NavigationDestination
+import com.github.mheerwaarden.eventdemo.ui.screen.DeleteEventHeaderButton
 import com.github.mheerwaarden.eventdemo.ui.screen.HeaderButton
 import com.github.mheerwaarden.eventdemo.ui.screen.LoadingScreen
 import com.github.mheerwaarden.eventdemo.ui.screen.settings.SettingsViewModel
@@ -71,6 +72,7 @@ fun EventScreen(
     onUpdateTopAppBar: (String, @Composable (RowScope.() -> Unit)) -> Unit,
     navigateToEventOverview: () -> Unit,
     navigateToEditEvent: (Long) -> Unit,
+    navigateBack: () -> Unit,
     modifier: Modifier = Modifier,
     eventViewModel: EventEditViewModel = viewModel(factory = AppViewModelProvider.Factory),
     settingsViewModel: SettingsViewModel = viewModel(factory = AppViewModelProvider.Factory),
@@ -97,7 +99,10 @@ fun EventScreen(
         val eventUiState = eventViewModel.eventUiState
         EventScreen(
             eventUiState = eventUiState,
-            deleteEvent = { eventViewModel.deleteEvent(eventUiState.id) },
+            deleteEvent = {
+                eventViewModel.deleteEvent(eventUiState.id)
+                navigateBack()
+            },
             navigateToEditEvent = { navigateToEditEvent(eventUiState.id) },
             modifier = modifier.fillMaxSize()
         )
@@ -120,6 +125,7 @@ private fun EventScreen(
         modifier = modifier
     ) {
         EventHeader(
+            event = eventUiState.toEvent(),
             startDateTime = eventUiState.startDateTime,
             endDateTime = eventUiState.endDateTime,
             deleteEvent = deleteEvent,
@@ -135,6 +141,7 @@ private fun EventScreen(
 
 @Composable
 private fun EventHeader(
+    event: Event,
     startDateTime: LocalDateTime,
     endDateTime: LocalDateTime,
     deleteEvent: () -> Unit,
@@ -159,9 +166,9 @@ private fun EventHeader(
             imageVector = Icons.Filled.Edit,
             contentDescription = Res.string.edit
         )
-        HeaderButton(
-            onClick = deleteEvent,
-            imageVector = Icons.Filled.Delete,
+        DeleteEventHeaderButton(
+            event = event,
+            onDelete = deleteEvent,
             contentDescription = Res.string.delete
         )
     }

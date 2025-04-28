@@ -31,7 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.github.mheerwaarden.eventdemo.Dimensions
-import com.github.mheerwaarden.eventdemo.data.model.ModelItem
+import com.github.mheerwaarden.eventdemo.data.model.Event
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.add
 import com.github.mheerwaarden.eventdemo.resources.delete
@@ -85,8 +85,45 @@ fun HeaderButton(
 }
 
 @Composable
+fun DeleteEventHeaderButton(
+    event: Event,
+    onDelete: () -> Unit,
+    modifier: Modifier = Modifier,
+    foregroundColor: Color = MaterialTheme.colorScheme.surface,
+    contentDescription: StringResource = Res.string.delete,
+) {
+    var deleteConfirmationDialogRequired by rememberSaveable { mutableStateOf(false) }
+    IconButton(
+        onClick = { deleteConfirmationDialogRequired = true },
+        colors = IconButtonColors(
+            containerColor = Color.Transparent,
+            contentColor = foregroundColor,
+            disabledContainerColor = Color.Transparent,
+            disabledContentColor = foregroundColor.copy(alpha = DISABLED_ICON_OPACITY)
+        ),
+        modifier = modifier
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Delete,
+            contentDescription = stringResource(contentDescription)
+        )
+    }
+    if (deleteConfirmationDialogRequired) {
+        DeleteConfirmationDialog(
+            deleteActionName = getDisplayName(event),
+            onRemoveConfirm = {
+                deleteConfirmationDialogRequired = false
+                onDelete()
+            },
+            onCancelCancel = { deleteConfirmationDialogRequired = false },
+            modifier = Modifier.padding(Dimensions.padding_medium)
+        )
+    }
+}
+
+@Composable
 fun EditItemButtons(
-    item: ModelItem,
+    event: Event,
     editIconButtonColors: IconButtonColors,
     onDelete: (Long) -> Unit,
     navigateToEditScreen: (Long) -> Unit,
@@ -101,7 +138,7 @@ fun EditItemButtons(
         modifier = modifier
     ) {
         IconButton(
-            onClick = { navigateToEditScreen(item.id) }, colors = editIconButtonColors
+            onClick = { navigateToEditScreen(event.id) }, colors = editIconButtonColors
         ) {
             Icon(
                 imageVector = Icons.Filled.Edit,
@@ -118,10 +155,10 @@ fun EditItemButtons(
         }
         if (deleteConfirmationDialogRequired) {
             DeleteConfirmationDialog(
-                deleteActionName = stringResource(item.getTypeNameResId()),
+                deleteActionName = getDisplayName(event),
                 onRemoveConfirm = {
                     deleteConfirmationDialogRequired = false
-                    onDelete(item.id)
+                    onDelete(event.id)
                 },
                 onCancelCancel = { deleteConfirmationDialogRequired = false },
                 modifier = Modifier.padding(Dimensions.padding_medium)
@@ -132,7 +169,7 @@ fun EditItemButtons(
 
 @Composable
 fun RemoveItemButton(
-    item: ModelItem,
+    event: Event,
     editIconButtonColors: IconButtonColors,
     onRemove: (Long) -> Unit,
     modifier: Modifier = Modifier,
@@ -154,10 +191,10 @@ fun RemoveItemButton(
         }
         if (deleteConfirmationDialogRequired) {
             DeleteConfirmationDialog(
-                deleteActionName = stringResource(item.getTypeNameResId()),
+                deleteActionName = getDisplayName(event),
                 onRemoveConfirm = {
                     deleteConfirmationDialogRequired = false
-                    onRemove(item.id)
+                    onRemove(event.id)
                 },
                 onCancelCancel = { deleteConfirmationDialogRequired = false },
                 modifier = Modifier.padding(Dimensions.padding_medium)
@@ -165,3 +202,6 @@ fun RemoveItemButton(
         }
     }
 }
+
+@Composable
+fun getDisplayName(event: Event): String  = "${stringResource(event.eventType.text)} ${event.description}"
