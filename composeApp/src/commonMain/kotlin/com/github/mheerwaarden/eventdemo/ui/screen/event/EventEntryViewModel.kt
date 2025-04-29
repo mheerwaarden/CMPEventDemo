@@ -12,17 +12,33 @@ package com.github.mheerwaarden.eventdemo.ui.screen.event
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.github.mheerwaarden.eventdemo.data.database.EventRepository
+import com.github.mheerwaarden.eventdemo.util.now
+import com.github.mheerwaarden.eventdemo.util.parseDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 
 class EventEntryViewModel(
+    savedStateHandle: SavedStateHandle,
     private val eventRepository: EventRepository,
 ) : ViewModel() {
+    private val initialDateString: String = checkNotNull(savedStateHandle[EventEntryDestination.startDateArg])
+    val initialDate = initialDateString.parseDate()
 
-    var eventUiState by mutableStateOf(EventUiState())
+    var eventUiState: EventUiState by mutableStateOf(EventUiState())
         private set
+
+    init {
+        val now = now()
+        val startDate = if (initialDate >= now.date) {
+            initialDate
+        } else {
+            now.date
+        }
+        eventUiState = eventUiState.copy(startDateTime = LocalDateTime(startDate, now.time), isEntryValid = validateInput())
+    }
 
     fun updateDescription(description: String) {
         eventUiState = eventUiState.copy(description = description, isEntryValid = validateInput())

@@ -55,6 +55,7 @@ import com.github.mheerwaarden.eventdemo.ui.util.DISABLED_ICON_OPACITY
 import com.github.mheerwaarden.eventdemo.util.formatDate
 import com.github.mheerwaarden.eventdemo.util.formatTime
 import com.github.mheerwaarden.eventdemo.util.toLocalDateTime
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
@@ -71,7 +72,7 @@ object EventOverviewDestination : NavigationDestination {
 fun EventOverviewScreen(
     onUpdateTopAppBar: (String, @Composable (RowScope.() -> Unit)) -> Unit,
     navigateToEvent: (Long) -> Unit,
-    navigateToAddEvent: () -> Unit,
+    navigateToAddEvent: (LocalDate) -> Unit,
     navigateToEditEvent: (Long) -> Unit,
     navigateToEventCalendar: () -> Unit,
     modifier: Modifier = Modifier,
@@ -134,7 +135,7 @@ fun EventOverviewBody(
     isReadOnly: Boolean,
     deleteEvent: (Long) -> Unit,
     navigateToEvent: (Long) -> Unit,
-    navigateToAddEvent: () -> Unit,
+    navigateToAddEvent: (LocalDate) -> Unit,
     navigateToEditEvent: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -166,7 +167,7 @@ private fun EventHeader(
     startDateTime: LocalDateTime,
     isReadOnly: Boolean,
     overviewConfig: OverviewConfig,
-    navigateToAddEvent: () -> Unit,
+    navigateToAddEvent: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -183,7 +184,7 @@ private fun EventHeader(
         )
         if (!isReadOnly) {
             AddItemButton(
-                navigateToAddScreen = navigateToAddEvent,
+                navigateToAddScreen = { navigateToAddEvent(startDateTime.date) },
                 foregroundColor = overviewConfig.dateColor,
                 contentDescription = Res.string.add_extra_event
             )

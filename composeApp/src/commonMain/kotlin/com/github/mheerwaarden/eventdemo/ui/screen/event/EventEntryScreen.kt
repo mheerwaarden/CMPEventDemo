@@ -20,8 +20,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -29,6 +33,7 @@ import com.github.mheerwaarden.eventdemo.Dimensions
 import com.github.mheerwaarden.eventdemo.data.database.DummyEventRepository
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.add_event_title
+import com.github.mheerwaarden.eventdemo.resources.date_passed_set_to_today
 import com.github.mheerwaarden.eventdemo.resources.description
 import com.github.mheerwaarden.eventdemo.resources.save_action
 import com.github.mheerwaarden.eventdemo.resources.select_end_time
@@ -52,6 +57,8 @@ import org.koin.compose.koinInject
 object EventEntryDestination : NavigationDestination {
     override val route = "event_entry"
     override val titleRes = Res.string.add_event_title
+    const val startDateArg = "startDateId"
+    val routeWithArgs = "$route/{$startDateArg}"
 }
 
 @Composable
@@ -65,13 +72,22 @@ fun EventEntryScreen(
 ) {
     onUpdateTopAppBar(stringResource(EventEntryDestination.titleRes)) {}
 
+    val eventUiState = eventViewModel.eventUiState
     LoadingScreen(loadingViewModel = settingsViewModel) {
         val preferences by settingsViewModel.settingsUiState.collectAsState()
+        var isStartTimeAutoUpdated by remember { mutableStateOf(false) }
+        LaunchedEffect(Unit) {
+            isStartTimeAutoUpdated = eventViewModel.initialDate < eventUiState.startDateTime.date
+        }
 
         EventEntryBody(
-            eventUiState = eventViewModel.eventUiState,
+            eventUiState = eventUiState,
+            isStartTimeAutoUpdated = isStartTimeAutoUpdated,
             onDescriptionChange = eventViewModel::updateDescription,
-            onDateChange = eventViewModel::updateEventDate,
+            onDateChange = { localDateTime ->
+                eventViewModel.updateEventDate(localDateTime)
+                isStartTimeAutoUpdated = false
+            },
             onStartTimeChange = eventViewModel::updateEventStartTime,
             onEndTimeChange = eventViewModel::updateEventEndTime,
             onSaveClick = {
@@ -96,6 +112,7 @@ fun EventEntryScreen(
 @Composable
 fun EventEntryBody(
     eventUiState: EventUiState,
+    isStartTimeAutoUpdated: Boolean,
     onDescriptionChange: (String) -> Unit,
     onDateChange: (LocalDateTime) -> Unit,
     onStartTimeChange: (LocalTime) -> Unit,
@@ -109,6 +126,12 @@ fun EventEntryBody(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(Dimensions.padding_large)
     ) {
+        if (isStartTimeAutoUpdated) {
+            Text(
+                text = stringResource(Res.string.date_passed_set_to_today),
+                color = MaterialTheme.colorScheme.tertiary
+            )
+        }
         EventInputForm(
             eventUiState = eventUiState,
             onDescriptionChange = onDescriptionChange,
@@ -181,6 +204,7 @@ fun EventEntryScreenPreview() {
     EventDemoAppTheme {
         EventEntryBody(
             eventUiState = event.toEventUiState(),
+            isStartTimeAutoUpdated = true,
             onDescriptionChange = {},
             onDateChange = {},
             onStartTimeChange = {},

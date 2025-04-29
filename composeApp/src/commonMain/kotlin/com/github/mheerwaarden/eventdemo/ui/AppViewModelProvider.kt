@@ -43,6 +43,7 @@ object AppViewModelProvider : KoinComponent {
         initializer {
             val appContainer = EventDemoApplication.container
             EventEntryViewModel(
+                this.createSavedStateHandle(),
                 appContainer.eventRepository,
             )
         }

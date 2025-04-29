@@ -23,15 +23,16 @@ import com.github.mheerwaarden.eventdemo.ui.screen.about.AboutScreen
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventCalendarDestination
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventCalendarScreen
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventDestination
-import com.github.mheerwaarden.eventdemo.ui.screen.event.EventOverviewDestination
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventEditDestination
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventEditScreen
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventEntryDestination
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventEntryScreen
+import com.github.mheerwaarden.eventdemo.ui.screen.event.EventOverviewDestination
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventOverviewScreen
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventScreen
 import com.github.mheerwaarden.eventdemo.ui.screen.settings.SettingsDestination
 import com.github.mheerwaarden.eventdemo.ui.screen.settings.SettingsScreen
+import com.github.mheerwaarden.eventdemo.util.format
 
 /**
  * Provides Navigation graph for the application.
@@ -53,7 +54,7 @@ fun EventDemoAppNavHost(
             EventOverviewScreen(
                 onUpdateTopAppBar = onUpdateTopAppBar,
                 navigateToEvent = { id -> navController.navigate("${EventDestination.route}/${id}") },
-                navigateToAddEvent = { navController.navigate(EventEntryDestination.route) },
+                navigateToAddEvent = { date -> navController.navigate("${EventEntryDestination.route}/${date.format()}") },
                 navigateToEditEvent = { id -> navController.navigate("${EventEditDestination.route}/${id}") },
                 navigateToEventCalendar = { navController.navigate(EventCalendarDestination.route) },
                 modifier = Modifier.fillMaxSize()
@@ -82,7 +83,11 @@ fun EventDemoAppNavHost(
                 modifier = Modifier.fillMaxSize()
             )
         }
-        composable(route = EventEntryDestination.route) {
+        composable(route = EventEntryDestination.routeWithArgs,
+            arguments = listOf(navArgument(EventEntryDestination.startDateArg) {
+                type = NavType.StringType
+            })
+        ){
             EventEntryScreen(
                 onUpdateTopAppBar = onUpdateTopAppBar,
                 isHorizontalLayout = isHorizontalLayout,

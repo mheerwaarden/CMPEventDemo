@@ -22,6 +22,7 @@ import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 
 data class EventUiState(
+    // Event fields
     val id: Long = 0,
     val description: String = "",
     val startDateTime: LocalDateTime = now(),
@@ -33,6 +34,7 @@ data class EventUiState(
     val eventType: EventType = EventType.ACTIVITY,
     val eventCategory: EventCategory = EventCategory.PRIVATE,
     val htmlColor: HtmlColors = HtmlColors.OLIVE_DRAB,
+    // UI fields
     val isEntryValid: Boolean = false,
 ) {
     fun toEvent(): Event {

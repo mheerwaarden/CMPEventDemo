@@ -127,6 +127,9 @@ fun LocalTime.format(): String = TIME_FORMAT.format(this)
 /** Format the time component of an Instant according to the short system default format */
 fun Instant.formatTime(): String = toLocalDateTime().formatTime()
 
+/** Parse a date string according to the short system default format */
+fun String.parseDate(): LocalDate = DATE_FORMAT.parse(this)
+
 // endregion
 
 // region Operations
