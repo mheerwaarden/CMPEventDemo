@@ -10,3 +10,9 @@ import com.github.mheerwaarden.eventdemo.ui.components.calendar.CalendarWithEven
 fun CalendarWithEventsPreview() {
     CalendarWithEventsScreenPreview()
 }
+
+@Preview(showBackground = true, group = "Preview", widthDp = 800, heightDp = 600)
+@Composable
+fun CalendarWithEventsLandscapePreview() {
+    CalendarWithEventsScreenPreview(isHorizontal = true)
+}

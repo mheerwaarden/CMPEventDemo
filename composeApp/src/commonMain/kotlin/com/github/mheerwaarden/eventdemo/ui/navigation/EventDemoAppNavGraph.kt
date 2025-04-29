@@ -64,6 +64,7 @@ fun EventDemoAppNavHost(
                 onUpdateTopAppBar = onUpdateTopAppBar,
                 navigateToEvent = { id -> navController.navigate("${EventDestination.route}/${id}") },
                 navigateToEventOverview = { navController.navigate(EventOverviewDestination.route) },
+                isHorizontal = isHorizontalLayout,
                 modifier = Modifier.fillMaxSize()
             )
         }

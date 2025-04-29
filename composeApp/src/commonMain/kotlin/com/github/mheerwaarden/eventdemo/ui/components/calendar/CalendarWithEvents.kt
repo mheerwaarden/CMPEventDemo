@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -63,6 +64,7 @@ import com.github.mheerwaarden.eventdemo.util.daysInMonth
 import com.github.mheerwaarden.eventdemo.util.formatTime
 import com.github.mheerwaarden.eventdemo.util.now
 import com.github.mheerwaarden.eventdemo.util.toLocalDateTime
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
@@ -92,6 +94,7 @@ fun CalendarWithEvents(
     modifier: Modifier = Modifier,
     startDate: LocalDate = now().date,
     actions: @Composable () -> Unit = {},
+    isHorizontal: Boolean = false,
 ) {
     // MutableState for selected date
     var selectedDay by remember { mutableIntStateOf(startDate.dayOfMonth) }
@@ -113,30 +116,91 @@ fun CalendarWithEvents(
             currentMonth = currentMonth.monthNumber
         )
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(Dimensions.padding_small)
-        ) {
-            // Calendar controls
-            CalendarControls(currentMonth) {
-                scrollScope.launch {
-                    val newMonth = currentMonth.plus(it, DateTimeUnit.MONTH)
-                    if (selectedDay > newMonth.daysInMonth()) selectedDay = newMonth.daysInMonth()
-                    pagerState.scrollToPage(pagerState.currentPage + it)
-                }
+        if (isHorizontal) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(Dimensions.padding_small)
+            ) {
+                // Display calendar header with controls and calendar body
+                Calendar(
+                    currentMonth = currentMonth,
+                    scrollScope = scrollScope,
+                    selectedDay = selectedDay,
+                    pagerState = pagerState,
+                    actions = actions,
+                    events = events,
+                    setPeriod = setPeriod,
+                    onSelectDay = { day -> selectedDay = day },
+                    modifier = Modifier.weight(1f)
+                )
+
+                // Display events for selected date at the bottom
+                EventList(
+                    selectedDay = selectedDay,
+                    currentMonth = currentMonth,
+                    events = selectedDateEvents,
+                    navigateToEvent = navigateToEvent,
+                    modifier = Modifier.weight(1f)
+                )
             }
+        } else {
 
-            actions()
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(Dimensions.padding_small)
+            ) {
+                // Display calendar header with controls and calendar body
+                Calendar(
+                    currentMonth = currentMonth,
+                    scrollScope = scrollScope,
+                    selectedDay = selectedDay,
+                    pagerState = pagerState,
+                    actions = actions,
+                    events = events,
+                    setPeriod = setPeriod,
+                    onSelectDay = { day -> selectedDay = day }
+                )
 
-            // Display the calendar grid
-            CalendarGrid(events, setPeriod, currentMonth, selectedDay) { day ->
-                selectedDay = day
+                // Display events for selected date at the bottom
+                EventList(
+                    selectedDay = selectedDay,
+                    currentMonth = currentMonth,
+                    events = selectedDateEvents,
+                    navigateToEvent = navigateToEvent
+                )
             }
-
-            // Display events for selected date at the bottom
-            EventList(selectedDay, currentMonth, selectedDateEvents, navigateToEvent)
         }
+    }
+}
+
+@Composable
+private fun Calendar(
+    currentMonth: LocalDate,
+    scrollScope: CoroutineScope,
+    selectedDay: Int,
+    pagerState: PagerState,
+    actions: @Composable () -> Unit,
+    events: List<Event>,
+    setPeriod: (LocalDate, LocalDate) -> Unit,
+    onSelectDay: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        // Calendar controls
+        CalendarControls(currentMonth) {
+            scrollScope.launch {
+                val newMonth = currentMonth.plus(it, DateTimeUnit.MONTH)
+                if (selectedDay > newMonth.daysInMonth()) onSelectDay(newMonth.daysInMonth())
+                pagerState.scrollToPage(pagerState.currentPage + it)
+            }
+        }
+
+        actions()
+
+        // Display the calendar grid
+        CalendarGrid(events, setPeriod, currentMonth, selectedDay) { day -> onSelectDay(day) }
     }
 }
 
@@ -262,12 +326,13 @@ fun EventList(
     currentMonth: LocalDate,
     events: List<Event>,
     navigateToEvent: (Long) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val titleText = stringResource(Res.string.events)
     val columnTimeWeight = .2f // 20%
     val columnDescriptionWeight = .6f // 60%
     LazyColumn(
-        modifier = Modifier
+        modifier = modifier
             .padding(top = Dimensions.padding_small)
             .fillMaxWidth(),
     ) {
@@ -340,7 +405,7 @@ fun EventList(
 
 @Preview
 @Composable
-fun CalendarWithEventsScreenPreview() {
+fun CalendarWithEventsScreenPreview(isHorizontal: Boolean = false) {
     val events = listOf(
         Event(
             id = 1,
@@ -373,12 +438,13 @@ fun CalendarWithEventsScreenPreview() {
             description = "date 3"
         ),
     )
-    val startDate = LocalDate(2024, 10, 1)
+    val startDate = LocalDate(2024, 10, 5)
     CalendarWithEvents(
         events = events,
         startDate = startDate,
         setPeriod = { _, _ -> },
         navigateToEvent = {},
+        isHorizontal = isHorizontal,
         modifier = Modifier
             .fillMaxSize()
             .background(Color.LightGray) // showBackground = true

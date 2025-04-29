@@ -42,6 +42,7 @@ fun EventCalendarScreen(
     navigateToEventOverview: () -> Unit,
     navigateToEvent: (Long) -> Unit,
     modifier: Modifier = Modifier,
+    isHorizontal: Boolean = false,
     eventViewModel: EventCalendarViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val eventUiState by eventViewModel.eventUiState.collectAsState()
@@ -68,6 +69,7 @@ fun EventCalendarScreen(
     EventCalendarBody(
         events = eventUiState,
         setPeriod = eventViewModel::setPeriod,
+        isHorizontal = isHorizontal,
         navigateToEvent = navigateToEvent,
         modifier = modifier,
     )
@@ -80,11 +82,13 @@ fun EventCalendarBody(
     navigateToEvent: (Long) -> Unit,
     modifier: Modifier = Modifier,
     startDate: LocalDate = now().date,
+    isHorizontal: Boolean = false,
 ) {
     CalendarWithEvents(
         events = events,
         startDate = startDate,
         setPeriod = setPeriod,
+        isHorizontal = isHorizontal,
         navigateToEvent = navigateToEvent,
         modifier = modifier,
     )
@@ -100,6 +104,23 @@ fun EventCalendarScreenPreview() {
             // The first event is in the previous month
             startDate = events[1].startInstant.toLocalDateTime().date,
             setPeriod = { _, _ -> },
+            navigateToEvent = {},
+            modifier = Modifier.fillMaxSize().background(Color.LightGray) // showBackground = true
+        )
+    }
+}
+
+@Preview
+@Composable
+fun EventCalendarLandscapeScreenPreview() {
+    val events = DummyEventRepository().getDefaultEvents(7)
+    EventDemoAppTheme {
+        EventCalendarBody(
+            events = events,
+            // The first event is in the previous month
+            startDate = events[1].startInstant.toLocalDateTime().date,
+            setPeriod = { _, _ -> },
+            isHorizontal = true,
             navigateToEvent = {},
             modifier = Modifier.fillMaxSize().background(Color.LightGray) // showBackground = true
         )
