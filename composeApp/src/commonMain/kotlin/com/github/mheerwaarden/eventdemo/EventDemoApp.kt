@@ -84,7 +84,7 @@ fun EventDemoApp(
                 EventDemoAppBar(
                     menuNavigator = MenuNavigatorImpl(navController),
                     title = updatedTitle,
-                    canNavigateBack = { navController.currentBackStackEntry != null },
+                    canNavigateBack = navController.previousBackStackEntry != null,
                     scrollBehavior = scrollBehavior,
                     navigateUp = { navController.navigateUp() },
                     actions = actions.value
@@ -116,7 +116,7 @@ fun EventDemoAppBar(
     menuNavigator: MenuNavigator,
     scrollBehavior: TopAppBarScrollBehavior?,
     title: String,
-    canNavigateBack: () -> Boolean,
+    canNavigateBack: Boolean,
     modifier: Modifier = Modifier,
     navigateUp: () -> Unit = {},
     actions: @Composable (RowScope.() -> Unit) = {},
@@ -130,7 +130,7 @@ fun EventDemoAppBar(
         modifier = modifier,
         scrollBehavior = scrollBehavior,
         navigationIcon = {
-            if (canNavigateBack()) {
+            if (canNavigateBack) {
                 IconButton(onClick = navigateUp) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
