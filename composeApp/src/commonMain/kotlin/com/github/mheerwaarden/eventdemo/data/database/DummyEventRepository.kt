@@ -34,7 +34,11 @@ class DummyEventRepository : EventRepository {
     private val _events = MutableStateFlow<Map<Long, Event>>(defaultEvents)
     private val events: Flow<Map<Long, Event>> = _events
 
-    private val _eventForPeriod = MutableStateFlow(getEvents(startOfMonthInstant(), endOfMonthInstant()))
+    private var storedStart: Instant = startOfMonthInstant()
+    private var storedEnd: Instant = endOfMonthInstant()
+    private var storedFilter: EventFilter = EventFilter.GENERAL
+
+    private val _eventForPeriod = MutableStateFlow(getEvents(storedStart, storedEnd))
     private val eventForPeriod: Flow<List<Event>> = _eventForPeriod
 
     override fun getEventsForPeriod(): Flow<List<Event>> {
@@ -58,6 +62,9 @@ class DummyEventRepository : EventRepository {
         end: Instant,
         filter: EventFilter,
     ) {
+        storedStart = start
+        storedEnd = end
+        storedFilter = filter
         _eventForPeriod.value = if (filter == EventFilter.GENERAL) {
             getEvents(start, end)
         } else {
@@ -67,19 +74,38 @@ class DummyEventRepository : EventRepository {
         }
     }
 
+    private fun inPeriod(event: Event): Boolean {
+        return event.startInstant >= storedStart && event.endInstant < storedEnd &&
+                (storedFilter == EventFilter.GENERAL || event.eventCategory.text == storedFilter.text)
+    }
+
     override fun addEvent(event: Event): Long {
-        _events.value = (_events.value + (++key to event.copy(id = key)))
+        val newEvent = event.copy(id = key)
+        _events.value = (_events.value + (++key to newEvent))
             .toList().sortedBy { it.second.startInstant }.toMap()
+        if (inPeriod(newEvent)) {
+            _eventForPeriod.value += newEvent
+        }
         return key
     }
 
     override fun updateEvent(event: Event) {
-        _events.value = (_events.value - event.id + (event.id to event))
+        _events.value = ((_events.value - event.id) + (event.id to event))
             .toList().sortedBy { it.second.startInstant }.toMap()
+        if (inPeriod(event)) {
+            _eventForPeriod.value -= _eventForPeriod.value.first { it.id == event.id }
+            _eventForPeriod.value += event
+        }
     }
 
     override fun deleteEvent(id: Long) {
-        _events.value -= id
+        val event = getEvent(id)
+        if (event != null) {
+            _events.value -= id
+            if (inPeriod(event)) {
+                _eventForPeriod.value -= event
+            }
+        }
     }
 
     fun getDefaultEvents(count: Int): List<Event> = defaultEvents.values.take(count)

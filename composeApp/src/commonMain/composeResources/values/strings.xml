@@ -63,6 +63,7 @@
     <string name="saturday">Saturday</string>
     <string name="sunday">Sunday</string>
     <string name="day">Day</string>
+    <string name="month_day">%1$d %2$d</string>
     <string name="unknown_day">Unknown day</string>
     <string name="about_event_demo">About Event</string>
     <string name="team_member">Team member</string>

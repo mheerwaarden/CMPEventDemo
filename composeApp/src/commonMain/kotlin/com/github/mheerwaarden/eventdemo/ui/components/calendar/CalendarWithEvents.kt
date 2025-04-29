@@ -46,10 +46,10 @@ import androidx.compose.ui.text.withStyle
 import com.github.mheerwaarden.eventdemo.Dimensions
 import com.github.mheerwaarden.eventdemo.data.model.Event
 import com.github.mheerwaarden.eventdemo.resources.Res
-import com.github.mheerwaarden.eventdemo.resources.day
 import com.github.mheerwaarden.eventdemo.resources.events
 import com.github.mheerwaarden.eventdemo.resources.friday
 import com.github.mheerwaarden.eventdemo.resources.monday
+import com.github.mheerwaarden.eventdemo.resources.month_day
 import com.github.mheerwaarden.eventdemo.resources.next_month
 import com.github.mheerwaarden.eventdemo.resources.previous_month
 import com.github.mheerwaarden.eventdemo.resources.saturday
@@ -107,8 +107,6 @@ fun CalendarWithEvents(
         val month = LocalDate(startDate.year, startDate.month, startDate.dayOfMonth)
         val currentMonth = month.plus(page - INITIAL_PAGE, DateTimeUnit.MONTH)
 
-        if (selectedDay > currentMonth.daysInMonth()) selectedDay = currentMonth.daysInMonth()
-
         val selectedDateEvents = getEventsForDay(
             events = events,
             day = selectedDay,
@@ -123,6 +121,8 @@ fun CalendarWithEvents(
             // Calendar controls
             CalendarControls(currentMonth) {
                 scrollScope.launch {
+                    val newMonth = currentMonth.plus(it, DateTimeUnit.MONTH)
+                    if (selectedDay > newMonth.daysInMonth()) selectedDay = newMonth.daysInMonth()
                     pagerState.scrollToPage(pagerState.currentPage + it)
                 }
             }
@@ -135,7 +135,7 @@ fun CalendarWithEvents(
             }
 
             // Display events for selected date at the bottom
-            EventList(selectedDay, selectedDateEvents, navigateToEvent)
+            EventList(selectedDay, currentMonth, selectedDateEvents, navigateToEvent)
         }
     }
 }
@@ -257,7 +257,12 @@ private fun getEventsForDay(events: List<Event>, day: Int, currentMonth: Int) =
         }
 
 @Composable
-fun EventList(selectedDay: Int, events: List<Event>, navigateToEvent: (Long) -> Unit) {
+fun EventList(
+    selectedDay: Int,
+    currentMonth: LocalDate,
+    events: List<Event>,
+    navigateToEvent: (Long) -> Unit,
+) {
     val titleText = stringResource(Res.string.events)
     val columnTimeWeight = .2f // 20%
     val columnDescriptionWeight = .6f // 60%
@@ -280,7 +285,9 @@ fun EventList(selectedDay: Int, events: List<Event>, navigateToEvent: (Long) -> 
                     modifier = Modifier.weight(columnTimeWeight * 2)
                 )
                 Text(
-                    text = if (selectedDay > 0) "$titleText (${stringResource(Res.string.day)} $selectedDay)" else "",
+                    text = if (selectedDay > 0) "$titleText ${
+                        stringResource(Res.string.month_day, currentMonth.month.name, selectedDay)
+                    }" else "",
                     color = foregroundColor,
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
