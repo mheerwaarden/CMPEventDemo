@@ -80,8 +80,8 @@ class DummyEventRepository : EventRepository {
     }
 
     override fun addEvent(event: Event): Long {
-        val newEvent = event.copy(id = key)
-        _events.value = (_events.value + (++key to newEvent))
+        val newEvent = event.copy(id = ++key)
+        _events.value = (_events.value + (key to newEvent))
             .toList().sortedBy { it.second.startInstant }.toMap()
         if (inPeriod(newEvent)) {
             _eventForPeriod.value += newEvent

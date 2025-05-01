@@ -177,7 +177,7 @@ private fun EventHeader(
 @Composable
 fun EventBody(eventUiState: EventUiState, modifier: Modifier) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(Dimensions.padding_medium),
+        verticalArrangement = Arrangement.spacedBy(Dimensions.padding_small),
         horizontalAlignment = Alignment.Start,
         modifier = modifier
     ) {

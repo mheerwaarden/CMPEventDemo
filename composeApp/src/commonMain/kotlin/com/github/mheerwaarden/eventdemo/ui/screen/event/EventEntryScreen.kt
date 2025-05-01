@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,26 +30,41 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.mheerwaarden.eventdemo.Dimensions
 import com.github.mheerwaarden.eventdemo.data.database.DummyEventRepository
+import com.github.mheerwaarden.eventdemo.data.model.EventCategory
+import com.github.mheerwaarden.eventdemo.data.model.EventType
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.add_event_title
+import com.github.mheerwaarden.eventdemo.resources.color
+import com.github.mheerwaarden.eventdemo.resources.contact
 import com.github.mheerwaarden.eventdemo.resources.date_passed_set_to_today
 import com.github.mheerwaarden.eventdemo.resources.description
+import com.github.mheerwaarden.eventdemo.resources.event_category
+import com.github.mheerwaarden.eventdemo.resources.event_type
+import com.github.mheerwaarden.eventdemo.resources.is_online
+import com.github.mheerwaarden.eventdemo.resources.location
+import com.github.mheerwaarden.eventdemo.resources.notes
 import com.github.mheerwaarden.eventdemo.resources.save_action
 import com.github.mheerwaarden.eventdemo.resources.select_end_time
 import com.github.mheerwaarden.eventdemo.resources.select_start_time
 import com.github.mheerwaarden.eventdemo.ui.AppViewModelProvider
+import com.github.mheerwaarden.eventdemo.ui.components.BooleanInputField
 import com.github.mheerwaarden.eventdemo.ui.components.DateField
 import com.github.mheerwaarden.eventdemo.ui.components.DateFieldPreferences
 import com.github.mheerwaarden.eventdemo.ui.components.InputField
+import com.github.mheerwaarden.eventdemo.ui.components.SelectionField
 import com.github.mheerwaarden.eventdemo.ui.components.TimeField
 import com.github.mheerwaarden.eventdemo.ui.components.TimeFieldPreferences
 import com.github.mheerwaarden.eventdemo.ui.navigation.NavigationDestination
 import com.github.mheerwaarden.eventdemo.ui.screen.LoadingScreen
 import com.github.mheerwaarden.eventdemo.ui.screen.settings.SettingsViewModel
 import com.github.mheerwaarden.eventdemo.ui.theme.EventDemoAppTheme
+import com.github.mheerwaarden.eventdemo.ui.util.HtmlColors
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import org.jetbrains.compose.resources.stringResource
@@ -83,13 +100,13 @@ fun EventEntryScreen(
         EventEntryBody(
             eventUiState = eventUiState,
             isStartTimeAutoUpdated = isStartTimeAutoUpdated,
-            onDescriptionChange = eventViewModel::updateDescription,
             onDateChange = { localDateTime ->
                 eventViewModel.updateEventDate(localDateTime)
                 isStartTimeAutoUpdated = false
             },
             onStartTimeChange = eventViewModel::updateEventStartTime,
             onEndTimeChange = eventViewModel::updateEventEndTime,
+            onStateChange = eventViewModel::updateState,
             onSaveClick = {
                 eventViewModel.addEvent()
                 navigateBack()
@@ -113,17 +130,17 @@ fun EventEntryScreen(
 fun EventEntryBody(
     eventUiState: EventUiState,
     isStartTimeAutoUpdated: Boolean,
-    onDescriptionChange: (String) -> Unit,
     onDateChange: (LocalDateTime) -> Unit,
     onStartTimeChange: (LocalTime) -> Unit,
     onEndTimeChange: (LocalTime) -> Unit,
+    onStateChange: (EventUiState) -> Unit,
     onSaveClick: () -> Unit,
     dateFieldPreferences: DateFieldPreferences,
     timeFieldPreferences: TimeFieldPreferences,
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier.verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(Dimensions.padding_large)
     ) {
         if (isStartTimeAutoUpdated) {
@@ -134,10 +151,10 @@ fun EventEntryBody(
         }
         EventInputForm(
             eventUiState = eventUiState,
-            onDescriptionChange = onDescriptionChange,
             onDateChange = onDateChange,
             onStartTimeChange = onStartTimeChange,
             onEndTimeChange = onEndTimeChange,
+            onStateChange = onStateChange,
             dateFieldPreferences = dateFieldPreferences,
             timeFieldPreferences = timeFieldPreferences,
             modifier = Modifier.fillMaxWidth()
@@ -156,17 +173,17 @@ fun EventEntryBody(
 @Composable
 fun EventInputForm(
     eventUiState: EventUiState,
-    onDescriptionChange: (String) -> Unit,
     onDateChange: (LocalDateTime) -> Unit,
     onStartTimeChange: (LocalTime) -> Unit,
     onEndTimeChange: (LocalTime) -> Unit,
+    onStateChange: (EventUiState) -> Unit,
     dateFieldPreferences: DateFieldPreferences,
     timeFieldPreferences: TimeFieldPreferences,
     modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(Dimensions.padding_medium)
+        verticalArrangement = Arrangement.spacedBy(Dimensions.padding_small)
     ) {
         DateField(
             currentDate = eventUiState.startDateTime,
@@ -191,8 +208,75 @@ fun EventInputForm(
         InputField(
             labelId = Res.string.description,
             value = eventUiState.description,
-            onValueChange = { onDescriptionChange(it) },
+            onValueChange = { onStateChange(eventUiState.copy(description = it)) },
             modifier = Modifier.fillMaxWidth(),
+        )
+        InputField(
+            labelId = Res.string.location,
+            value = eventUiState.location ?: "",
+            onValueChange = { onStateChange(eventUiState.copy(location = it)) },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        BooleanInputField(
+            labelId = Res.string.is_online,
+            value = eventUiState.isOnline,
+            onValueChange = { onStateChange(eventUiState.copy(isOnline = it)) },
+            isSwitch = false,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        InputField(
+            labelId = Res.string.contact,
+            value = eventUiState.contact ?: "",
+            onValueChange = { onStateChange(eventUiState.copy(contact = it)) },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        InputField(
+            labelId = Res.string.notes,
+            value = eventUiState.notes ?: "",
+            onValueChange = { onStateChange(eventUiState.copy(notes = it)) },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        SelectionField(
+            label = stringResource(Res.string.event_type),
+            currentItem = eventUiState.eventType,
+            onGetItems = { EventType.entries },
+            onGetKey = { it.ordinal },
+            onGetDisplayName = { stringResource(it.text) },
+            onChange = { onStateChange(eventUiState.copy(eventType = it)) },
+            modifier = Modifier.fillMaxWidth(),
+            isRequired = false,
+        )
+        SelectionField(
+            label = stringResource(Res.string.event_category),
+            currentItem = eventUiState.eventCategory,
+            onGetItems = { EventCategory.entries },
+            onGetKey = { it.ordinal },
+            onGetDisplayName = { stringResource(it.text) },
+            onChange = { onStateChange(eventUiState.copy(eventCategory = it)) },
+            modifier = Modifier.fillMaxWidth(),
+            isRequired = false,
+        )
+        SelectionField(
+            label = stringResource(Res.string.color),
+            currentItem = eventUiState.htmlColor,
+            onGetItems = { HtmlColors.entries },
+            onGetKey = { it.ordinal },
+            onGetDisplayName = {
+                buildAnnotatedString {
+                    withStyle(
+                        style = SpanStyle(
+                            color = it.color,
+                            fontSize = MaterialTheme.typography.headlineLarge.fontSize
+                        )
+                    ) {
+                        append("• ")
+                    }
+                    append(it.text)
+                }
+            },
+            onChange = { onStateChange(eventUiState.copy(htmlColor = it)) },
+            modifier = Modifier.fillMaxWidth(),
+            isRequired = false,
         )
     }
 }
@@ -205,10 +289,10 @@ fun EventEntryScreenPreview() {
         EventEntryBody(
             eventUiState = event.toEventUiState(),
             isStartTimeAutoUpdated = true,
-            onDescriptionChange = {},
             onDateChange = {},
             onStartTimeChange = {},
             onEndTimeChange = {},
+            onStateChange = {},
             onSaveClick = {},
             dateFieldPreferences = DateFieldPreferences(),
             timeFieldPreferences = TimeFieldPreferences(),

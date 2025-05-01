@@ -24,7 +24,8 @@ class EventEntryViewModel(
     savedStateHandle: SavedStateHandle,
     private val eventRepository: EventRepository,
 ) : ViewModel() {
-    private val initialDateString: String = checkNotNull(savedStateHandle[EventEntryDestination.startDateArg])
+    private val initialDateString: String =
+            checkNotNull(savedStateHandle[EventEntryDestination.startDateArg])
     val initialDate = initialDateString.parseDate()
 
     var eventUiState: EventUiState by mutableStateOf(EventUiState())
@@ -37,11 +38,15 @@ class EventEntryViewModel(
         } else {
             now.date
         }
-        eventUiState = eventUiState.copy(startDateTime = LocalDateTime(startDate, now.time), isEntryValid = validateInput())
+        eventUiState = eventUiState.copy(
+            startDateTime = LocalDateTime(startDate, now.time),
+            isEntryValid = validateInput()
+        )
     }
 
-    fun updateDescription(description: String) {
-        eventUiState = eventUiState.copy(description = description, isEntryValid = validateInput())
+    /** Independent fields can be updated in the [eventUiState] and a call to this function. This method also triggers validation */
+    fun updateState(eventUiState: EventUiState) {
+        this.eventUiState = eventUiState.copy(isEntryValid = validateInput())
     }
 
     fun updateEventDate(selectedDate: LocalDateTime) {

@@ -28,10 +28,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.github.mheerwaarden.eventdemo.Dimensions
@@ -52,9 +48,32 @@ fun SelectionField(
     modifier: Modifier = Modifier,
     isRequired: Boolean = true,
 ) {
+    SelectionField(
+        label = label,
+        currentItem = currentItem,
+        onGetItems = onGetItems,
+        onGetKey = { it.id },
+        onGetDisplayName = { it.getDisplayName() },
+        onChange = onChange,
+        modifier = modifier,
+        isRequired = isRequired,
+    )
+}
+
+@Composable
+fun <T> SelectionField(
+    label: String,
+    currentItem: T?,
+    onGetItems: () -> List<T>,
+    onGetKey: (T) -> Any,
+    onGetDisplayName: @Composable (T) -> Any,
+    onChange: (T) -> Unit,
+    modifier: Modifier = Modifier,
+    isRequired: Boolean = true,
+) {
     // String value of the item
-    var value by rememberSaveable { mutableStateOf("") }
-    value = currentItem?.getDisplayName() ?: ""
+//    var value: Any by rememberSaveable { mutableStateOf("") }
+    val value = if (currentItem == null) "" else onGetDisplayName(currentItem)
 
     DialogField(
         label = label,
@@ -66,25 +85,29 @@ fun SelectionField(
                 Icons.Filled.Search,
                 contentDescription = stringResource(Res.string.show_selection_dialog),
             )
-        },
-        { close ->
-            SelectionDialog(
-                label = label,
-                currentDisplayValue = value,
-                items = onGetItems(),
-                onChange = onChange,
-                onDismissRequest = { close() },
-            )
-        })
+        }
+    ) { close ->
+        SelectionDialog(
+            label = label,
+            currentDisplayValue = value,
+            items = onGetItems(),
+            onGetKey = onGetKey,
+            onGetDisplayName = onGetDisplayName,
+            onChange = onChange,
+            onDismissRequest = { close() },
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SelectionDialog(
+private fun <T> SelectionDialog(
     label: String,
-    currentDisplayValue: String,
-    items: List<ModelItem>,
-    onChange: (ModelItem) -> Unit,
+    currentDisplayValue: Any,
+    items: List<T>,
+    onGetKey: (T) -> Any,
+    onGetDisplayName: @Composable (T) -> Any,
+    onChange: (T) -> Unit,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -96,9 +119,10 @@ fun SelectionDialog(
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
         ) {
             Box(
-                modifier = Modifier.padding(Dimensions.padding_large).border(
-                        width = Dimensions.border_width,
-                        color = MaterialTheme.colorScheme.surfaceTint
+                modifier = Modifier
+                    .padding(Dimensions.padding_large)
+                    .border(
+                        width = Dimensions.border_width, color = MaterialTheme.colorScheme.surfaceTint
                     )
             ) {
                 val evenColor = MaterialTheme.colorScheme.surfaceContainer
@@ -108,13 +132,15 @@ fun SelectionDialog(
                         Text(
                             text = label,
                             color = MaterialTheme.colorScheme.surface,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
                                 .background(color = MaterialTheme.colorScheme.surfaceTint)
                                 .padding(Dimensions.padding_small)
                         )
                     }
-                    itemsIndexed(items = items, key = { _, item -> item.id }) { index, item ->
-                        val displayName = item.getDisplayName()
+                    itemsIndexed(
+                        items = items, key = { _, item -> onGetKey(item) }) { index, item ->
+                        val displayName = onGetDisplayName(item)
                         val isSelected = displayName == currentDisplayValue
                         val backgroundColor = if (isSelected) {
                             MaterialTheme.colorScheme.primaryContainer
@@ -126,11 +152,14 @@ fun SelectionDialog(
                         } else {
                             Color.Unspecified
                         }
-                        Text(
+                        DisplayableText(
                             text = displayName,
                             color = textColor,
-                            modifier = Modifier.fillMaxWidth().background(color = backgroundColor)
-                                .padding(Dimensions.padding_small).clickable {
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(color = backgroundColor)
+                                .padding(Dimensions.padding_small)
+                                .clickable {
                                     onChange(item)
                                     onDismissRequest()
                                 })
@@ -149,6 +178,8 @@ fun SelectionDialogPreview() {
             label = "Event",
             currentDisplayValue = "Birthday",
             items = DummyEventRepository().getDefaultEvents(6),
+            onGetKey = { it.id },
+            onGetDisplayName = { it.getDisplayName() },
             onChange = { },
             onDismissRequest = { },
             modifier = Modifier.fillMaxSize().background(Color.LightGray) // showBackground = true

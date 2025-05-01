@@ -45,11 +45,9 @@ class EventEditViewModel(
         }
     }
 
-    fun updateDescription(description: String) {
-        eventUiState = eventUiState.copy(
-            description = description,
-            isEntryValid = validateInput(newDescription = description)
-        )
+    /** Independent fields can be updated in the [eventUiState] and a call to this function. This method also triggers validation */
+    fun updateState(eventUiState: EventUiState) {
+        this.eventUiState = eventUiState.copy(isEntryValid = validateInput())
     }
 
     fun updateEventDate(selectedDate: LocalDateTime) {

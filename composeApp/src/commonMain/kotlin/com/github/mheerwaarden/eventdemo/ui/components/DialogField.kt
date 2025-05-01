@@ -27,7 +27,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 
@@ -35,7 +37,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 @Composable
 fun DialogField(
     label: String,
-    value: String,
+    value: Any,
     modifier: Modifier = Modifier,
     isRequired: Boolean = false,
     trailingIcon: @Composable (() -> Unit)? = null,
@@ -87,19 +89,35 @@ fun DialogField(
             disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
         )
     }
-    OutlinedTextField(
-        value = value,
-        onValueChange = { },
-        label = { Text(label) },
-        colors = colors,
-        trailingIcon = trailingIcon,
-        readOnly = true,
-        singleLine = true,
-        interactionSource = interactionSource,
-        keyboardActions = KeyboardActions(onDone = { showDialog = true }),
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-        modifier = modifier
-    )
+    if (value is AnnotatedString) {
+        OutlinedTextField(
+            value = TextFieldValue(value),
+            onValueChange = { },
+            label = { Text(label) },
+            colors = colors,
+            trailingIcon = trailingIcon,
+            readOnly = true,
+            singleLine = true,
+            interactionSource = interactionSource,
+            keyboardActions = KeyboardActions(onDone = { showDialog = true }),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            modifier = modifier
+        )
+    } else {
+        OutlinedTextField(
+            value = if (value is String) value else value.toString(),
+            onValueChange = { },
+            label = { Text(label) },
+            colors = colors,
+            trailingIcon = trailingIcon,
+            readOnly = true,
+            singleLine = true,
+            interactionSource = interactionSource,
+            keyboardActions = KeyboardActions(onDone = { showDialog = true }),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            modifier = modifier
+        )
+    }
     if (showDialog) {
         onShowDialog { showDialog = false }
     }

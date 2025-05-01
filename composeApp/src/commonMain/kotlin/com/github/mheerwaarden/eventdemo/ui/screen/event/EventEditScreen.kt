@@ -51,10 +51,10 @@ fun EventEditScreen(
         EventEntryBody(
             eventUiState = eventViewModel.eventUiState,
             isStartTimeAutoUpdated = false,
-            onDescriptionChange = eventViewModel::updateDescription,
             onDateChange = eventViewModel::updateEventDate,
             onStartTimeChange = eventViewModel::updateEventStartTime,
             onEndTimeChange = eventViewModel::updateEventEndTime,
+            onStateChange = eventViewModel::updateState,
             onSaveClick = {
                 eventViewModel.updateEvent()
                 navigateBack()
