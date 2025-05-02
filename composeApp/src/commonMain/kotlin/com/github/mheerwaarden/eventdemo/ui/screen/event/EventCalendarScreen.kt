@@ -23,6 +23,8 @@ import com.github.mheerwaarden.eventdemo.resources.event_overview
 import com.github.mheerwaarden.eventdemo.ui.AppViewModelProvider
 import com.github.mheerwaarden.eventdemo.ui.components.calendar.CalendarWithEvents
 import com.github.mheerwaarden.eventdemo.ui.navigation.NavigationDestination
+import com.github.mheerwaarden.eventdemo.ui.screen.LoadingScreen
+import com.github.mheerwaarden.eventdemo.ui.screen.settings.SettingsViewModel
 import com.github.mheerwaarden.eventdemo.ui.theme.EventDemoAppTheme
 import com.github.mheerwaarden.eventdemo.ui.util.DISABLED_ICON_OPACITY
 import com.github.mheerwaarden.eventdemo.util.now
@@ -44,35 +46,41 @@ fun EventCalendarScreen(
     modifier: Modifier = Modifier,
     isHorizontal: Boolean = false,
     eventViewModel: EventCalendarViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    settingsViewModel: SettingsViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val eventUiState by eventViewModel.eventUiState.collectAsState()
+    LoadingScreen(loadingViewModel = settingsViewModel) {
+        val preferences by settingsViewModel.settingsUiState.collectAsState()
 
-    val title = stringResource(EventCalendarDestination.titleRes)
-    onUpdateTopAppBar(title) {
-        val foregroundColor = MaterialTheme.colorScheme.primary
-        IconButton(
-            onClick = navigateToEventOverview,
-            colors = IconButtonColors(
-                containerColor = Color.Transparent,
-                contentColor = foregroundColor,
-                disabledContainerColor = Color.Transparent,
-                disabledContentColor = foregroundColor.copy(alpha = DISABLED_ICON_OPACITY)
-            ),
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.List,
-                contentDescription = stringResource(Res.string.event_overview),
-            )
+        val title = stringResource(EventCalendarDestination.titleRes)
+        onUpdateTopAppBar(title) {
+            val foregroundColor = MaterialTheme.colorScheme.primary
+            IconButton(
+                onClick = navigateToEventOverview,
+                colors = IconButtonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = foregroundColor,
+                    disabledContainerColor = Color.Transparent,
+                    disabledContentColor = foregroundColor.copy(alpha = DISABLED_ICON_OPACITY)
+                ),
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.List,
+                    contentDescription = stringResource(Res.string.event_overview),
+                )
+            }
         }
-    }
 
-    EventCalendarBody(
-        events = eventUiState,
-        setPeriod = eventViewModel::setPeriod,
-        isHorizontal = isHorizontal,
-        navigateToEvent = navigateToEvent,
-        modifier = modifier,
-    )
+        EventCalendarBody(
+            events = eventUiState,
+            setPeriod = eventViewModel::setPeriod,
+            isHorizontal = isHorizontal,
+            navigateToEvent = navigateToEvent,
+            isExpanded = preferences.isCalendarExpanded,
+            onExpand = settingsViewModel::setCalendarExpanded,
+            modifier = modifier,
+        )
+    }
 }
 
 @Composable
@@ -83,6 +91,8 @@ fun EventCalendarBody(
     modifier: Modifier = Modifier,
     startDate: LocalDate = now().date,
     isHorizontal: Boolean = false,
+    isExpanded: Boolean = true,
+    onExpand: (Boolean) -> Unit = {}
 ) {
     CalendarWithEvents(
         events = events,
@@ -90,6 +100,8 @@ fun EventCalendarBody(
         setPeriod = setPeriod,
         isHorizontal = isHorizontal,
         navigateToEvent = navigateToEvent,
+        isExpanded = isExpanded,
+        onExpand = onExpand,
         modifier = modifier,
     )
 }

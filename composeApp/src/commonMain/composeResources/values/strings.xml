@@ -117,4 +117,6 @@
     <string name="previous_month">Previous Month</string>
     <string name="next_month">Next Month</string>
     <string name="date_passed_set_to_today">Ths selected date has already passed; start date is set to today</string>">
+    <string name="hide_calendar">Hide calendar</string>
+    <string name="show_calendar">Show calendar</string>
 </resources>

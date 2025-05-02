@@ -18,12 +18,13 @@ class UserPreferencesSettingsRepository(
         private const val KEY_IS_READ_ONLY = "is_read_only"
         private const val KEY_DATE_PICKER_USES_KEYBOARD = "date_picker_uses_keyboard"
         private const val KEY_TIME_PICKER_USES_KEYBOARD = "time_picker_uses_keyboard"
+        private const val KEY_CALENDAR_EXPANDED = "calendar_expanded"
     }
     //endregion
 
     //region Flow
     private val _preferences: MutableStateFlow<UserPreferences> =
-        MutableStateFlow(loadPreferences())
+            MutableStateFlow(loadPreferences())
     override val preferences: Flow<UserPreferences> = _preferences.asStateFlow()
     //endregion
 
@@ -47,8 +48,8 @@ class UserPreferencesSettingsRepository(
     //region Save
     override suspend fun saveReadOnlyPreference(isReadOnly: Boolean) {
         try {
-        settings[KEY_IS_READ_ONLY] = isReadOnly
-        updatePreferences { it.copy(isReadOnly = isReadOnly) }
+            settings[KEY_IS_READ_ONLY] = isReadOnly
+            updatePreferences { it.copy(isReadOnly = isReadOnly) }
         } catch (e: Exception) {
             logger.e(throwable = e) { "Error saving isReadOnly preference" }
         }
@@ -56,8 +57,8 @@ class UserPreferencesSettingsRepository(
 
     override suspend fun saveDatePickerUsesKeyboard(useKeyboard: Boolean) {
         try {
-        settings[KEY_DATE_PICKER_USES_KEYBOARD] = useKeyboard
-        updatePreferences { it.copy(datePickerUsesKeyboard = useKeyboard) }
+            settings[KEY_DATE_PICKER_USES_KEYBOARD] = useKeyboard
+            updatePreferences { it.copy(datePickerUsesKeyboard = useKeyboard) }
         } catch (e: Exception) {
             logger.e(throwable = e) { "Error saving datePickerUsesKeyboard preference" }
         }
@@ -65,10 +66,19 @@ class UserPreferencesSettingsRepository(
 
     override suspend fun saveTimePickerUsesKeyboard(useKeyboard: Boolean) {
         try {
-        settings[KEY_TIME_PICKER_USES_KEYBOARD] = useKeyboard
-        updatePreferences { it.copy(timePickerUsesKeyboard = useKeyboard) }
+            settings[KEY_TIME_PICKER_USES_KEYBOARD] = useKeyboard
+            updatePreferences { it.copy(timePickerUsesKeyboard = useKeyboard) }
         } catch (e: Exception) {
             logger.e(throwable = e) { "Error saving timePickerUsesKeyboard preference" }
+        }
+    }
+
+    override suspend fun saveCalendarExpanded(isExpanded: Boolean) {
+        try {
+            settings[KEY_CALENDAR_EXPANDED] = isExpanded
+            updatePreferences { it.copy(isCalendarExpanded = isExpanded) }
+        } catch (e: Exception) {
+            logger.e(throwable = e) { "Error saving isCalendarExpanded preference" }
         }
     }
     //endregion

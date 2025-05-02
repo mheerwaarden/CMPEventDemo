@@ -70,6 +70,7 @@ fun EventDemoApp(
         val actions = remember { mutableStateOf(defaultAction) }
 
         val navController = rememberNavController()
+        // The scroll state of the overview must not be applied to the other screens
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route ?: startDestination
         val scrollBehavior = if (currentRoute == EventOverviewDestination.route) {

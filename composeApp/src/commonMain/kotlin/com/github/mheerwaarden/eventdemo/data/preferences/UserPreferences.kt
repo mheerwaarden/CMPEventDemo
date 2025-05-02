@@ -15,4 +15,6 @@ data class UserPreferences(
     val datePickerUsesKeyboard: Boolean = false,
     /** Prefer keyboard input for the time picker */
     val timePickerUsesKeyboard: Boolean = false,
+    /** Expanded state of the Event calendar */
+    val isCalendarExpanded: Boolean = true,
 )

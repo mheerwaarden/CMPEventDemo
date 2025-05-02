@@ -30,7 +30,8 @@ class SettingsViewModel(
             SettingsUiState(
                 isReadOnly = preferences.isReadOnly,
                 datePickerUsesKeyboard = preferences.datePickerUsesKeyboard,
-                timePickerUsesKeyboard = preferences.timePickerUsesKeyboard
+                timePickerUsesKeyboard = preferences.timePickerUsesKeyboard,
+                isCalendarExpanded = preferences.isCalendarExpanded,
             )
         }.stateIn(
             scope = viewModelScope,
@@ -56,6 +57,13 @@ class SettingsViewModel(
         }
     }
 
+    fun setCalendarExpanded(isExpanded: Boolean) {
+        updatePreferenceJob?.cancel()
+        updatePreferenceJob = viewModelScope.launch {
+            userPreferencesRepository.saveCalendarExpanded(isExpanded)
+        }
+    }
+
 }
 
 /**
@@ -65,6 +73,7 @@ data class SettingsUiState(
     val isReadOnly: Boolean = true,
     val datePickerUsesKeyboard: Boolean = false,
     val timePickerUsesKeyboard: Boolean = false,
+    val isCalendarExpanded: Boolean = true,
     val useDynamicColor: Boolean = false,
     val useDarkTheme: Boolean = false,
 )

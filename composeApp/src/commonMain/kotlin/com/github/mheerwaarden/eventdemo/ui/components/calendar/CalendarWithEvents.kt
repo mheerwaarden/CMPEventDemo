@@ -9,6 +9,7 @@
 
 package com.github.mheerwaarden.eventdemo.ui.components.calendar
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +28,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,11 +52,13 @@ import com.github.mheerwaarden.eventdemo.data.model.Event
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.events
 import com.github.mheerwaarden.eventdemo.resources.friday
+import com.github.mheerwaarden.eventdemo.resources.hide_calendar
 import com.github.mheerwaarden.eventdemo.resources.monday
 import com.github.mheerwaarden.eventdemo.resources.month_day
 import com.github.mheerwaarden.eventdemo.resources.next_month
 import com.github.mheerwaarden.eventdemo.resources.previous_month
 import com.github.mheerwaarden.eventdemo.resources.saturday
+import com.github.mheerwaarden.eventdemo.resources.show_calendar
 import com.github.mheerwaarden.eventdemo.resources.sunday
 import com.github.mheerwaarden.eventdemo.resources.thursday
 import com.github.mheerwaarden.eventdemo.resources.time
@@ -95,6 +100,8 @@ fun CalendarWithEvents(
     startDate: LocalDate = now().date,
     actions: @Composable () -> Unit = {},
     isHorizontal: Boolean = false,
+    isExpanded: Boolean = true,
+    onExpand: (Boolean) -> Unit = {},
 ) {
     // MutableState for selected date
     var selectedDay by remember { mutableIntStateOf(startDate.dayOfMonth) }
@@ -132,6 +139,8 @@ fun CalendarWithEvents(
                     events = events,
                     setPeriod = setPeriod,
                     onSelectDay = { day -> selectedDay = day },
+                    isExpanded = isExpanded,
+                    onExpand = onExpand,
                     modifier = Modifier.weight(1f)
                 )
 
@@ -145,7 +154,6 @@ fun CalendarWithEvents(
                 )
             }
         } else {
-
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -160,7 +168,9 @@ fun CalendarWithEvents(
                     actions = actions,
                     events = events,
                     setPeriod = setPeriod,
-                    onSelectDay = { day -> selectedDay = day }
+                    onSelectDay = { day -> selectedDay = day },
+                    isExpanded = isExpanded,
+                    onExpand = onExpand,
                 )
 
                 // Display events for selected date at the bottom
@@ -186,10 +196,19 @@ private fun Calendar(
     setPeriod: (LocalDate, LocalDate) -> Unit,
     onSelectDay: (Int) -> Unit,
     modifier: Modifier = Modifier,
-) {
+    isExpanded: Boolean = true,
+    onExpand: (Boolean) -> Unit = {},
+
+    ) {
     Column(modifier = modifier) {
+//        var isExpanded by remember { mutableStateOf(true) }
+
         // Calendar controls
-        CalendarControls(currentMonth) {
+        CalendarControls(
+            currentMonth = currentMonth,
+            isExpanded = isExpanded,
+            onExpand = onExpand // { isExpanded = !isExpanded }
+        ) {
             scrollScope.launch {
                 val newMonth = currentMonth.plus(it, DateTimeUnit.MONTH)
                 if (selectedDay > newMonth.daysInMonth()) onSelectDay(newMonth.daysInMonth())
@@ -197,20 +216,28 @@ private fun Calendar(
             }
         }
 
-        actions()
+        AnimatedVisibility(isExpanded) {
+            actions()
 
-        // Display the calendar grid
-        CalendarGrid(events, setPeriod, currentMonth, selectedDay) { day -> onSelectDay(day) }
+            // Display the calendar grid
+            CalendarGrid(events, setPeriod, currentMonth, selectedDay) { day -> onSelectDay(day) }
+        }
     }
 }
 
 @Composable
-fun CalendarControls(currentMonth: LocalDate, toNextMonth: (Int) -> Unit) {
+fun CalendarControls(
+    currentMonth: LocalDate,
+    isExpanded: Boolean,
+    onExpand: (Boolean) -> Unit,
+    toNextMonth: (Int) -> Unit,
+) {
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
     ) {
+        // Button to scroll to previous month
         IconButton(onClick = { toNextMonth(-1) }) {
             Icon(
                 Icons.AutoMirrored.Filled.ArrowBack,
@@ -221,11 +248,26 @@ fun CalendarControls(currentMonth: LocalDate, toNextMonth: (Int) -> Unit) {
         Text(
             text = "${currentMonth.month.name} ${currentMonth.year}"
         )
-        IconButton(onClick = { toNextMonth(1) }) {
-            Icon(
-                Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = stringResource(Res.string.next_month)
-            )
+        // Button to scroll to next month and button to expand/collapse calendar
+        Row(
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = { toNextMonth(1) }) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = stringResource(Res.string.next_month)
+                )
+            }
+
+            val icon = if (isExpanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore
+            val description = if (isExpanded) Res.string.hide_calendar else Res.string.show_calendar
+            IconButton(onClick = { onExpand(!isExpanded) }) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = stringResource(description),
+                )
+            }
         }
     }
 }

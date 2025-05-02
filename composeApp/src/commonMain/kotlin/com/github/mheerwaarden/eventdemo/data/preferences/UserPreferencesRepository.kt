@@ -18,4 +18,5 @@ interface UserPreferencesRepository {
     suspend fun saveReadOnlyPreference(isReadOnly: Boolean)
     suspend fun saveDatePickerUsesKeyboard(useKeyboard: Boolean)
     suspend fun saveTimePickerUsesKeyboard(useKeyboard: Boolean)
+    suspend fun saveCalendarExpanded(isExpanded: Boolean)
 }
