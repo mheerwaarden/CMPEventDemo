@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -43,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -317,7 +319,12 @@ fun CalendarGrid(
             val currentDay = if (day <= 0) "" else day.toString()
 
             // Determine the events for this day
-            val eventsForDay = getEventsForDay(events, day, currentMonth.monthNumber)
+            val eventsForDay = getEventsForDay(events, day, currentMonth.monthNumber).sortedBy { it.startInstant }
+            val dotTextStyle = TextStyle(
+                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                lineHeight = MaterialTheme.typography.bodyLarge.fontSize * .8f,
+            )
+
 
             // Display dots for each event
             val coloredEventDots = buildAnnotatedString {
@@ -325,7 +332,7 @@ fun CalendarGrid(
                     withStyle(
                         style = SpanStyle(
                             color = event.htmlColor.color,
-                            fontSize = MaterialTheme.typography.headlineLarge.fontSize
+                            fontSize = dotTextStyle.fontSize
                         )
                     ) {
                         append("• ")
@@ -350,7 +357,9 @@ fun CalendarGrid(
                     text = currentDay,
                     color = textColor,
                 )
-                Text(text = coloredEventDots)
+                Text(
+                    text = coloredEventDots,
+                    style = LocalTextStyle.current.merge(dotTextStyle))
             }
         }
     }
