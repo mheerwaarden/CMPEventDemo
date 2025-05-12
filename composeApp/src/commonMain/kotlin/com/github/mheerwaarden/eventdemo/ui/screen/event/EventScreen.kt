@@ -69,7 +69,7 @@ object EventDestination : NavigationDestination {
 
 @Composable
 fun EventScreen(
-    onUpdateTopAppBar: (String, @Composable (RowScope.() -> Unit)) -> Unit,
+    onUpdateTopAppBar: (String, (() -> Unit)?, @Composable (RowScope.() -> Unit)) -> Unit,
     navigateToEventOverview: () -> Unit,
     navigateToEditEvent: (Long) -> Unit,
     navigateBack: () -> Unit,
@@ -77,7 +77,7 @@ fun EventScreen(
     eventViewModel: EventEditViewModel = viewModel(factory = AppViewModelProvider.Factory),
     settingsViewModel: SettingsViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
-    onUpdateTopAppBar(stringResource(EventDestination.titleRes)) {
+    onUpdateTopAppBar(stringResource(EventDestination.titleRes), null) {
         val foregroundColor = MaterialTheme.colorScheme.primary
         IconButton(
             onClick = navigateToEventOverview,

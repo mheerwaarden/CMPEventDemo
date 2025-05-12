@@ -52,16 +52,18 @@ import com.github.mheerwaarden.eventdemo.ui.screen.AddItemButton
 import com.github.mheerwaarden.eventdemo.ui.screen.EditItemButtons
 import com.github.mheerwaarden.eventdemo.ui.theme.EventDemoAppTheme
 import com.github.mheerwaarden.eventdemo.ui.util.DISABLED_ICON_OPACITY
-import com.github.mheerwaarden.eventdemo.util.formatDate
+import com.github.mheerwaarden.eventdemo.util.format
 import com.github.mheerwaarden.eventdemo.util.formatTime
+import com.github.mheerwaarden.eventdemo.util.toInstant
 import com.github.mheerwaarden.eventdemo.util.toLocalDateTime
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atTime
+import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import kotlin.time.Duration.Companion.minutes
 
 object EventOverviewDestination : NavigationDestination {
     override val route = "event_overview"
@@ -70,7 +72,7 @@ object EventOverviewDestination : NavigationDestination {
 
 @Composable
 fun EventOverviewScreen(
-    onUpdateTopAppBar: (String, @Composable (RowScope.() -> Unit)) -> Unit,
+    onUpdateTopAppBar: (String, (() -> Unit)?, @Composable (RowScope.() -> Unit)) -> Unit,
     navigateToEvent: (Long) -> Unit,
     navigateToAddEvent: (LocalDate) -> Unit,
     navigateToEditEvent: (Long) -> Unit,
@@ -82,7 +84,7 @@ fun EventOverviewScreen(
     val preferencesState by eventViewModel.preferencesState.collectAsState()
 
     val title = stringResource(EventOverviewDestination.titleRes)
-    onUpdateTopAppBar(title) {
+    onUpdateTopAppBar(title, null) {
         val foregroundColor = MaterialTheme.colorScheme.primary
         IconButton(
             onClick = navigateToEventCalendar,
@@ -141,8 +143,35 @@ fun EventOverviewBody(
 ) {
     val overviewConfig = OverviewConfig(MaterialTheme.colorScheme)
     val lazyListState = rememberLazyListState()
-    val groupedEvents: Map<LocalDateTime, List<Event>> = eventScheme.groupBy {
-        it.startInstant.toLocalDateTime().date.atTime(hour = 0, minute = 0)
+
+    val groupedEvents: Map<LocalDate, List<Event>> = buildMap {
+        eventScheme.forEach { event ->
+            // Iterate through each date from start to end
+            val startDate = event.startInstant.toLocalDateTime().date
+            val endDate = event.endInstant.toLocalDateTime().date
+            var currentDate = startDate
+            while (currentDate <= endDate) {
+                val currentStartInstant =
+                    if (currentDate == startDate) event.startInstant else currentDate.toInstant()
+                val currentEndInstant =
+                    if (currentDate == endDate) event.endInstant else currentDate.plus(
+                        1, DateTimeUnit.DAY
+                    ).toInstant().minus(1.minutes)
+
+                // Add the event to the list for this date, creating the list if it doesn't exist
+                val currentEvents = getOrElse(currentDate) { emptyList() }.toMutableList()
+                currentEvents.add(
+                    event.copy(
+                        startInstant = currentStartInstant,
+                        endInstant = currentEndInstant
+                    )
+                )
+                put(currentDate, currentEvents)
+
+                // Move to the next day
+                currentDate = currentDate.plus(1, DateTimeUnit.DAY)
+            }
+        }
     }
     LazyColumn(state = lazyListState, modifier = modifier) {
         groupedEvents.forEach { entry ->
@@ -164,7 +193,7 @@ fun EventOverviewBody(
 
 @Composable
 private fun EventHeader(
-    startDateTime: LocalDateTime,
+    startDate: LocalDate,
     isReadOnly: Boolean,
     overviewConfig: OverviewConfig,
     navigateToAddEvent: (LocalDate) -> Unit,
@@ -177,14 +206,14 @@ private fun EventHeader(
             .padding(Dimensions.padding_small)
     ) {
         Text(
-            text = startDateTime.formatDate(),
+            text = startDate.format(),
             color = overviewConfig.dateColor,
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.weight(1f).padding(Dimensions.padding_small)
         )
         if (!isReadOnly) {
             AddItemButton(
-                navigateToAddScreen = { navigateToAddEvent(startDateTime.date) },
+                navigateToAddScreen = { navigateToAddEvent(startDate) },
                 foregroundColor = overviewConfig.dateColor,
                 contentDescription = Res.string.add_extra_event
             )

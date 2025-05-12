@@ -40,7 +40,7 @@ object EventCalendarDestination : NavigationDestination {
 
 @Composable
 fun EventCalendarScreen(
-    onUpdateTopAppBar: (String, @Composable (RowScope.() -> Unit)) -> Unit,
+    onUpdateTopAppBar: (String, (() -> Unit)?, @Composable (RowScope.() -> Unit)) -> Unit,
     navigateToEventOverview: () -> Unit,
     navigateToEvent: (Long) -> Unit,
     modifier: Modifier = Modifier,
@@ -53,7 +53,7 @@ fun EventCalendarScreen(
         val preferences by settingsViewModel.settingsUiState.collectAsState()
 
         val title = stringResource(EventCalendarDestination.titleRes)
-        onUpdateTopAppBar(title) {
+        onUpdateTopAppBar(title, null) {
             val foregroundColor = MaterialTheme.colorScheme.primary
             IconButton(
                 onClick = navigateToEventOverview,

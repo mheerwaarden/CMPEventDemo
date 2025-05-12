@@ -25,7 +25,7 @@ class EventEntryViewModel(
     private val eventRepository: EventRepository,
 ) : ViewModel() {
     private val initialDateString: String =
-            checkNotNull(savedStateHandle[EventEntryDestination.startDateArg])
+        checkNotNull(savedStateHandle[EventEntryDestination.startDateArg])
     val initialDate = initialDateString.parseDate()
 
     var eventUiState: EventUiState by mutableStateOf(EventUiState())
@@ -49,16 +49,25 @@ class EventEntryViewModel(
         this.eventUiState = eventUiState.copy(isEntryValid = validateInput())
     }
 
-    fun updateEventDate(selectedDate: LocalDateTime) {
+    fun updateEventDate(selectedStartDate: LocalDateTime?, selectedEndDate: LocalDateTime? = null) {
+        if (selectedStartDate == null) return
+        
         eventUiState = eventUiState.copy(
             startDateTime = LocalDateTime(
-                date = selectedDate.date,
+                date = selectedStartDate.date,
                 time = eventUiState.startDateTime.time
             ),
-            endDateTime = LocalDateTime(
-                date = selectedDate.date,
-                time = eventUiState.endDateTime.time
-            ),
+            endDateTime = if (selectedEndDate == null) {
+                LocalDateTime(
+                    date = selectedStartDate.date,
+                    time = eventUiState.endDateTime.time
+                )
+            } else {
+                LocalDateTime(
+                    date = selectedEndDate.date,
+                    time = eventUiState.endDateTime.time
+                )
+            },
             isEntryValid = validateInput()
         )
     }

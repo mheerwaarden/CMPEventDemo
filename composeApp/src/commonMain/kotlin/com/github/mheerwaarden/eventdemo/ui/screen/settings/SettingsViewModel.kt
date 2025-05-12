@@ -32,6 +32,7 @@ class SettingsViewModel(
                 datePickerUsesKeyboard = preferences.datePickerUsesKeyboard,
                 timePickerUsesKeyboard = preferences.timePickerUsesKeyboard,
                 isCalendarExpanded = preferences.isCalendarExpanded,
+                useCraneCalendar = preferences.useCraneCalendar,
             )
         }.stateIn(
             scope = viewModelScope,
@@ -64,6 +65,13 @@ class SettingsViewModel(
         }
     }
 
+    fun setUseCraneCalendar(useCraneCalendar: Boolean) {
+        updatePreferenceJob?.cancel()
+        updatePreferenceJob = viewModelScope.launch {
+            userPreferencesRepository.saveUseCraneCalendar(useCraneCalendar)
+        }
+    }
+
 }
 
 /**
@@ -74,6 +82,7 @@ data class SettingsUiState(
     val datePickerUsesKeyboard: Boolean = false,
     val timePickerUsesKeyboard: Boolean = false,
     val isCalendarExpanded: Boolean = true,
+    val useCraneCalendar: Boolean = false,
     val useDynamicColor: Boolean = false,
     val useDarkTheme: Boolean = false,
 )

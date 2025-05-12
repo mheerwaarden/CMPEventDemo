@@ -41,7 +41,7 @@ import com.github.mheerwaarden.eventdemo.util.format
 fun EventDemoAppNavHost(
     navController: NavHostController,
     isHorizontalLayout: Boolean,
-    onUpdateTopAppBar: (String, @Composable (RowScope.() -> Unit)) -> Unit,
+    onUpdateTopAppBar: (String, (() -> Unit)?, @Composable (RowScope.() -> Unit)) -> Unit,
     modifier: Modifier = Modifier,
     startDestination: String = EventOverviewDestination.route,
 ) {
@@ -83,11 +83,12 @@ fun EventDemoAppNavHost(
                 modifier = Modifier.fillMaxSize()
             )
         }
-        composable(route = EventEntryDestination.routeWithArgs,
+        composable(
+            route = EventEntryDestination.routeWithArgs,
             arguments = listOf(navArgument(EventEntryDestination.startDateArg) {
                 type = NavType.StringType
             })
-        ){
+        ) {
             EventEntryScreen(
                 onUpdateTopAppBar = onUpdateTopAppBar,
                 isHorizontalLayout = isHorizontalLayout,
@@ -108,7 +109,6 @@ fun EventDemoAppNavHost(
                 modifier = Modifier.fillMaxSize()
             )
         }
-
 
         /* Menu screens */
         composable(route = SettingsDestination.route) {

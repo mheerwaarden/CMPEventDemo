@@ -50,18 +50,26 @@ class EventEditViewModel(
         this.eventUiState = eventUiState.copy(isEntryValid = validateInput())
     }
 
-    fun updateEventDate(selectedDate: LocalDateTime) {
-        val newStartDateTime = LocalDateTime(
-            date = selectedDate.date,
-            time = eventUiState.startDateTime.time
-        )
+    fun updateEventDate(selectedStartDate: LocalDateTime?, selectedEndDate: LocalDateTime? = null) {
+        if (selectedStartDate == null) return
+
         eventUiState = eventUiState.copy(
-            startDateTime = newStartDateTime,
-            endDateTime = LocalDateTime(
-                date = selectedDate.date,
-                time = eventUiState.endDateTime.time
+            startDateTime = LocalDateTime(
+                date = selectedStartDate.date,
+                time = eventUiState.startDateTime.time
             ),
-            isEntryValid = validateInput(newStartDateTime = newStartDateTime)
+            endDateTime = if (selectedEndDate == null) {
+                LocalDateTime(
+                    date = selectedStartDate.date,
+                    time = eventUiState.endDateTime.time
+                )
+            } else {
+                LocalDateTime(
+                    date = selectedEndDate.date,
+                    time = eventUiState.endDateTime.time
+                )
+            },
+            isEntryValid = validateInput()
         )
     }
 

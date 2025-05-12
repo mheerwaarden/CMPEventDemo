@@ -17,4 +17,6 @@ data class UserPreferences(
     val timePickerUsesKeyboard: Boolean = false,
     /** Expanded state of the Event calendar */
     val isCalendarExpanded: Boolean = true,
+    /** Use Crane calendar instead of Event calendar */
+    val useCraneCalendar: Boolean = false
 )

@@ -1,5 +1,6 @@
 /*
  * Copyright 2022 The Android Open Source Project
+ * Copyright (c) 2025. Marcel Van Heerwaarden
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,24 +47,23 @@ import com.github.mheerwaarden.eventdemo.ui.components.cranecalendar.model.Calen
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.stringResource
 
-
 /*
- * Based on the Compose sample Crane
+ * Based on the Compose sample Crane from the Android Open Source Project
  */
 
 @Composable
 fun CalendarScreen(
     onBackPressed: () -> Unit,
-    mainViewModel: MainViewModel
+    craneCalendarViewModel: CraneCalendarViewModel
 ) {
     val calendarState = remember {
-        mainViewModel.calendarState
+        craneCalendarViewModel.calendarState
     }
 
     CalendarContent(
         calendarState = calendarState,
         onDayClicked = { dateClicked ->
-            mainViewModel.onDaySelected(dateClicked)
+            craneCalendarViewModel.onDaySelected(dateClicked)
         },
         onBackPressed = onBackPressed
     )

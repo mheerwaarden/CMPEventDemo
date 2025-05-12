@@ -54,6 +54,7 @@ import com.github.mheerwaarden.eventdemo.resources.select_end_time
 import com.github.mheerwaarden.eventdemo.resources.select_start_time
 import com.github.mheerwaarden.eventdemo.ui.AppViewModelProvider
 import com.github.mheerwaarden.eventdemo.ui.components.BooleanInputField
+import com.github.mheerwaarden.eventdemo.ui.components.CraneCalendarField
 import com.github.mheerwaarden.eventdemo.ui.components.DateField
 import com.github.mheerwaarden.eventdemo.ui.components.DateFieldPreferences
 import com.github.mheerwaarden.eventdemo.ui.components.InputField
@@ -80,14 +81,14 @@ object EventEntryDestination : NavigationDestination {
 
 @Composable
 fun EventEntryScreen(
-    onUpdateTopAppBar: (String, @Composable (RowScope.() -> Unit)) -> Unit,
+    onUpdateTopAppBar: (String, (() -> Unit)?, @Composable (RowScope.() -> Unit)) -> Unit,
     isHorizontalLayout: Boolean,
     navigateBack: () -> Unit,
     modifier: Modifier = Modifier,
     eventViewModel: EventEntryViewModel = viewModel(factory = AppViewModelProvider.Factory),
     settingsViewModel: SettingsViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
-    onUpdateTopAppBar(stringResource(EventEntryDestination.titleRes)) {}
+    onUpdateTopAppBar(stringResource(EventEntryDestination.titleRes), null) {}
 
     val eventUiState = eventViewModel.eventUiState
     LoadingScreen(loadingViewModel = settingsViewModel) {
@@ -100,8 +101,8 @@ fun EventEntryScreen(
         EventEntryBody(
             eventUiState = eventUiState,
             isStartTimeAutoUpdated = isStartTimeAutoUpdated,
-            onDateChange = { localDateTime ->
-                eventViewModel.updateEventDate(localDateTime)
+            onDateChange = { localStartDateTime, localEndDateTime ->
+                eventViewModel.updateEventDate(localStartDateTime, localEndDateTime)
                 isStartTimeAutoUpdated = false
             },
             onStartTimeChange = eventViewModel::updateEventStartTime,
@@ -121,6 +122,7 @@ fun EventEntryScreen(
                 onToggleKeyboard = settingsViewModel::setTimePickerUsesKeyboard,
                 isHorizontalLayout = isHorizontalLayout
             ),
+            useCraneCalendar = preferences.useCraneCalendar,
             modifier = modifier.padding(Dimensions.padding_small)
         )
     }
@@ -130,13 +132,14 @@ fun EventEntryScreen(
 fun EventEntryBody(
     eventUiState: EventUiState,
     isStartTimeAutoUpdated: Boolean,
-    onDateChange: (LocalDateTime) -> Unit,
+    onDateChange: (LocalDateTime?, LocalDateTime?) -> Unit,
     onStartTimeChange: (LocalTime) -> Unit,
     onEndTimeChange: (LocalTime) -> Unit,
     onStateChange: (EventUiState) -> Unit,
     onSaveClick: () -> Unit,
     dateFieldPreferences: DateFieldPreferences,
     timeFieldPreferences: TimeFieldPreferences,
+    useCraneCalendar: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -157,6 +160,7 @@ fun EventEntryBody(
             onStateChange = onStateChange,
             dateFieldPreferences = dateFieldPreferences,
             timeFieldPreferences = timeFieldPreferences,
+            useCraneCalendar = useCraneCalendar,
             modifier = Modifier.fillMaxWidth()
         )
         Button(
@@ -173,24 +177,35 @@ fun EventEntryBody(
 @Composable
 fun EventInputForm(
     eventUiState: EventUiState,
-    onDateChange: (LocalDateTime) -> Unit,
+    onDateChange: (LocalDateTime?, LocalDateTime?) -> Unit,
     onStartTimeChange: (LocalTime) -> Unit,
     onEndTimeChange: (LocalTime) -> Unit,
     onStateChange: (EventUiState) -> Unit,
     dateFieldPreferences: DateFieldPreferences,
     timeFieldPreferences: TimeFieldPreferences,
+    useCraneCalendar: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(Dimensions.padding_small)
     ) {
-        DateField(
-            currentDate = eventUiState.startDateTime,
-            onDateChange = { onDateChange(it) },
-            modifier = Modifier.fillMaxWidth(),
-            preferences = dateFieldPreferences,
-        )
+        if (useCraneCalendar) {
+            CraneCalendarField(
+                startDate = eventUiState.startDateTime,
+                endDate = eventUiState.endDateTime,
+                onDateChange = onDateChange,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        } else {
+            // Default: Material Design date picker dialog.
+            DateField(
+                currentDate = eventUiState.startDateTime,
+                onDateChange = { onDateChange(it, null) },
+                modifier = Modifier.fillMaxWidth(),
+                preferences = dateFieldPreferences,
+            )
+        }
         TimeField(
             currentTime = eventUiState.startDateTime.time,
             onTimeChange = { localTime -> onStartTimeChange(localTime) },
@@ -289,13 +304,14 @@ fun EventEntryScreenPreview() {
         EventEntryBody(
             eventUiState = event.toEventUiState(),
             isStartTimeAutoUpdated = true,
-            onDateChange = {},
+            onDateChange = { _, _ -> },
             onStartTimeChange = {},
             onEndTimeChange = {},
             onStateChange = {},
             onSaveClick = {},
             dateFieldPreferences = DateFieldPreferences(),
             timeFieldPreferences = TimeFieldPreferences(),
+            useCraneCalendar = false,
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.LightGray) // showBackground = true

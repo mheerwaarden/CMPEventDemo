@@ -9,14 +9,16 @@
 
 package com.github.mheerwaarden.eventdemo.ui.screen
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,13 +27,11 @@ import androidx.compose.ui.unit.dp
 import com.github.mheerwaarden.eventdemo.Dimensions
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.error
-import com.github.mheerwaarden.eventdemo.resources.ic_broken_image
 import com.github.mheerwaarden.eventdemo.resources.loading
 import com.github.mheerwaarden.eventdemo.resources.retry
 import com.github.mheerwaarden.eventdemo.resources.unknown_error
 import com.github.mheerwaarden.eventdemo.ui.components.ProgressIndicator
 import org.jetbrains.compose.resources.StringResource
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -82,8 +82,8 @@ fun ErrorScreen(message: String, retryAction: () -> Unit, modifier: Modifier = M
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
     ) {
-        Image(
-            painter = painterResource(resource = Res.drawable.ic_broken_image),
+        Icon(
+            imageVector = Icons.Filled.BrokenImage,
             contentDescription = stringResource(Res.string.error),
             modifier = Modifier.size(Dimensions.error_image_size)
         )

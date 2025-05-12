@@ -72,7 +72,7 @@ fun TimeField(
                 contentDescription = stringResource(Res.string.show_time_picker),
             )
         },
-        { close ->
+        onShowDialog = { onClose ->
             ShowTimePickerDialog(
                 currentTime = currentTime,
                 is24Hour = preferences.is24Hour,
@@ -81,11 +81,12 @@ fun TimeField(
                     val localTime = LocalTime(hour, minute)
                     time = localTime.format()
                     onTimeChange(localTime)
-                    close()
+                    onClose()
                 },
                 onToggleKeyboard = preferences.onToggleKeyboard,
-                onDismiss = { close() },
+                onDismiss = { onClose() },
                 layoutType = if (preferences.isHorizontalLayout) TimePickerLayoutType.Horizontal else TimePickerLayoutType.Vertical
             )
-        })
+        }
+    )
 }

@@ -44,11 +44,11 @@ object AboutDestination : NavigationDestination {
 
 @Composable
 fun AboutScreen(
-    onUpdateTopAppBar: (String, @Composable (RowScope.() -> Unit)) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier,
+    onUpdateTopAppBar: (String, (() -> Unit)?, @Composable (RowScope.() -> Unit)) -> Unit = { _, _, _ -> },
     appInfo: AppInfo = koinInject(),
 ) {
-    onUpdateTopAppBar(stringResource(AboutDestination.titleRes)) {}
+    onUpdateTopAppBar(stringResource(AboutDestination.titleRes), null) {}
 
     Column(
         modifier = modifier

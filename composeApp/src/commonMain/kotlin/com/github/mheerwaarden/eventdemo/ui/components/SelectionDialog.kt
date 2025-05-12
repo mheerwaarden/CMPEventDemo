@@ -72,7 +72,6 @@ fun <T> SelectionField(
     isRequired: Boolean = true,
 ) {
     // String value of the item
-//    var value: Any by rememberSaveable { mutableStateOf("") }
     val value = if (currentItem == null) "" else onGetDisplayName(currentItem)
 
     DialogField(
@@ -85,18 +84,19 @@ fun <T> SelectionField(
                 Icons.Filled.Search,
                 contentDescription = stringResource(Res.string.show_selection_dialog),
             )
+        },
+        onShowDialog = { onClose ->
+            SelectionDialog(
+                label = label,
+                currentDisplayValue = value,
+                items = onGetItems(),
+                onGetKey = onGetKey,
+                onGetDisplayName = onGetDisplayName,
+                onChange = onChange,
+                onDismissRequest = { onClose() },
+            )
         }
-    ) { close ->
-        SelectionDialog(
-            label = label,
-            currentDisplayValue = value,
-            items = onGetItems(),
-            onGetKey = onGetKey,
-            onGetDisplayName = onGetDisplayName,
-            onChange = onChange,
-            onDismissRequest = { close() },
-        )
-    }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -122,7 +122,8 @@ private fun <T> SelectionDialog(
                 modifier = Modifier
                     .padding(Dimensions.padding_large)
                     .border(
-                        width = Dimensions.border_width, color = MaterialTheme.colorScheme.surfaceTint
+                        width = Dimensions.border_width,
+                        color = MaterialTheme.colorScheme.surfaceTint
                     )
             ) {
                 val evenColor = MaterialTheme.colorScheme.surfaceContainer

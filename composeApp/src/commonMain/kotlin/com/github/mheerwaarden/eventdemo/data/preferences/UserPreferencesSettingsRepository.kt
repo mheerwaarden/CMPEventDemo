@@ -19,6 +19,7 @@ class UserPreferencesSettingsRepository(
         private const val KEY_DATE_PICKER_USES_KEYBOARD = "date_picker_uses_keyboard"
         private const val KEY_TIME_PICKER_USES_KEYBOARD = "time_picker_uses_keyboard"
         private const val KEY_CALENDAR_EXPANDED = "calendar_expanded"
+        private const val KEY_USE_CRANE_CALENDAR = "use_crane_calendar"
     }
     //endregion
 
@@ -35,6 +36,8 @@ class UserPreferencesSettingsRepository(
                 isReadOnly = settings.getBoolean(KEY_IS_READ_ONLY, false),
                 datePickerUsesKeyboard = settings.getBoolean(KEY_DATE_PICKER_USES_KEYBOARD, false),
                 timePickerUsesKeyboard = settings.getBoolean(KEY_TIME_PICKER_USES_KEYBOARD, false),
+                isCalendarExpanded = settings.getBoolean(KEY_CALENDAR_EXPANDED, true),
+                useCraneCalendar = settings.getBoolean(KEY_USE_CRANE_CALENDAR, false),
             )
 
         } catch (e: Exception) {
@@ -79,6 +82,15 @@ class UserPreferencesSettingsRepository(
             updatePreferences { it.copy(isCalendarExpanded = isExpanded) }
         } catch (e: Exception) {
             logger.e(throwable = e) { "Error saving isCalendarExpanded preference" }
+        }
+    }
+
+    override suspend fun saveUseCraneCalendar(useCraneCalendar: Boolean) {
+        try {
+            settings[KEY_USE_CRANE_CALENDAR] = useCraneCalendar
+            updatePreferences { it.copy(useCraneCalendar = useCraneCalendar) }
+        } catch (e: Exception) {
+            logger.e(throwable = e) { "Error saving useCraneCalendar preference" }
         }
     }
     //endregion

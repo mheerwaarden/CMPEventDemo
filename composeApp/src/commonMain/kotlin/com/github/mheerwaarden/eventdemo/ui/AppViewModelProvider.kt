@@ -24,38 +24,36 @@ import org.koin.core.component.inject
 
 object AppViewModelProvider : KoinComponent {
     private val userPreferencesRepository: UserPreferencesRepository by inject<UserPreferencesRepository>()
+
     val Factory = viewModelFactory {
 
         /* region Event ViewModels */
+        val appContainer = EventDemoApplication.container
         initializer {
-            val appContainer = EventDemoApplication.container
             EventViewModel(
                 appContainer.eventRepository,
                 userPreferencesRepository
             )
         }
         initializer {
-            val appContainer = EventDemoApplication.container
             EventCalendarViewModel(
                 appContainer.eventRepository,
             )
         }
         initializer {
-            val appContainer = EventDemoApplication.container
             EventEntryViewModel(
                 this.createSavedStateHandle(),
                 appContainer.eventRepository,
             )
         }
         initializer {
-            val appContainer = EventDemoApplication.container
             EventEditViewModel(
                 this.createSavedStateHandle(),
                 appContainer.eventRepository,
             )
         }
         // endregion
-        
+
         /* region Settings ViewModel */
         initializer {
             SettingsViewModel(userPreferencesRepository)

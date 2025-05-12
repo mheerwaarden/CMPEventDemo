@@ -36,14 +36,14 @@ object EventEditDestination : NavigationDestination {
 
 @Composable
 fun EventEditScreen(
-    onUpdateTopAppBar: (String, @Composable (RowScope.() -> Unit)) -> Unit,
+    onUpdateTopAppBar: (String, (() -> Unit)?, @Composable (RowScope.() -> Unit)) -> Unit,
     isHorizontalLayout: Boolean,
     navigateBack: () -> Unit,
     modifier: Modifier = Modifier,
     eventViewModel: EventEditViewModel = viewModel(factory = AppViewModelProvider.Factory),
     settingsViewModel: SettingsViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
-    onUpdateTopAppBar(stringResource(EventEditDestination.titleRes)) {}
+    onUpdateTopAppBar(stringResource(EventEditDestination.titleRes), null) {}
 
     LoadingScreen(loadingViewModel = settingsViewModel) {
         val preferences by settingsViewModel.settingsUiState.collectAsState()
@@ -69,6 +69,7 @@ fun EventEditScreen(
                 onToggleKeyboard = settingsViewModel::setTimePickerUsesKeyboard,
                 isHorizontalLayout = isHorizontalLayout
             ),
+            useCraneCalendar = preferences.useCraneCalendar,
             modifier = modifier.padding(Dimensions.padding_small),
         )
     }

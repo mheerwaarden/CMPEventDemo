@@ -20,22 +20,29 @@ import androidx.compose.runtime.mutableStateOf
 import com.github.mheerwaarden.eventdemo.util.now
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.periodUntil
 
-class CalendarState(now: LocalDateTime = now()) {
-
-    val calendarUiState = mutableStateOf(CalendarUiState())
+class CalendarState(
+    startDate: LocalDate? = null,
+    endDate: LocalDate? = null,
+) {
+    val calendarUiState = mutableStateOf(
+        CalendarUiState(
+            selectedStartDate = startDate,
+            selectedEndDate = endDate,
+        )
+    )
     val listMonths: List<Month>
 
+    // Defaulting to starting at 1/01 of start year
+    private val calendarStartDate: LocalDate = LocalDate(startDate?.year ?: now().year, 1, 1)
 
-    // Defaulting to starting at 1/01 of current year
-    private val calendarStartDate: LocalDate = LocalDate(now.year, 1, 1)
+    // Defaulting to 2 years from end date.
+    private val calendarEndDate: LocalDate =
+            LocalDate((endDate?.year ?: calendarStartDate.year) + 2, 12, 31)
 
-    // Defaulting to 2 years from current date.
-    private val calendarEndDate: LocalDate = LocalDate(now.year + 2 , 12, 31)
-
-    private val periodBetweenCalendarStartEnd: DatePeriod = calendarStartDate.periodUntil(calendarEndDate)
+    private val periodBetweenCalendarStartEnd: DatePeriod =
+            calendarStartDate.periodUntil(calendarEndDate)
 
     init {
         val tempListMonths = mutableListOf<Month>()
@@ -71,6 +78,7 @@ class CalendarState(now: LocalDateTime = now()) {
             selectedStartDate == null && selectedEndDate == null -> {
                 currentState.setDates(newDate, null)
             }
+
             selectedStartDate != null && selectedEndDate != null -> {
                 val animationDirection = if (newDate < selectedStartDate) {
                     AnimationDirection.BACKWARDS
@@ -84,11 +92,11 @@ class CalendarState(now: LocalDateTime = now()) {
                 )
                 updateSelectedDay(newDate = newDate)
             }
+
             selectedStartDate == null -> {
                 if (selectedEndDate == null) {
                     currentState
-                }
-                else if (newDate < selectedEndDate) {
+                } else if (newDate < selectedEndDate) {
                     currentState.copy(animateDirection = AnimationDirection.BACKWARDS)
                         .setDates(newDate, selectedEndDate)
                 } else if (newDate > selectedEndDate) {
@@ -98,6 +106,7 @@ class CalendarState(now: LocalDateTime = now()) {
                     currentState
                 }
             }
+
             else -> {
                 if (newDate < selectedStartDate) {
                     currentState.copy(animateDirection = AnimationDirection.BACKWARDS)

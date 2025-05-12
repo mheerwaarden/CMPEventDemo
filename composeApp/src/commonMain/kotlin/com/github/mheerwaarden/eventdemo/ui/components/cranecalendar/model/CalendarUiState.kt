@@ -27,7 +27,7 @@ import kotlin.math.abs
 data class CalendarUiState(
     val selectedStartDate: LocalDate? = null,
     val selectedEndDate: LocalDate? = null,
-    val animateDirection: AnimationDirection? = null
+    val animateDirection: AnimationDirection? = null,
 ) {
 
     val numberSelectedDays: Float
@@ -130,7 +130,7 @@ data class CalendarUiState(
 
     fun isRightHighlighted(
         beginningWeek: LocalDate?,
-        month: YearMonth
+        month: YearMonth,
     ): Boolean {
         val lastDayOfTheWeek = beginningWeek?.plus(6, DateTimeUnit.DAY)
         return if (lastDayOfTheWeek != null) {
@@ -161,7 +161,8 @@ data class CalendarUiState(
             }
         } else {
             if (selectedStartDate != null &&
-                ((selectedStartDate < currentWeekStartDate) || (selectedStartDate > endWeek))) {
+                ((selectedStartDate < currentWeekStartDate) || (selectedStartDate > endWeek))
+            ) {
                 // selected start date is not in current week
                 abs(currentWeekStartDate.daysBetween(selectedStartDate))
             } else {
@@ -172,7 +173,7 @@ data class CalendarUiState(
 
     fun monthOverlapSelectionDelay(
         currentWeekStartDate: LocalDate,
-        week: Week
+        week: Week,
     ): Int {
         return if (animateDirection?.isBackwards() == true) {
             val endWeek = currentWeekStartDate.plus(6, DateTimeUnit.DAY)

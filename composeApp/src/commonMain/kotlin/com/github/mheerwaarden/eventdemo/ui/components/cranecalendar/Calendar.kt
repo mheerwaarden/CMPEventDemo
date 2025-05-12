@@ -1,5 +1,6 @@
 /*
  * Copyright 2022 The Android Open Source Project
+ * Copyright (c) 2025. Marcel Van Heerwaarden
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +36,7 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -53,6 +55,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
+/** Calendar based on the Crane sample from the Android Open Source Project */
 @Composable
 fun Calendar(
     calendarState: CalendarState,
@@ -84,25 +87,27 @@ fun Calendar(
         }
     }
 
-    LazyColumn(
-        modifier = modifier.consumeWindowInsets(contentPadding),
-        contentPadding = contentPadding
-    ) {
-        calendarState.listMonths.forEach { month ->
-            itemsCalendarMonth(
-                calendarUiState,
-                onDayClicked,
-                { selectedAnimationPercentage.value },
-                month
-            )
-        }
-
-        item(key = "bottomSpacer") {
-            Spacer(
-                modifier = Modifier.windowInsetsBottomHeight(
-                    WindowInsets.navigationBars
+    Surface (modifier = modifier.background(Color.Transparent)) {
+        LazyColumn(
+            modifier = modifier.consumeWindowInsets(contentPadding),
+            contentPadding = contentPadding
+        ) {
+            calendarState.listMonths.forEach { month ->
+                itemsCalendarMonth(
+                    calendarUiState,
+                    onDayClicked,
+                    { selectedAnimationPercentage.value },
+                    month
                 )
-            )
+            }
+
+            item(key = "bottomSpacer") {
+                Spacer(
+                    modifier = Modifier.windowInsetsBottomHeight(
+                        WindowInsets.navigationBars
+                    )
+                )
+            }
         }
     }
 }

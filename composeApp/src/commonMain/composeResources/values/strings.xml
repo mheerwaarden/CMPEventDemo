@@ -122,4 +122,9 @@
     <string name="version">Version</string>
     <string name="platform">Platform</string>
     <string name="app_id">Application ID</string>
+    <string name="use_keyboard_for_date_input">Use keyboard for date input</string>
+    <string name="use_keyboard_for_time_input">Use keyboard for time input</string>
+    <string name="use_crane_calendar">Use Crane calendar</string>
+    <string name="close">Close</string>
+    <string name="select_start_end_date">Select start and end date</string>
 </resources>

@@ -69,14 +69,14 @@ fun DateField(
                 contentDescription = stringResource(Res.string.show_date_picker),
             )
         },
-        { close ->
+        onShowDialog = { onClose ->
             // State for managing date picker
             val datePickerState = rememberDatePickerState(
                 initialSelectedDateMillis = currentDate.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds(),
                 initialDisplayMode = if (preferences.isUseKeyboard) DisplayMode.Input else DisplayMode.Picker
             )
             DatePickerDialog(
-                onDismissRequest = { closeDialog(preferences, datePickerState, close) },
+                onDismissRequest = { closeDialog(preferences, datePickerState, onClose) },
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -86,15 +86,17 @@ fun DateField(
                                 date = selectedDate.formatDate()
                                 onDateChange(selectedDate)
                             }
-                            closeDialog(preferences, datePickerState, close)
-                        }) { Text(stringResource(Res.string.ok)) }
+                            closeDialog(preferences, datePickerState, onClose)
+                        }
+                    ) {
+                        Text(stringResource(Res.string.ok))
+                    }
                 },
                 dismissButton = {
                     TextButton(
-                        onClick = { closeDialog(preferences, datePickerState, close) }) {
-                        Text(
-                            stringResource(Res.string.cancel)
-                        )
+                        onClick = { closeDialog(preferences, datePickerState, onClose) }
+                    ) {
+                        Text(stringResource(Res.string.cancel))
                     }
                 },
             ) { DatePicker(state = datePickerState) }

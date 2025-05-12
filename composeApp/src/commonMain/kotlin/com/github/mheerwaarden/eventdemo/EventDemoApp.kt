@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
@@ -43,6 +44,7 @@ import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.about
 import com.github.mheerwaarden.eventdemo.resources.app_name
 import com.github.mheerwaarden.eventdemo.resources.back_button
+import com.github.mheerwaarden.eventdemo.resources.close
 import com.github.mheerwaarden.eventdemo.resources.more
 import com.github.mheerwaarden.eventdemo.resources.settings
 import com.github.mheerwaarden.eventdemo.ui.navigation.EventDemoAppNavHost
@@ -66,8 +68,12 @@ fun EventDemoApp(
         var title by rememberSaveable { mutableStateOf(appName) }
         val updatedTitle by remember { derivedStateOf { title } }
 
+        // Additional action icons shown on the top app bar
         val defaultAction: @Composable (RowScope.() -> Unit) = {}
         val actions = remember { mutableStateOf(defaultAction) }
+        // When the screen shows a dialog, a close action must be provided.
+        val defaultCloseAction = { }
+        val closeAction = remember { mutableStateOf(defaultCloseAction) }
 
         val navController = rememberNavController()
         // The scroll state of the overview must not be applied to the other screens
@@ -86,6 +92,7 @@ fun EventDemoApp(
                     menuNavigator = MenuNavigatorImpl(navController),
                     title = updatedTitle,
                     canNavigateBack = navController.previousBackStackEntry != null,
+                    closeDialog = if (closeAction.value == defaultCloseAction) null else closeAction.value,
                     scrollBehavior = scrollBehavior,
                     navigateUp = { navController.navigateUp() },
                     actions = actions.value
@@ -96,8 +103,9 @@ fun EventDemoApp(
                 navController = navController,
                 startDestination = startDestination,
                 isHorizontalLayout = isHorizontalLayout,
-                onUpdateTopAppBar = { newTitle, newActions ->
+                onUpdateTopAppBar = { newTitle, newCloseDialog, newActions ->
                     title = newTitle
+                    closeAction.value = newCloseDialog ?: defaultCloseAction
                     actions.value = newActions
                 },
                 modifier = Modifier
@@ -118,6 +126,7 @@ fun EventDemoAppBar(
     scrollBehavior: TopAppBarScrollBehavior?,
     title: String,
     canNavigateBack: Boolean,
+    closeDialog: (() -> Unit)?,
     modifier: Modifier = Modifier,
     navigateUp: () -> Unit = {},
     actions: @Composable (RowScope.() -> Unit) = {},
@@ -131,7 +140,17 @@ fun EventDemoAppBar(
         modifier = modifier,
         scrollBehavior = scrollBehavior,
         navigationIcon = {
-            if (canNavigateBack) {
+            if (closeDialog != null) {
+                IconButton(onClick = {
+                    closeDialog()
+                    navigateUp()
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = stringResource(Res.string.close)
+                    )
+                }
+            } else if (canNavigateBack) {
                 IconButton(onClick = navigateUp) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
