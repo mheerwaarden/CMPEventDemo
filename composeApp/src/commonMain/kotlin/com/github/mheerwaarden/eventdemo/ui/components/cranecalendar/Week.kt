@@ -81,4 +81,4 @@ internal fun Week(
     }
 }
 
-internal val CELL_SIZE = 48.dp
+internal val CELL_SIZE = 40.dp

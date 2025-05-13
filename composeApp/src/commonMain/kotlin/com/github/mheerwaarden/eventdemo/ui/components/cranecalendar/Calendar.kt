@@ -37,6 +37,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -75,7 +76,6 @@ fun Calendar(
     // using .animateTo() we animate the percentage selection from 0f - 1f
     LaunchedEffect(numberSelectedDays) {
         if (calendarUiState.hasSelectedDates) {
-
             val animationSpec: TweenSpec<Float> = tween(
                 durationMillis =
                     (numberSelectedDays.coerceAtLeast(0) * DURATION_MILLIS_PER_DAY)
@@ -92,7 +92,7 @@ fun Calendar(
     val selectedStartDate = calendarState.calendarUiState.value.selectedStartDate
 
     // Calculate the initial scroll index
-    val initialFirstVisibleItemIndex = remember(selectedStartDate) {
+    val initialVisibleMonthIndex = remember(selectedStartDate) {
         val startDate = selectedStartDate ?: now().date
         // Find the index of the month that matches the selected start date's month and year
         val startIndex = calendarState.listMonths.indexOfFirst {
@@ -111,7 +111,7 @@ fun Calendar(
     }
 
     val lazyListState =
-        rememberLazyListState(initialFirstVisibleItemIndex = initialFirstVisibleItemIndex)
+        rememberLazyListState(initialFirstVisibleItemIndex = initialVisibleMonthIndex)
     Surface(modifier = modifier.background(Color.Transparent)) {
         LazyColumn(
             state = lazyListState,
@@ -146,7 +146,9 @@ private fun LazyListScope.itemsCalendarMonth(
 ) {
     item(month.yearMonth.month.name + month.yearMonth.year + "header") {
         MonthHeader(
-            modifier = Modifier.padding(start = 32.dp, end = 32.dp, top = 32.dp),
+            modifier = Modifier
+                .background(color = MaterialTheme.colorScheme.surfaceVariant)
+                .padding(start = 32.dp, end = 32.dp, top = 16.dp),
             month = month.yearMonth.month.name,
             year = month.yearMonth.year.toString()
         )

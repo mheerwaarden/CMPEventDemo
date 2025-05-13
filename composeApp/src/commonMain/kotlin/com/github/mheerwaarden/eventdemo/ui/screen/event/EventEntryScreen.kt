@@ -66,7 +66,7 @@ import com.github.mheerwaarden.eventdemo.ui.screen.LoadingScreen
 import com.github.mheerwaarden.eventdemo.ui.screen.settings.SettingsViewModel
 import com.github.mheerwaarden.eventdemo.ui.theme.EventDemoAppTheme
 import com.github.mheerwaarden.eventdemo.ui.util.HtmlColors
-import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -132,7 +132,7 @@ fun EventEntryScreen(
 fun EventEntryBody(
     eventUiState: EventUiState,
     isStartTimeAutoUpdated: Boolean,
-    onDateChange: (LocalDateTime?, LocalDateTime?) -> Unit,
+    onDateChange: (LocalDate?, LocalDate?) -> Unit,
     onStartTimeChange: (LocalTime) -> Unit,
     onEndTimeChange: (LocalTime) -> Unit,
     onStateChange: (EventUiState) -> Unit,
@@ -177,7 +177,7 @@ fun EventEntryBody(
 @Composable
 fun EventInputForm(
     eventUiState: EventUiState,
-    onDateChange: (LocalDateTime?, LocalDateTime?) -> Unit,
+    onDateChange: (LocalDate?, LocalDate?) -> Unit,
     onStartTimeChange: (LocalTime) -> Unit,
     onEndTimeChange: (LocalTime) -> Unit,
     onStateChange: (EventUiState) -> Unit,
@@ -192,15 +192,15 @@ fun EventInputForm(
     ) {
         if (useCraneCalendar) {
             CraneCalendarField(
-                startDate = eventUiState.startDateTime,
-                endDate = eventUiState.endDateTime,
+                startDate = eventUiState.startDateTime.date,
+                endDate = eventUiState.endDateTime.date,
                 onDateChange = onDateChange,
                 modifier = Modifier.fillMaxWidth(),
             )
         } else {
             // Default: Material Design date picker dialog.
             DateField(
-                currentDate = eventUiState.startDateTime,
+                currentDate = eventUiState.startDateTime.date,
                 onDateChange = { onDateChange(it, null) },
                 modifier = Modifier.fillMaxWidth(),
                 preferences = dateFieldPreferences,

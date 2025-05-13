@@ -19,6 +19,7 @@ import com.github.mheerwaarden.eventdemo.data.database.EventRepository
 import com.github.mheerwaarden.eventdemo.util.now
 import com.github.mheerwaarden.eventdemo.util.toLocalDateTime
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 
@@ -31,45 +32,42 @@ class EventEditViewModel(
     var eventUiState by mutableStateOf(EventUiState())
         private set
 
-    // Just get the reminder. Do not create a flow, no dynamic updates during edit. When Room creates
+    // Just get the event. Do not create a flow, no dynamic updates during edit. When Room creates
     // a flow, it automatically does the query in the background. Here we need to launch a
     // coroutine ourselves.
     init {
         viewModelScope.launch {
             val event = eventRepository.getEvent(eventId)
             eventUiState =
-                    event?.toEventUiState(validateInput(
+                event?.toEventUiState(
+                    validateInput(
                         newStartDateTime = event.startInstant.toLocalDateTime(),
                         newDescription = event.description
-                    )) ?: throw NoSuchElementException("Event $eventId not found")
+                    )
+                ) ?: throw NoSuchElementException("Event $eventId not found")
         }
     }
 
-    /** Independent fields can be updated in the [eventUiState] and a call to this function. This method also triggers validation */
-    fun updateState(eventUiState: EventUiState) {
-        this.eventUiState = eventUiState.copy(isEntryValid = validateInput())
+    /** Independent fields can be updated in the [newEventUiState] and a call to this function. This method also triggers validation */
+    fun updateState(newEventUiState: EventUiState) {
+        eventUiState =
+            newEventUiState.copy(isEntryValid = validateInput(newDescription = newEventUiState.description))
     }
 
-    fun updateEventDate(selectedStartDate: LocalDateTime?, selectedEndDate: LocalDateTime? = null) {
+    fun updateEventDate(selectedStartDate: LocalDate?, selectedEndDate: LocalDate? = null) {
         if (selectedStartDate == null) return
 
+        val newStartDate = LocalDateTime(
+            date = selectedStartDate,
+            time = eventUiState.startDateTime.time
+        )
         eventUiState = eventUiState.copy(
-            startDateTime = LocalDateTime(
-                date = selectedStartDate.date,
-                time = eventUiState.startDateTime.time
+            startDateTime = newStartDate,
+            endDateTime = LocalDateTime(
+                date = selectedEndDate ?: selectedStartDate,
+                time = eventUiState.endDateTime.time
             ),
-            endDateTime = if (selectedEndDate == null) {
-                LocalDateTime(
-                    date = selectedStartDate.date,
-                    time = eventUiState.endDateTime.time
-                )
-            } else {
-                LocalDateTime(
-                    date = selectedEndDate.date,
-                    time = eventUiState.endDateTime.time
-                )
-            },
-            isEntryValid = validateInput()
+            isEntryValid = validateInput(newStartDate)
         )
     }
 

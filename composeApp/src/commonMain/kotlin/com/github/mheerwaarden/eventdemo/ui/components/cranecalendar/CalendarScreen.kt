@@ -103,7 +103,7 @@ private fun CalendarTopAppBar(calendarState: CalendarState, onBackPressed: () ->
             modifier = Modifier
                 .windowInsetsTopHeight(WindowInsets.statusBars)
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .background(MaterialTheme.colorScheme.surfaceTint)
         )
         TopAppBar(
             title = {
@@ -124,7 +124,7 @@ private fun CalendarTopAppBar(calendarState: CalendarState, onBackPressed: () ->
                     )
                 }
             },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceTint),
         )
     }
 }

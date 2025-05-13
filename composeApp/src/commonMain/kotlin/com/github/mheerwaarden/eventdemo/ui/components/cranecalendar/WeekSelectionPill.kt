@@ -48,11 +48,12 @@ fun WeekSelectionPill(
     state: CalendarUiState,
     selectedPercentageTotalProvider: () -> Float,
     modifier: Modifier = Modifier,
-    widthPerDay: Dp = 48.dp,
+    widthPerDay: Dp = CELL_SIZE,
     pillColor: Color = MaterialTheme.colorScheme.secondary
 ) {
+    val cornerSize = (CELL_SIZE.value / 2).toInt()
     val widthPerDayPx = with(LocalDensity.current) { widthPerDay.toPx() }
-    val cornerRadiusPx = with(LocalDensity.current) { 24.dp.toPx() }
+    val cornerRadiusPx = with(LocalDensity.current) { cornerSize.dp.toPx() }
 
     Canvas(
         modifier = modifier.fillMaxWidth(),

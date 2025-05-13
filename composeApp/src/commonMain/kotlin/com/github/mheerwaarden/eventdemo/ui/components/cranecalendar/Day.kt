@@ -49,12 +49,13 @@ import kotlinx.datetime.LocalDate
 internal fun DayOfWeekHeading(day: String) {
     DayContainer {
         Text(
+            text = day,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
                 .fillMaxSize()
                 .wrapContentHeight(Alignment.CenterVertically),
             textAlign = TextAlign.Center,
-            text = day,
-            style = MaterialTheme.typography.titleMedium.copy(Color.White.copy(alpha = 0.6f))
+            style = MaterialTheme.typography.titleMedium
         )
     }
 }
@@ -119,13 +120,14 @@ internal fun Day(
     ) {
 
         Text(
+            text = day.dayOfMonth.toString(),
+            color = if (selected) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
                 .fillMaxSize()
                 .wrapContentSize(Alignment.Center)
                 // Parent will handle semantics
                 .clearAndSetSemantics {},
-            text = day.dayOfMonth.toString(),
-            style = MaterialTheme.typography.bodyMedium.copy(color = Color.White)
+            style = MaterialTheme.typography.bodyMedium
         )
     }
 }

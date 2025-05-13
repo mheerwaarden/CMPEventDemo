@@ -60,7 +60,6 @@ fun endOfMonth(): LocalDate {
     return startOfMonth().plus(1, DateTimeUnit.MONTH)
 }
 
-
 // endregion
 
 // region Conversion

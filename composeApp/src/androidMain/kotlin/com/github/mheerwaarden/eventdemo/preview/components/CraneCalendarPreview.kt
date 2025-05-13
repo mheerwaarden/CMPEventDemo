@@ -1,4 +1,4 @@
-package com.github.mheerwaarden.eventdemo.preview.screen
+package com.github.mheerwaarden.eventdemo.preview.components
 
 
 import androidx.compose.runtime.Composable

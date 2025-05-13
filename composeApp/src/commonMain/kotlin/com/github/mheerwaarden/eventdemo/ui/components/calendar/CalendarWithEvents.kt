@@ -200,16 +200,14 @@ private fun Calendar(
     modifier: Modifier = Modifier,
     isExpanded: Boolean = true,
     onExpand: (Boolean) -> Unit = {},
-
-    ) {
+) {
     Column(modifier = modifier) {
-//        var isExpanded by remember { mutableStateOf(true) }
 
         // Calendar controls
         CalendarControls(
             currentMonth = currentMonth,
             isExpanded = isExpanded,
-            onExpand = onExpand // { isExpanded = !isExpanded }
+            onExpand = onExpand
         ) {
             scrollScope.launch {
                 val newMonth = currentMonth.plus(it, DateTimeUnit.MONTH)
@@ -286,13 +284,13 @@ fun CalendarGrid(
     val firstDayOfMonth = LocalDate(currentMonth.year, currentMonth.month, 1)
     val lastDayOfMonth = LocalDate(currentMonth.year, currentMonth.month, daysInMonth)
     val startingDayOfWeek =
-            firstDayOfMonth.dayOfWeek.isoDayNumber - 1 // Adjusting for zero-based indexing
+        firstDayOfMonth.dayOfWeek.isoDayNumber - 1 // Adjusting for zero-based indexing
     val days = (1..daysInMonth).toList()
     val paddingDaysBefore = List(startingDayOfWeek) { DAY_OUTSIDE_MONTH }
     val paddingDaysAfter =
-            List((DAYS_IN_WEEK - (startingDayOfWeek + daysInMonth) % DAYS_IN_WEEK) % DAYS_IN_WEEK) {
-                DAY_OUTSIDE_MONTH
-            }
+        List((DAYS_IN_WEEK - (startingDayOfWeek + daysInMonth) % DAYS_IN_WEEK) % DAYS_IN_WEEK) {
+            DAY_OUTSIDE_MONTH
+        }
     val allDays = paddingDaysBefore + days + paddingDaysAfter
     setPeriod(firstDayOfMonth, lastDayOfMonth.plus(1, DateTimeUnit.DAY))
 
@@ -319,7 +317,8 @@ fun CalendarGrid(
             val currentDay = if (day <= 0) "" else day.toString()
 
             // Determine the events for this day
-            val eventsForDay = getEventsForDay(events, day, currentMonth.monthNumber).sortedBy { it.startInstant }
+            val eventsForDay =
+                getEventsForDay(events, day, currentMonth.monthNumber).sortedBy { it.startInstant }
             val dotTextStyle = TextStyle(
                 fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                 lineHeight = MaterialTheme.typography.bodyLarge.fontSize * .8f,
@@ -359,17 +358,18 @@ fun CalendarGrid(
                 )
                 Text(
                     text = coloredEventDots,
-                    style = LocalTextStyle.current.merge(dotTextStyle))
+                    style = LocalTextStyle.current.merge(dotTextStyle)
+                )
             }
         }
     }
 }
 
 private fun getEventsForDay(events: List<Event>, day: Int, currentMonth: Int) =
-        events.filter { event ->
-            val startDate = event.startInstant.toLocalDateTime()
-            startDate.dayOfMonth == day && startDate.monthNumber == currentMonth
-        }
+    events.filter { event ->
+        val startDate = event.startInstant.toLocalDateTime()
+        startDate.dayOfMonth == day && startDate.monthNumber == currentMonth
+    }
 
 @Composable
 fun EventList(

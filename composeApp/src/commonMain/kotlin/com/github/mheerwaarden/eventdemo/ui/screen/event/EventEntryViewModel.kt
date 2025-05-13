@@ -17,6 +17,7 @@ import androidx.lifecycle.ViewModel
 import com.github.mheerwaarden.eventdemo.data.database.EventRepository
 import com.github.mheerwaarden.eventdemo.util.now
 import com.github.mheerwaarden.eventdemo.util.parseDate
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 
@@ -44,30 +45,23 @@ class EventEntryViewModel(
         )
     }
 
-    /** Independent fields can be updated in the [eventUiState] and a call to this function. This method also triggers validation */
-    fun updateState(eventUiState: EventUiState) {
-        this.eventUiState = eventUiState.copy(isEntryValid = validateInput())
+    /** Independent fields can be updated in the [newEventUiState] and a call to this function. This method also triggers validation */
+    fun updateState(newEventUiState: EventUiState) {
+        eventUiState = newEventUiState.copy(isEntryValid = validateInput(newDescription = newEventUiState.description))
     }
 
-    fun updateEventDate(selectedStartDate: LocalDateTime?, selectedEndDate: LocalDateTime? = null) {
+    fun updateEventDate(selectedStartDate: LocalDate?, selectedEndDate: LocalDate? = null) {
         if (selectedStartDate == null) return
-        
+
         eventUiState = eventUiState.copy(
             startDateTime = LocalDateTime(
-                date = selectedStartDate.date,
+                date = selectedStartDate,
                 time = eventUiState.startDateTime.time
             ),
-            endDateTime = if (selectedEndDate == null) {
-                LocalDateTime(
-                    date = selectedStartDate.date,
-                    time = eventUiState.endDateTime.time
-                )
-            } else {
-                LocalDateTime(
-                    date = selectedEndDate.date,
-                    time = eventUiState.endDateTime.time
-                )
-            },
+            endDateTime = LocalDateTime(
+                date = selectedEndDate ?: selectedStartDate,
+                time = eventUiState.endDateTime.time
+            ),
             isEntryValid = validateInput()
         )
     }
@@ -96,8 +90,8 @@ class EventEntryViewModel(
         eventRepository.addEvent(eventUiState.toEvent())
     }
 
-    private fun validateInput(): Boolean {
-        return eventUiState.description.isNotBlank()
+    private fun validateInput(newDescription: String = eventUiState.description): Boolean {
+        return newDescription.isNotBlank()
     }
 
 }

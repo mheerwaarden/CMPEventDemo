@@ -32,11 +32,10 @@ import com.github.mheerwaarden.eventdemo.resources.cancel
 import com.github.mheerwaarden.eventdemo.resources.ok
 import com.github.mheerwaarden.eventdemo.resources.select_date
 import com.github.mheerwaarden.eventdemo.resources.show_date_picker
-import com.github.mheerwaarden.eventdemo.util.formatDate
+import com.github.mheerwaarden.eventdemo.util.format
 import com.github.mheerwaarden.eventdemo.util.ofEpochMilli
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toInstant
+import com.github.mheerwaarden.eventdemo.util.toInstant
+import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -48,15 +47,15 @@ data class DateFieldPreferences(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DateField(
-    currentDate: LocalDateTime,
-    onDateChange: (LocalDateTime) -> Unit,
+    currentDate: LocalDate,
+    onDateChange: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
     preferences: DateFieldPreferences = DateFieldPreferences(),
     labelId: StringResource = Res.string.select_date
 ) {
     // String value of the date
     var date by rememberSaveable { mutableStateOf("") }
-    date = currentDate.formatDate()
+    date = currentDate.format()
 
     DialogField(
         label = stringResource(labelId),
@@ -72,7 +71,7 @@ fun DateField(
         onShowDialog = { onClose ->
             // State for managing date picker
             val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = currentDate.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds(),
+                initialSelectedDateMillis = currentDate.toInstant().toEpochMilliseconds(),
                 initialDisplayMode = if (preferences.isUseKeyboard) DisplayMode.Input else DisplayMode.Picker
             )
             DatePickerDialog(
@@ -82,8 +81,8 @@ fun DateField(
                         onClick = {
                             val selectedUtcMillis = datePickerState.selectedDateMillis
                             if (selectedUtcMillis != null) {
-                                val selectedDate = ofEpochMilli(selectedUtcMillis)
-                                date = selectedDate.formatDate()
+                                val selectedDate = ofEpochMilli(selectedUtcMillis).date
+                                date = selectedDate.format()
                                 onDateChange(selectedDate)
                             }
                             closeDialog(preferences, datePickerState, onClose)

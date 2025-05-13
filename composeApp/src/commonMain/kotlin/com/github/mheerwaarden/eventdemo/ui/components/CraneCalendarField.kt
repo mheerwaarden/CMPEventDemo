@@ -14,22 +14,22 @@ import androidx.compose.ui.Modifier
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.select_date
 import com.github.mheerwaarden.eventdemo.resources.show_date_picker
-import com.github.mheerwaarden.eventdemo.util.formatDate
-import kotlinx.datetime.LocalDateTime
+import com.github.mheerwaarden.eventdemo.util.format
+import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun CraneCalendarField(
-    startDate: LocalDateTime? = null,
-    endDate: LocalDateTime? = null,
-    onDateChange: (LocalDateTime?, LocalDateTime?) -> Unit,
+    startDate: LocalDate? = null,
+    endDate: LocalDate? = null,
+    onDateChange: (LocalDate?, LocalDate?) -> Unit,
     modifier: Modifier = Modifier,
     labelId: StringResource = Res.string.select_date,
 ) {
     // String value showing start date - end date
     var period by rememberSaveable { mutableStateOf("") }
-    period = "${startDate?.formatDate() ?: ""} - ${endDate?.formatDate() ?: ""}"
+    period = "${startDate?.format() ?: ""} - ${endDate?.format() ?: ""}"
 
     DialogField(
         label = stringResource(labelId),
@@ -47,7 +47,7 @@ fun CraneCalendarField(
                 startDate = startDate,
                 endDate = endDate,
                 onDateChange = { startDate, endDate ->
-                    period = "${startDate?.formatDate() ?: ""} - ${endDate?.formatDate() ?: ""}"
+                    period = "${startDate?.format() ?: ""} - ${endDate?.format() ?: ""}"
                     onDateChange(startDate, endDate)
                     onClose()
                 },
