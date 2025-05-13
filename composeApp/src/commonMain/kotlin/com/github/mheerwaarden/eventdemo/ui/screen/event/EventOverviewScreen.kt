@@ -54,6 +54,7 @@ import com.github.mheerwaarden.eventdemo.ui.theme.EventDemoAppTheme
 import com.github.mheerwaarden.eventdemo.ui.util.DISABLED_ICON_OPACITY
 import com.github.mheerwaarden.eventdemo.util.format
 import com.github.mheerwaarden.eventdemo.util.formatTime
+import com.github.mheerwaarden.eventdemo.util.now
 import com.github.mheerwaarden.eventdemo.util.toInstant
 import com.github.mheerwaarden.eventdemo.util.toLocalDateTime
 import kotlinx.datetime.DateTimeUnit
@@ -63,6 +64,7 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import kotlin.math.max
 import kotlin.time.Duration.Companion.minutes
 
 object EventOverviewDestination : NavigationDestination {
@@ -102,10 +104,9 @@ fun EventOverviewScreen(
         }
     }
 
-    val isReadOnly = preferencesState.isReadOnly
     EventOverviewBody(
-        eventScheme = eventUiState,
-        isReadOnly = isReadOnly,
+        eventList = eventUiState,
+        isReadOnly = preferencesState.isReadOnly,
         deleteEvent = eventViewModel::deleteEvent,
         navigateToEvent = navigateToEvent,
         navigateToAddEvent = navigateToAddEvent,
@@ -132,8 +133,8 @@ private class OverviewConfig(colorScheme: ColorScheme) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun EventOverviewBody(
-    eventScheme: List<Event>,
+private fun EventOverviewBody(
+    eventList: List<Event>,
     isReadOnly: Boolean,
     deleteEvent: (Long) -> Unit,
     navigateToEvent: (Long) -> Unit,
@@ -141,14 +142,27 @@ fun EventOverviewBody(
     navigateToEditEvent: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val overviewConfig = OverviewConfig(MaterialTheme.colorScheme)
-    val lazyListState = rememberLazyListState()
+    // Return early if the event list is empty
+    if (eventList.isEmpty()) return
 
+    val overviewConfig = OverviewConfig(MaterialTheme.colorScheme)
+
+    // While grouping events by date, determine start index of overview
+    var currentIndex = 0
+    var startIndex = -1
+    val today = now().date
     val groupedEvents: Map<LocalDate, List<Event>> = buildMap {
-        eventScheme.forEach { event ->
-            // Iterate through each date from start to end
+        eventList.forEach { event ->
             val startDate = event.startInstant.toLocalDateTime().date
             val endDate = event.endInstant.toLocalDateTime().date
+
+            if (startDate == today && startIndex == -1) {
+                // Start the overview at the number of events plus the number of headers
+                startIndex = currentIndex + size
+            }
+            currentIndex++
+
+            // Iterate through each date from start to end, adding the event for each date
             var currentDate = startDate
             while (currentDate <= endDate) {
                 val currentStartInstant =
@@ -173,6 +187,8 @@ fun EventOverviewBody(
             }
         }
     }
+
+    val lazyListState = rememberLazyListState(initialFirstVisibleItemIndex = max(startIndex, 0))
     LazyColumn(state = lazyListState, modifier = modifier) {
         groupedEvents.forEach { entry ->
             stickyHeader { EventHeader(entry.key, isReadOnly, overviewConfig, navigateToAddEvent) }
@@ -285,7 +301,7 @@ fun EventOverviewScreenPreview() {
     val events = DummyEventRepository().getDefaultEvents(6)
     EventDemoAppTheme {
         EventOverviewBody(
-            eventScheme = events,
+            eventList = events,
             isReadOnly = false,
             navigateToEvent = {},
             deleteEvent = {},
@@ -302,7 +318,7 @@ fun EventOverviewScreenReadOnlyPreview() {
     val events = DummyEventRepository().getDefaultEvents(6)
     EventDemoAppTheme {
         EventOverviewBody(
-            eventScheme = events,
+            eventList = events,
             isReadOnly = true,
             navigateToEvent = {},
             deleteEvent = {},

@@ -36,6 +36,7 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -48,6 +49,7 @@ import com.github.mheerwaarden.eventdemo.ui.components.cranecalendar.model.Calen
 import com.github.mheerwaarden.eventdemo.ui.components.cranecalendar.model.CalendarUiState
 import com.github.mheerwaarden.eventdemo.ui.components.cranecalendar.model.Month
 import com.github.mheerwaarden.eventdemo.ui.theme.EventDemoAppTheme
+import com.github.mheerwaarden.eventdemo.util.now
 import com.github.mheerwaarden.eventdemo.util.previousOrSame
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
@@ -76,8 +78,8 @@ fun Calendar(
 
             val animationSpec: TweenSpec<Float> = tween(
                 durationMillis =
-                (numberSelectedDays.coerceAtLeast(0) * DURATION_MILLIS_PER_DAY)
-                    .coerceAtMost(2000),
+                    (numberSelectedDays.coerceAtLeast(0) * DURATION_MILLIS_PER_DAY)
+                        .coerceAtMost(2000),
                 easing = EaseOutQuart
             )
             selectedAnimationPercentage.animateTo(
@@ -87,17 +89,41 @@ fun Calendar(
         }
     }
 
-    Surface (modifier = modifier.background(Color.Transparent)) {
+    val selectedStartDate = calendarState.calendarUiState.value.selectedStartDate
+
+    // Calculate the initial scroll index
+    val initialFirstVisibleItemIndex = remember(selectedStartDate) {
+        val startDate = selectedStartDate ?: now().date
+        // Find the index of the month that matches the selected start date's month and year
+        val startIndex = calendarState.listMonths.indexOfFirst {
+            it.yearMonth.year == startDate.year && it.yearMonth.monthNumber == startDate.monthNumber
+        }
+        // Each call to itemsCalendarMonth adds items: header, daysOfWeek, weeks, spacer.
+        // The items are added sequentially for each month in listMonths.
+        // The index of the header for the i-th month (0-indexed in listMonths) is the sum of the item counts of the previous i - 1 months.
+        // Number of items for month j = 1 (header) + 1 (daysOfWeek) + listMonths[j].weeks.size = 2 + listMonths[j].weeks.size
+        var headerIndex = 0
+        for (i in 0 until startIndex) {
+            headerIndex += 2 + calendarState.listMonths[i].weeks.size
+        }
+        // This is the index of the header for the start month
+        headerIndex
+    }
+
+    val lazyListState =
+        rememberLazyListState(initialFirstVisibleItemIndex = initialFirstVisibleItemIndex)
+    Surface(modifier = modifier.background(Color.Transparent)) {
         LazyColumn(
+            state = lazyListState,
             modifier = modifier.consumeWindowInsets(contentPadding),
             contentPadding = contentPadding
         ) {
             calendarState.listMonths.forEach { month ->
                 itemsCalendarMonth(
-                    calendarUiState,
-                    onDayClicked,
-                    { selectedAnimationPercentage.value },
-                    month
+                    calendarUiState = calendarUiState,
+                    onDayClicked = onDayClicked,
+                    selectedPercentageProvider = { selectedAnimationPercentage.value },
+                    month = month
                 )
             }
 
@@ -139,10 +165,10 @@ private fun LazyListScope.itemsCalendarMonth(
     // the key for the fourth week of December 2020 is "2020/12/4"
     itemsIndexed(month.weeks, key = { index, _ ->
         month.yearMonth.year.toString() +
-            "/" +
-            month.yearMonth.monthNumber +
-            "/" +
-            (index + 1).toString()
+                "/" +
+                month.yearMonth.monthNumber +
+                "/" +
+                (index + 1).toString()
     }) { _, week ->
         val beginningWeek = week.yearMonth.atDay(1).plus(week.number, DateTimeUnit.WEEK)
         val currentDay = beginningWeek.previousOrSame(DayOfWeek.MONDAY)
