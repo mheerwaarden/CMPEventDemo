@@ -29,15 +29,16 @@ class EventCalendarViewModel(
     private val eventRepository: EventRepository,
 ) : ViewModel() {
 
-    private var calendarUiState by mutableStateOf(CalendarState())
+    var calendarUiState by mutableStateOf(CalendarState())
+        private set
 
     val eventUiState: StateFlow<List<Event>> =
-            eventRepository.getEventsForPeriod()
-                .stateIn(
-                    scope = viewModelScope,
-                    started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
-                    initialValue = listOf()
-                )
+        eventRepository.getEventsForPeriod()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
+                initialValue = listOf()
+            )
 
     /** Set period for selected events from start up to and including end date */
     fun setPeriod(start: LocalDate, end: LocalDate) {
@@ -47,6 +48,17 @@ class EventCalendarViewModel(
                 start = start.toInstant(),
                 end = end.toInstant(),
                 filter = calendarUiState.eventFilter
+            )
+        }
+    }
+
+    fun setFilter(filter: EventFilter) {
+        if (calendarUiState.eventFilter != filter) {
+            calendarUiState = calendarUiState.copy(eventFilter = filter)
+            eventRepository.updateEventsForPeriod(
+                start = calendarUiState.start.toInstant(),
+                end = calendarUiState.end.toInstant(),
+                filter = filter
             )
         }
     }

@@ -1,20 +1,29 @@
 package com.github.mheerwaarden.eventdemo.ui.screen.event
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.outlined.Done
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.github.mheerwaarden.eventdemo.Dimensions
 import com.github.mheerwaarden.eventdemo.data.database.DummyEventRepository
 import com.github.mheerwaarden.eventdemo.data.model.Event
 import com.github.mheerwaarden.eventdemo.resources.Res
@@ -74,6 +83,8 @@ fun EventCalendarScreen(
         EventCalendarBody(
             events = eventUiState,
             setPeriod = eventViewModel::setPeriod,
+            currentFilter = eventViewModel.calendarUiState.eventFilter,
+            setFilter = eventViewModel::setFilter,
             isHorizontal = isHorizontal,
             navigateToEvent = navigateToEvent,
             isExpanded = preferences.isCalendarExpanded,
@@ -90,6 +101,8 @@ fun EventCalendarBody(
     navigateToEvent: (Long) -> Unit,
     modifier: Modifier = Modifier,
     startDate: LocalDate = now().date,
+    currentFilter: EventFilter = EventFilter.GENERAL,
+    setFilter: (EventFilter) -> Unit = {},
     isHorizontal: Boolean = false,
     isExpanded: Boolean = true,
     onExpand: (Boolean) -> Unit = {}
@@ -98,12 +111,39 @@ fun EventCalendarBody(
         events = events,
         startDate = startDate,
         setPeriod = setPeriod,
+        actions = { FilterButtons(currentFilter = currentFilter, setFilter = setFilter) },
         isHorizontal = isHorizontal,
         navigateToEvent = navigateToEvent,
         isExpanded = isExpanded,
         onExpand = onExpand,
         modifier = modifier,
     )
+}
+
+@Composable
+fun FilterButtons(currentFilter: EventFilter, setFilter: (EventFilter) -> Unit) {
+    // Preserve vertical screen estate
+    Row(horizontalArrangement = Arrangement.spacedBy(Dimensions.padding_small)) {
+        EventFilter.entries.forEach { entry ->
+            FilterChip(
+                selected = currentFilter == entry,
+                onClick = { setFilter(entry) },
+                label = { Text(stringResource(entry.text)) },
+                leadingIcon = if (currentFilter == entry) {
+                    {
+                        Icon(
+                            imageVector = Icons.Outlined.Done,
+                            contentDescription = "Selected filter",
+                            modifier = Modifier.size(FilterChipDefaults.IconSize),
+                        )
+                    }
+                } else {
+                    null
+                },
+            )
+        }
+    }
+    HorizontalDivider()
 }
 
 @Preview

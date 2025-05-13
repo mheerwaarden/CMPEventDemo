@@ -217,10 +217,21 @@ private fun Calendar(
         }
 
         AnimatedVisibility(isExpanded) {
-            actions()
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top
+            ) {
+                // Actions, like filter buttons
+                actions()
 
-            // Display the calendar grid
-            CalendarGrid(events, setPeriod, currentMonth, selectedDay) { day -> onSelectDay(day) }
+                // Display the calendar grid
+                CalendarGrid(
+                    events,
+                    setPeriod,
+                    currentMonth,
+                    selectedDay
+                ) { day -> onSelectDay(day) }
+            }
         }
     }
 }
