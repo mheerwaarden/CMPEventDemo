@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -22,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.github.mheerwaarden.eventdemo.Dimensions
 import com.github.mheerwaarden.eventdemo.i18n.AppLanguage
 import com.github.mheerwaarden.eventdemo.i18n.LocaleViewModel
 import com.github.mheerwaarden.eventdemo.resources.Res
@@ -64,7 +66,7 @@ fun SettingsScreen(
             setTimePickerUsesKeyboard = settingsViewModel::setTimePickerUsesKeyboard,
             setUseCraneCalendar = settingsViewModel::setUseCraneCalendar,
             setLanguage = localeViewModel::setPreferredAppLocale,
-            modifier = modifier,
+            modifier = modifier.padding(Dimensions.padding_small)
         )
     }
 }
