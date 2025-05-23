@@ -22,18 +22,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.github.mheerwaarden.eventdemo.i18n.AppLanguage
+import com.github.mheerwaarden.eventdemo.i18n.LocaleViewModel
 import com.github.mheerwaarden.eventdemo.resources.Res
+import com.github.mheerwaarden.eventdemo.resources.language
 import com.github.mheerwaarden.eventdemo.resources.settings
+import com.github.mheerwaarden.eventdemo.resources.use_crane_calendar
 import com.github.mheerwaarden.eventdemo.resources.use_keyboard_for_date_input
 import com.github.mheerwaarden.eventdemo.resources.use_keyboard_for_time_input
-import com.github.mheerwaarden.eventdemo.resources.use_crane_calendar
 import com.github.mheerwaarden.eventdemo.ui.AppViewModelProvider
 import com.github.mheerwaarden.eventdemo.ui.components.BooleanInputField
+import com.github.mheerwaarden.eventdemo.ui.components.SelectionField
 import com.github.mheerwaarden.eventdemo.ui.navigation.NavigationDestination
 import com.github.mheerwaarden.eventdemo.ui.screen.LoadingScreen
 import com.github.mheerwaarden.eventdemo.ui.theme.EventDemoAppTheme
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.koin.compose.koinInject
 
 object SettingsDestination : NavigationDestination {
     override val route = "settings"
@@ -45,18 +50,21 @@ fun SettingsScreen(
     onUpdateTopAppBar: (String, (() -> Unit)?, @Composable (RowScope.() -> Unit)) -> Unit,
     modifier: Modifier = Modifier,
     settingsViewModel: SettingsViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    localeViewModel: LocaleViewModel = koinInject()
 ) {
     onUpdateTopAppBar(stringResource(SettingsDestination.titleRes), null) {}
 
-    LoadingScreen(loadingViewModel = settingsViewModel) {
+    LoadingScreen(loadingViewModels = listOf(settingsViewModel, localeViewModel)) {
         val settingsUiState by settingsViewModel.settingsUiState.collectAsState()
 
         SettingsBody(
             settingsUiState = settingsUiState,
+            language = AppLanguage.entries.firstOrNull { settingsUiState.localeTag.startsWith(it.code) } ?: AppLanguage.System,
             setDatePickerUsesKeyboard = settingsViewModel::setDatePickerUsesKeyboard,
             setTimePickerUsesKeyboard = settingsViewModel::setTimePickerUsesKeyboard,
             setUseCraneCalendar = settingsViewModel::setUseCraneCalendar,
-            modifier = modifier
+            setLanguage = localeViewModel::setPreferredAppLocale,
+            modifier = modifier,
         )
     }
 }
@@ -64,10 +72,12 @@ fun SettingsScreen(
 @Composable
 fun SettingsBody(
     settingsUiState: SettingsUiState,
+    language: AppLanguage,
     setDatePickerUsesKeyboard: (Boolean) -> Unit,
     setTimePickerUsesKeyboard: (Boolean) -> Unit,
     setUseCraneCalendar: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
+    setLanguage: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
@@ -95,6 +105,16 @@ fun SettingsBody(
             isSwitch = true,
             modifier = Modifier.fillMaxWidth()
         )
+        SelectionField(
+            label = stringResource(Res.string.language),
+            currentItem = language,
+            onGetItems = { AppLanguage.entries },
+            onGetKey = { it.ordinal },
+            onGetDisplayName = { stringResource(it.stringRes) },
+            onChange = { setLanguage(it.code) },
+            modifier = Modifier.fillMaxWidth(),
+            isRequired = false,
+        )
     }
 }
 
@@ -107,9 +127,11 @@ fun SettingsScreenPreview() {
                 datePickerUsesKeyboard = true,
                 timePickerUsesKeyboard = false
             ),
+            language = AppLanguage.English,
             setDatePickerUsesKeyboard = {},
             setTimePickerUsesKeyboard = {},
             setUseCraneCalendar = {},
+            setLanguage = {},
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.LightGray) // showBackground = true

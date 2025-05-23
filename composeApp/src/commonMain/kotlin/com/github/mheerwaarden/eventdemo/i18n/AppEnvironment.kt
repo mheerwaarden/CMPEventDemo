@@ -1,0 +1,46 @@
+package com.github.mheerwaarden.eventdemo.i18n
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.key
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Modifier
+import com.github.mheerwaarden.eventdemo.data.preferences.DEFAULT_LOCALE
+import com.github.mheerwaarden.eventdemo.ui.screen.LoadingScreen
+import org.koin.compose.koinInject
+
+/**
+ * CompositionLocal to provide the current effective BCP 47 locale tag (e.g., "en-US")
+ * to the rest of the UI tree.
+ * Compose Multiplatform resource libraries look for such a local to determine
+ * which language's resources to load.
+ * Use as default the value for no locale in preferences or on the platform, which is English.
+ */
+val LocalAppLocale = staticCompositionLocalOf { DEFAULT_LOCALE }
+
+@Composable
+fun AppEnvironment(
+    modifier: Modifier = Modifier,
+    localeViewModel: LocaleViewModel = koinInject(),
+    content: @Composable () -> Unit
+) {
+    LoadingScreen(loadingViewModel = localeViewModel, modifier = modifier) {
+
+        // Collect the effective locale tag (e.g., "en-US") from the ViewModel's StateFlow.
+        // This triggers recomposition whenever effectiveAppLocale emits a new value.
+        val effectiveLocaleTag = localeViewModel.preferredLocaleState.collectAsState().value
+        println("AppEnvironment : effectiveLocaleTag=$effectiveLocaleTag")
+
+        // Provide this effectiveLocaleTag via the LocalAppLocale CompositionLocal.
+        // This allows stringResource, painterResource, etc., from Compose Multiplatform
+        // resource libraries to pick up the correct language.
+        CompositionLocalProvider(
+            LocalAppLocale provides effectiveLocaleTag
+        ) {
+            key(effectiveLocaleTag) {
+                content()
+            }
+        }
+    }
+}

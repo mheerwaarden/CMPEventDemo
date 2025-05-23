@@ -28,7 +28,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun ProgressIndicator(modifier: Modifier = Modifier, action: StringResource?) {
+fun ProgressIndicator(modifier: Modifier = Modifier, action: StringResource?, vararg formatArgs: Any) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -45,7 +45,7 @@ fun ProgressIndicator(modifier: Modifier = Modifier, action: StringResource?) {
             )
         }
         if (action != null) {
-            Text(text = stringResource(action))
+            Text(text = stringResource(action, formatArgs))
         }
     }
 }

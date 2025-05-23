@@ -40,13 +40,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.github.mheerwaarden.eventdemo.i18n.AppEnvironment
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.about
 import com.github.mheerwaarden.eventdemo.resources.app_name
 import com.github.mheerwaarden.eventdemo.resources.back_button
 import com.github.mheerwaarden.eventdemo.resources.close
 import com.github.mheerwaarden.eventdemo.resources.more
-import com.github.mheerwaarden.eventdemo.resources.settings
+import com.github.mheerwaarden.eventdemo.resources.preferences
 import com.github.mheerwaarden.eventdemo.ui.navigation.EventDemoAppNavHost
 import com.github.mheerwaarden.eventdemo.ui.navigation.MenuNavigator
 import com.github.mheerwaarden.eventdemo.ui.navigation.MenuNavigatorImpl
@@ -56,7 +57,6 @@ import com.github.mheerwaarden.eventdemo.ui.theme.EventDemoAppTheme
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventDemoApp(
     modifier: Modifier = Modifier,
@@ -64,55 +64,67 @@ fun EventDemoApp(
     isHorizontalLayout: Boolean = false,
 ) {
     EventDemoAppTheme {
-        val appName = stringResource(resource = Res.string.app_name)
-        var title by rememberSaveable { mutableStateOf(appName) }
-        val updatedTitle by remember { derivedStateOf { title } }
-
-        // Additional action icons shown on the top app bar
-        val defaultAction: @Composable (RowScope.() -> Unit) = {}
-        val actions = remember { mutableStateOf(defaultAction) }
-        // When the screen shows a dialog, a close action must be provided.
-        val defaultCloseAction = { }
-        val closeAction = remember { mutableStateOf(defaultCloseAction) }
-
-        val navController = rememberNavController()
-        // The scroll state of the overview must not be applied to the other screens
-        val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentRoute = navBackStackEntry?.destination?.route ?: startDestination
-        val scrollBehavior = if (currentRoute == EventOverviewDestination.route) {
-            TopAppBarDefaults.enterAlwaysScrollBehavior()
-        } else {
-            null
+        AppEnvironment {
+            ThemedLocalizedApp(startDestination, modifier, isHorizontalLayout)
         }
+    }
+}
 
-        Scaffold(
-            modifier = if (scrollBehavior != null) modifier.nestedScroll(scrollBehavior.nestedScrollConnection) else modifier,
-            topBar = {
-                EventDemoAppBar(
-                    menuNavigator = MenuNavigatorImpl(navController),
-                    title = updatedTitle,
-                    canNavigateBack = navController.previousBackStackEntry != null,
-                    closeDialog = if (closeAction.value == defaultCloseAction) null else closeAction.value,
-                    scrollBehavior = scrollBehavior,
-                    navigateUp = { navController.navigateUp() },
-                    actions = actions.value
-                )
-            },
-        ) { innerPadding ->
-            EventDemoAppNavHost(
-                navController = navController,
-                startDestination = startDestination,
-                isHorizontalLayout = isHorizontalLayout,
-                onUpdateTopAppBar = { newTitle, newCloseDialog, newActions ->
-                    title = newTitle
-                    closeAction.value = newCloseDialog ?: defaultCloseAction
-                    actions.value = newActions
-                },
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize(),
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ThemedLocalizedApp(
+    startDestination: String,
+    modifier: Modifier,
+    isHorizontalLayout: Boolean
+) {
+    val appName = stringResource(resource = Res.string.app_name)
+    var title by rememberSaveable { mutableStateOf(appName) }
+    val updatedTitle by remember { derivedStateOf { title } }
+
+    // Additional action icons shown on the top app bar
+    val defaultAction: @Composable (RowScope.() -> Unit) = {}
+    val actions = remember { mutableStateOf(defaultAction) }
+    // When the screen shows a dialog, a close action must be provided.
+    val defaultCloseAction = { }
+    val closeAction = remember { mutableStateOf(defaultCloseAction) }
+
+    val navController = rememberNavController()
+    // The scroll state of the overview must not be applied to the other screens
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route ?: startDestination
+    val scrollBehavior = if (currentRoute == EventOverviewDestination.route) {
+        TopAppBarDefaults.enterAlwaysScrollBehavior()
+    } else {
+        null
+    }
+
+    Scaffold(
+        modifier = if (scrollBehavior != null) modifier.nestedScroll(scrollBehavior.nestedScrollConnection) else modifier,
+        topBar = {
+            EventDemoAppBar(
+                menuNavigator = MenuNavigatorImpl(navController),
+                title = updatedTitle,
+                canNavigateBack = navController.previousBackStackEntry != null,
+                closeDialog = if (closeAction.value == defaultCloseAction) null else closeAction.value,
+                scrollBehavior = scrollBehavior,
+                navigateUp = { navController.navigateUp() },
+                actions = actions.value
             )
-        }
+        },
+    ) { innerPadding ->
+        EventDemoAppNavHost(
+            navController = navController,
+            startDestination = startDestination,
+            isHorizontalLayout = isHorizontalLayout,
+            onUpdateTopAppBar = { newTitle, newCloseDialog, newActions ->
+                title = newTitle
+                closeAction.value = newCloseDialog ?: defaultCloseAction
+                actions.value = newActions
+            },
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize(),
+        )
     }
 }
 
@@ -169,7 +181,7 @@ fun EventDemoAppBar(
                 onDismissRequest = { expanded = false }
             ) {
                 DropdownMenuItem(
-                    text = { Text(stringResource(Res.string.settings)) },
+                    text = { Text(stringResource(Res.string.preferences)) },
                     onClick = { menuNavigator.navigateToSettings(); expanded = false }
                 )
                 DropdownMenuItem(

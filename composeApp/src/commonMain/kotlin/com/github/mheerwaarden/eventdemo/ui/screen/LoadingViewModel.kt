@@ -52,7 +52,7 @@ abstract class LoadingViewModel : ViewModel() {
      * Override to load the uiState in the view model. The loadingState is updated by default.
      * The LoadingScreen handles the progress indicator and allows a retry on error messages.
      */
-    abstract suspend fun loadState()
+    protected abstract suspend fun loadState()
 
     companion object {
         const val TIMEOUT_MILLIS = 5_000L

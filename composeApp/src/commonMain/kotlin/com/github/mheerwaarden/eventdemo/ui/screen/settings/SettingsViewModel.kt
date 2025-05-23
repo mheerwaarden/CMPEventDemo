@@ -10,22 +10,31 @@
 package com.github.mheerwaarden.eventdemo.ui.screen.settings
 
 import androidx.lifecycle.viewModelScope
+import com.github.mheerwaarden.eventdemo.data.preferences.DEFAULT_LOCALE
 import com.github.mheerwaarden.eventdemo.data.preferences.UserPreferencesRepository
 import com.github.mheerwaarden.eventdemo.ui.screen.LoadingViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+/**
+ * ViewModel for managing the settings screen in the app.
+ * Note that the locale preference must be set through the LocaleViewModel.
+ */
 class SettingsViewModel(
     private val userPreferencesRepository: UserPreferencesRepository,
 ) : LoadingViewModel() {
     var settingsUiState: StateFlow<SettingsUiState> = MutableStateFlow(SettingsUiState())
 
     override suspend fun loadState() {
+        // Suspend while fetch the first value to ensure initial state is correct.
+        val initialPreferences = userPreferencesRepository.preferences.first()
+
         settingsUiState = userPreferencesRepository.preferences.map { preferences ->
             SettingsUiState(
                 isReadOnly = preferences.isReadOnly,
@@ -33,11 +42,19 @@ class SettingsViewModel(
                 timePickerUsesKeyboard = preferences.timePickerUsesKeyboard,
                 isCalendarExpanded = preferences.isCalendarExpanded,
                 useCraneCalendar = preferences.useCraneCalendar,
+                localeTag = preferences.localeTag
             )
         }.stateIn(
             scope = viewModelScope,
             started = WhileSubscribed(TIMEOUT_MILLIS),
-            initialValue = SettingsUiState()
+            initialValue = SettingsUiState(
+                isReadOnly = initialPreferences.isReadOnly,
+                datePickerUsesKeyboard = initialPreferences.datePickerUsesKeyboard,
+                timePickerUsesKeyboard = initialPreferences.timePickerUsesKeyboard,
+                isCalendarExpanded = initialPreferences.isCalendarExpanded,
+                useCraneCalendar = initialPreferences.useCraneCalendar,
+                localeTag = initialPreferences.localeTag
+            )
         )
     }
 
@@ -85,4 +102,5 @@ data class SettingsUiState(
     val useCraneCalendar: Boolean = false,
     val useDynamicColor: Boolean = false,
     val useDarkTheme: Boolean = false,
+    val localeTag: String = DEFAULT_LOCALE,
 )

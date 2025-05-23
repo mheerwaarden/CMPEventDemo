@@ -9,6 +9,11 @@
 
 package com.github.mheerwaarden.eventdemo.data.preferences
 
+/* Default: Get the locale from the platform */
+const val DEFAULT_LOCALE_FROM_PLATFORM = "System"
+// Default: If no locale is set and the platform doesn't provide one, use English
+const val DEFAULT_LOCALE = "en"
+
 data class UserPreferences(
     val isReadOnly: Boolean = false,
     /** Prefer keyboard input for the date picker */
@@ -18,5 +23,7 @@ data class UserPreferences(
     /** Expanded state of the Event calendar */
     val isCalendarExpanded: Boolean = true,
     /** Use Crane calendar instead of Event calendar */
-    val useCraneCalendar: Boolean = false
+    val useCraneCalendar: Boolean = false,
+    /** Locale for language, default to English */
+    val localeTag: String = DEFAULT_LOCALE_FROM_PLATFORM
 )

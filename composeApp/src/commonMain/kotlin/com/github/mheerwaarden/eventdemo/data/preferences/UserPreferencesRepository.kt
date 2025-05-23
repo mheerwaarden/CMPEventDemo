@@ -20,4 +20,5 @@ interface UserPreferencesRepository {
     suspend fun saveTimePickerUsesKeyboard(useKeyboard: Boolean)
     suspend fun saveCalendarExpanded(isExpanded: Boolean)
     suspend fun saveUseCraneCalendar(useCraneCalendar: Boolean)
+    suspend fun saveLocalePreference(localeTag: String)
 }

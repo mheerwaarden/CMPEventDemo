@@ -10,10 +10,11 @@ object WasmJsAppContext : AppContext {
 
 private fun is24HourFormatJs(locale: String): Boolean = js(
     """
-    (locale) => {
+    {
         const options = { hour: 'numeric' };
         const fmt = new Intl.DateTimeFormat(locale, options);
         const resolved = fmt.resolvedOptions();
+        console.log("WasmJsAppContext.is24HourFormat: " + resolved);
         return resolved.hourCycle === 'h23' || resolved.hourCycle === 'h24';
     }
     """

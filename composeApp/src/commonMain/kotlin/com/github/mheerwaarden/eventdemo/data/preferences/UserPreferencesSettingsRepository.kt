@@ -20,6 +20,7 @@ class UserPreferencesSettingsRepository(
         private const val KEY_TIME_PICKER_USES_KEYBOARD = "time_picker_uses_keyboard"
         private const val KEY_CALENDAR_EXPANDED = "calendar_expanded"
         private const val KEY_USE_CRANE_CALENDAR = "use_crane_calendar"
+        private const val KEY_LOCALE_TAG = "locale_tag"
     }
     //endregion
 
@@ -38,6 +39,7 @@ class UserPreferencesSettingsRepository(
                 timePickerUsesKeyboard = settings.getBoolean(KEY_TIME_PICKER_USES_KEYBOARD, false),
                 isCalendarExpanded = settings.getBoolean(KEY_CALENDAR_EXPANDED, true),
                 useCraneCalendar = settings.getBoolean(KEY_USE_CRANE_CALENDAR, false),
+                localeTag = settings.getString(KEY_LOCALE_TAG, DEFAULT_LOCALE_FROM_PLATFORM)
             )
 
         } catch (e: Exception) {
@@ -93,6 +95,16 @@ class UserPreferencesSettingsRepository(
             logger.e(throwable = e) { "Error saving useCraneCalendar preference" }
         }
     }
+
+    override suspend fun saveLocalePreference(localeTag: String) {
+        try {
+            settings[KEY_LOCALE_TAG] = localeTag
+            updatePreferences { it.copy(localeTag = localeTag) }
+        } catch (e: Exception) {
+            logger.e(throwable = e) { "Error saving Locale preference" }
+        }
+    }
+
     //endregion
 
     //region Update

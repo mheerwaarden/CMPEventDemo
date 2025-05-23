@@ -32,8 +32,8 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -44,8 +44,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
@@ -66,6 +66,7 @@ import com.github.mheerwaarden.eventdemo.resources.thursday
 import com.github.mheerwaarden.eventdemo.resources.time
 import com.github.mheerwaarden.eventdemo.resources.tuesday
 import com.github.mheerwaarden.eventdemo.resources.wednesday
+import com.github.mheerwaarden.eventdemo.ui.util.HtmlColors
 import com.github.mheerwaarden.eventdemo.util.INSTANT_DATETIME_FORMAT
 import com.github.mheerwaarden.eventdemo.util.daysInMonth
 import com.github.mheerwaarden.eventdemo.util.formatTime
@@ -335,14 +336,13 @@ fun CalendarGrid(
                 lineHeight = MaterialTheme.typography.bodyLarge.fontSize * .8f,
             )
 
-
             // Display dots for each event
             val coloredEventDots = buildAnnotatedString {
                 eventsForDay.forEach { event ->
                     withStyle(
                         style = SpanStyle(
                             color = event.htmlColor.color,
-                            fontSize = dotTextStyle.fontSize
+                            fontSize = dotTextStyle.fontSize,
                         )
                     ) {
                         append("• ")
@@ -369,7 +369,7 @@ fun CalendarGrid(
                 )
                 Text(
                     text = coloredEventDots,
-                    style = LocalTextStyle.current.merge(dotTextStyle)
+                    style = LocalTextStyle.current.merge(dotTextStyle),
                 )
             }
         }
@@ -456,7 +456,7 @@ fun EventList(
                     Text(
                         text = "•",
                         color = item.htmlColor.color,
-                        fontSize = MaterialTheme.typography.headlineLarge.fontSize
+                        fontSize = MaterialTheme.typography.headlineLarge.fontSize,
                     )
                     Text(text = item.description)
                 }
@@ -477,27 +477,32 @@ fun CalendarWithEventsScreenPreview(isHorizontal: Boolean = false) {
         Event(
             id = 2,
             startInstant = Instant.parse("2024-10-05 10:00", INSTANT_DATETIME_FORMAT),
-            description = "date 1b"
+            description = "date 1b",
+            htmlColor = HtmlColors.RED
         ),
         Event(
             id = 3,
             startInstant = Instant.parse("2024-10-05 10:00", INSTANT_DATETIME_FORMAT),
-            description = "date 1c"
+            description = "date 1c",
+            htmlColor = HtmlColors.BLUE
         ),
         Event(
             id = 4,
             startInstant = Instant.parse("2024-10-05 10:00", INSTANT_DATETIME_FORMAT),
-            description = "date 1c"
+            description = "date 1c",
+            htmlColor = HtmlColors.AQUAMARINE
         ),
         Event(
             id = 5,
             startInstant = Instant.parse("2024-10-10 10:00", INSTANT_DATETIME_FORMAT),
-            description = "date 2"
+            description = "date 2",
+            htmlColor = HtmlColors.VIOLET
         ),
         Event(
             id = 6,
             startInstant = Instant.parse("2024-10-15 10:00", INSTANT_DATETIME_FORMAT),
-            description = "date 3"
+            description = "date 3",
+            htmlColor = HtmlColors.PURPLE
         ),
     )
     val startDate = LocalDate(2024, 10, 5)

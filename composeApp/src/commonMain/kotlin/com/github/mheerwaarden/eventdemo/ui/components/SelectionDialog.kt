@@ -95,8 +95,7 @@ fun <T> SelectionField(
                 onChange = onChange,
                 onDismissRequest = { onClose() },
             )
-        }
-    )
+        })
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -121,10 +120,7 @@ private fun <T> SelectionDialog(
             Box(
                 modifier = Modifier
                     .padding(Dimensions.padding_large)
-                    .border(
-                        width = Dimensions.border_width,
-                        color = MaterialTheme.colorScheme.surfaceTint
-                    )
+                    .border(width = Dimensions.border_width, color = MaterialTheme.colorScheme.surfaceTint)
             ) {
                 val evenColor = MaterialTheme.colorScheme.surfaceContainer
                 val oddColor = MaterialTheme.colorScheme.surfaceVariant
@@ -140,7 +136,8 @@ private fun <T> SelectionDialog(
                         )
                     }
                     itemsIndexed(
-                        items = items, key = { _, item -> onGetKey(item) }) { index, item ->
+                        items = items, key = { _, item -> onGetKey(item) }
+                    ) { index, item ->
                         val displayName = onGetDisplayName(item)
                         val isSelected = displayName == currentDisplayValue
                         val backgroundColor = if (isSelected) {

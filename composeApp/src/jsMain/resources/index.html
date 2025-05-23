@@ -6,6 +6,24 @@
     <title>Event Demo</title>
     <link type="text/css" rel="stylesheet" href="styles.css">
     <link rel="icon" type="image/x-icon" href="composeResources/com.github.mheerwaarden.eventdemo.resources/files/favicon.ico">
+    <script>
+        console.log("WebJS: Initial languages: " + navigator.languages);
+
+        // Install a getter for Navigator.languages that uses the custom locale which the app fills
+        // with the locale from the preferences, returning to default when not set
+        var currentLanguagesImplementation = Object.getOwnPropertyDescriptor(Navigator.prototype, "languages");
+        var newLanguagesImplementation = Object.assign({}, currentLanguagesImplementation, {
+            get: function () {
+                if (window.__customLocale) {
+                    return [window.__customLocale];
+                } else {
+                    return currentLanguagesImplementation.get.apply(this);
+                }
+            }
+        });
+
+        Object.defineProperty(Navigator.prototype, "languages", newLanguagesImplementation)
+    </script>
     <script src="skiko.js"></script>
     <script type="application/javascript" src="composeApp.js"></script>
 </head>

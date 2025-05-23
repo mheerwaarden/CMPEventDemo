@@ -18,11 +18,13 @@ object JsDateTimeFormatter : DateTimeFormatter {
     fun is24HourFormat() : Boolean = is24HourFormatJsImpl(locale)
 
     private fun is24HourFormatJsImpl(locale: String): Boolean {
-        val resolvedOptions =
-                js("new Intl.DateTimeFormat(locale, { hour: 'numeric' }).resolvedOptions()")
+        val resolvedOptions = getResolvedOptions()
         return resolvedOptions?.hourCycle == null
                 || resolvedOptions.hourCycle == "h23" || resolvedOptions.hourCycle == "h24"
     }
+
+    private fun getResolvedOptions(): dynamic =
+        js("new Intl.DateTimeFormat(locale, { hour: 'numeric' }).resolvedOptions()")
 
     override fun getCurrentLocale(): String {
         return locale.unsafeCast<String>()

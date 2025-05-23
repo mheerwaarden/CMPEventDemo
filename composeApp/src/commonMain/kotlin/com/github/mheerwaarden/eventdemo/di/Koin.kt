@@ -3,6 +3,7 @@ package com.github.mheerwaarden.eventdemo.di
 import co.touchlab.kermit.Logger
 import com.github.mheerwaarden.eventdemo.data.preferences.UserPreferencesRepository
 import com.github.mheerwaarden.eventdemo.data.preferences.UserPreferencesSettingsRepository
+import com.github.mheerwaarden.eventdemo.i18n.LocaleViewModel
 import com.github.mheerwaarden.eventdemo.initLogger
 import kotlinx.datetime.Clock
 import org.koin.core.KoinApplication
@@ -37,9 +38,10 @@ fun initKoin(appModule: Module, inJsModule: Module? = null): KoinApplication {
 expect val platformModule: Module
 
 private val coreModule = module {
-   factory { (tag: String?) -> get<Logger>().withTag(tag ?: "Event") }
+    factory { (tag: String?) -> get<Logger>().withTag(tag ?: "Event") }
 
     single<UserPreferencesRepository> { UserPreferencesSettingsRepository(get(), initLogger()) }
+    single { LocaleViewModel(userPreferencesRepository = get()) }
 
     single<Clock> { Clock.System }
 }

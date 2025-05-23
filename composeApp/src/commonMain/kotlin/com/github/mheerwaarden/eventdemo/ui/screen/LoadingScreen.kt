@@ -40,11 +40,11 @@ fun LoadingScreen(
     modifier: Modifier = Modifier,
     successContent: @Composable () -> Unit,
 ) {
-    val msgPrefix = "LoadingScreen for ${loadingViewModel::class.simpleName}:"
+    val name = loadingViewModel::class.simpleName ?: ""
     when (val result = loadingViewModel.loadingState) {
         is LoadingState.Loading -> {
             /* Show progress indicator */
-            ProgressScreen(action = Res.string.loading, modifier = modifier)
+            ProgressScreen(action = Res.string.loading, name = name, modifier = modifier)
         }
 
         is LoadingState.Success -> {
@@ -54,8 +54,10 @@ fun LoadingScreen(
 
         is LoadingState.Failure -> {
             /* Handle error */
+            val message = result.error.message ?: stringResource(Res.string.unknown_error)
+            println("LoadingScreen for $name Error: $message")
             ErrorScreen(
-                message = result.error.message ?: stringResource(Res.string.unknown_error),
+                message = message,
                 retryAction = { loadingViewModel.load() },
                 modifier = Modifier
                     .fillMaxSize()
@@ -66,12 +68,45 @@ fun LoadingScreen(
 }
 
 @Composable
-fun ProgressScreen(action: StringResource, modifier: Modifier = Modifier) {
+fun LoadingScreen(
+    loadingViewModels: List<LoadingViewModel>,
+    modifier: Modifier = Modifier,
+    successContent: @Composable () -> Unit,
+) {
+    if (loadingViewModels.any { it.loadingState is LoadingState.Loading }) {
+        ProgressScreen(
+            action = Res.string.loading,
+            name = "one or more items",
+            modifier = modifier
+        )
+    } else if (loadingViewModels.any { it.loadingState is LoadingState.Failure }) {
+        val failures = mutableListOf<LoadingViewModel>()
+        val messageBuilder = StringBuilder()
+        loadingViewModels.filter { vm -> vm.loadingState is LoadingState.Failure }.map { vm ->
+            val state = vm.loadingState as LoadingState.Failure
+            val errorMessage = state.error.message ?: stringResource(Res.string.unknown_error)
+            messageBuilder.append("Error for ${vm::class.simpleName}: $errorMessage\n")
+            failures.add(vm)
+        }
+        val message = messageBuilder.toString().trim()
+        println("LoadingScreen errors:\n$message")
+        ErrorScreen(
+            message = message,
+            retryAction = { failures.forEach { it.load() } },
+            modifier = Modifier
+                .fillMaxSize()
+                .wrapContentSize(Alignment.Center)
+        )
+    } else {
+        successContent()
+    }
+}
+
+@Composable
+fun ProgressScreen(action: StringResource, modifier: Modifier = Modifier, name: String) {
     ProgressIndicator(
-        action = action,
-        modifier = modifier
-            .fillMaxSize()
-            .wrapContentSize(Alignment.Center)
+        modifier.fillMaxSize().wrapContentSize(Alignment.Center),
+        action, name
     )
 }
 
