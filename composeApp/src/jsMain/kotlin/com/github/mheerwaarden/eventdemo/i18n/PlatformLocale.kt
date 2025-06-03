@@ -23,7 +23,7 @@ actual fun getPlatformSystemLocaleTag(): String? {
     val languages = window.navigator.languages
     // Testing languages against null includes testing against undefined
     if (languages != null && languages.isNotEmpty()) {
-        // langs[0] here is a JsString because langs is JsArray<JsString>
+        // languages[0] here is a JsString because languages is JsArray<JsString>
         // Calling toString() on JsString converts it to Kotlin String
         // Standardize for browsers that might return an underscore as separator
         val language = languages[0].toString().replace('_', '-')

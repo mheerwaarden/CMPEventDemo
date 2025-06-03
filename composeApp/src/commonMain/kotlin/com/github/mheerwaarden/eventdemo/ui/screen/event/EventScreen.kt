@@ -53,8 +53,9 @@ import com.github.mheerwaarden.eventdemo.ui.screen.LoadingScreen
 import com.github.mheerwaarden.eventdemo.ui.screen.settings.SettingsViewModel
 import com.github.mheerwaarden.eventdemo.ui.theme.EventDemoAppTheme
 import com.github.mheerwaarden.eventdemo.ui.util.DISABLED_ICON_OPACITY
-import com.github.mheerwaarden.eventdemo.util.formatDate
-import com.github.mheerwaarden.eventdemo.util.formatTime
+import com.github.mheerwaarden.eventdemo.util.toLocalizedDateString
+import com.github.mheerwaarden.eventdemo.util.toLocalizedDateTimeString
+import com.github.mheerwaarden.eventdemo.util.toLocalizedTimeString
 import kotlinx.datetime.LocalDateTime
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -155,8 +156,14 @@ private fun EventHeader(
             .background(color = MaterialTheme.colorScheme.surfaceTint)
             .padding(Dimensions.padding_small)
     ) {
+        val dateString = if (startDateTime.date == endDateTime.date) {
+            "${startDateTime.date.toLocalizedDateString()} ${startDateTime.time.toLocalizedTimeString()}" +
+                    " - ${endDateTime.time.toLocalizedTimeString()}"
+        } else {
+            "${startDateTime.toLocalizedDateTimeString()} - ${endDateTime.toLocalizedDateTimeString()}"
+        }
         Text(
-            text = "${startDateTime.formatDate()} ${startDateTime.formatTime()} - ${endDateTime.formatTime()}",
+            text = dateString,
             color = MaterialTheme.colorScheme.surface,
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.weight(1f)

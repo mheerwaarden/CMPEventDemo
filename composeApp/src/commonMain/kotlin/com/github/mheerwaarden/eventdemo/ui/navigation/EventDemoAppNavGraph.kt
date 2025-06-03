@@ -45,7 +45,6 @@ fun EventDemoAppNavHost(
     modifier: Modifier = Modifier,
     startDestination: String = EventOverviewDestination.route,
 ) {
-
     NavHost(
         navController = navController, startDestination = startDestination, modifier = modifier
     ) {

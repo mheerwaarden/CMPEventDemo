@@ -52,11 +52,11 @@ import com.github.mheerwaarden.eventdemo.ui.screen.AddItemButton
 import com.github.mheerwaarden.eventdemo.ui.screen.EditItemButtons
 import com.github.mheerwaarden.eventdemo.ui.theme.EventDemoAppTheme
 import com.github.mheerwaarden.eventdemo.ui.util.DISABLED_ICON_OPACITY
-import com.github.mheerwaarden.eventdemo.util.format
-import com.github.mheerwaarden.eventdemo.util.formatTime
 import com.github.mheerwaarden.eventdemo.util.now
 import com.github.mheerwaarden.eventdemo.util.toInstant
 import com.github.mheerwaarden.eventdemo.util.toLocalDateTime
+import com.github.mheerwaarden.eventdemo.util.toLocalizedDateString
+import com.github.mheerwaarden.eventdemo.util.toLocalizedTimeString
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -222,7 +222,7 @@ private fun EventHeader(
             .padding(Dimensions.padding_small)
     ) {
         Text(
-            text = startDate.format(),
+            text = startDate.toLocalizedDateString(),
             color = overviewConfig.dateColor,
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.weight(1f).padding(Dimensions.padding_small)
@@ -257,12 +257,12 @@ private fun EventRow(
             .clickable { navigateToEvent(event.id) }
     ) {
         Text(
-            text = event.startInstant.toLocalDateTime(overviewConfig.timeZone).formatTime(),
+            text = event.startInstant.toLocalDateTime(overviewConfig.timeZone).time.toLocalizedTimeString(),
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(overviewConfig.columnTimeWeight)
         )
         Text(
-            text = event.endInstant.toLocalDateTime(overviewConfig.timeZone).formatTime(),
+            text = event.endInstant.toLocalDateTime(overviewConfig.timeZone).time.toLocalizedTimeString(),
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(overviewConfig.columnTimeWeight)
         )

@@ -17,6 +17,7 @@
 package com.github.mheerwaarden.eventdemo.ui.components.cranecalendar.model
 
 import com.github.mheerwaarden.eventdemo.util.daysBetween
+import com.github.mheerwaarden.eventdemo.util.shortMonthNames
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.format.char
@@ -38,18 +39,16 @@ data class CalendarUiState(
         }
 
     val hasSelectedDates: Boolean
-        get() {
-            return selectedStartDate != null || selectedEndDate != null
-        }
+        get() = selectedStartDate != null || selectedEndDate != null
 
     val selectedDatesFormatted: String
         get() {
             if (selectedStartDate == null) return ""
-            var output = MONTH_FORMAT.format(selectedStartDate)
+            var result = MONTH_FORMAT.format(selectedStartDate)
             if (selectedEndDate != null) {
-                output += " - ${MONTH_FORMAT.format(selectedEndDate)}"
+                result += " - ${MONTH_FORMAT.format(selectedEndDate)}"
             }
-            return output
+            return result
         }
 
     fun hasSelectedPeriodOverlap(start: LocalDate, end: LocalDate): Boolean {
@@ -99,7 +98,8 @@ data class CalendarUiState(
             }
             startOffset
         } else {
-            var startDate = currentWeekStartDate.plus(6, DateTimeUnit.DAY)
+            var startDate =
+                currentWeekStartDate.plus(CalendarState.DAYS_IN_WEEK - 1, DateTimeUnit.DAY)
             var startOffset = 0
 
             for (i in 0 until CalendarState.DAYS_IN_WEEK) {
@@ -110,23 +110,18 @@ data class CalendarUiState(
                 }
                 startDate = startDate.minus(1, DateTimeUnit.DAY)
             }
-            7 - startOffset
+            CalendarState.DAYS_IN_WEEK - startOffset
         }
     }
 
-    fun isLeftHighlighted(beginningWeek: LocalDate?, month: YearMonth): Boolean {
-        return if (beginningWeek != null) {
-            if (month.monthNumber != beginningWeek.monthNumber) {
-                false
-            } else {
-                val beginningWeekSelected = isDateInSelectedPeriod(beginningWeek)
-                val lastDayPreviousWeek = beginningWeek.minus(1, DateTimeUnit.DAY)
-                isDateInSelectedPeriod(lastDayPreviousWeek) && beginningWeekSelected
-            }
-        } else {
+    fun isLeftHighlighted(beginningWeek: LocalDate?, month: YearMonth): Boolean =
+        if (beginningWeek == null || month.monthNumber != beginningWeek.monthNumber) {
             false
+        } else {
+            val beginningWeekSelected = isDateInSelectedPeriod(beginningWeek)
+            val lastDayPreviousWeek = beginningWeek.minus(1, DateTimeUnit.DAY)
+            isDateInSelectedPeriod(lastDayPreviousWeek) && beginningWeekSelected
         }
-    }
 
     fun isRightHighlighted(
         beginningWeek: LocalDate?,
@@ -223,7 +218,7 @@ data class CalendarUiState(
 
     companion object {
         private val MONTH_FORMAT by lazy {
-            LocalDate.Format { year(); char('-'); monthNumber() }
+            LocalDate.Format { monthName(shortMonthNames); char(' '); year(); }
         }
     }
 }

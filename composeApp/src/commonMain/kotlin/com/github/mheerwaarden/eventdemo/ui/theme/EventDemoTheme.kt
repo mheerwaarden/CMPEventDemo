@@ -19,14 +19,14 @@ fun EventDemoAppTheme(
     // Dynamic color is only available on Android 12+
     content: @Composable () -> Unit
 ) {
-  val colorScheme = when {
-      darkTheme -> eventDemoDarkColorScheme
-      else -> eventDemoLightColorScheme
-  }
+    val colorScheme = when {
+        darkTheme -> eventDemoDarkColorScheme
+        else -> eventDemoLightColorScheme
+    }
 
-  MaterialTheme(
-    colorScheme = colorScheme,
-    typography = Typography,
-    content = content
-  )
+    MaterialTheme(
+        colorScheme = colorScheme,
+        typography = Typography,
+        content = content
+    )
 }

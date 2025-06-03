@@ -43,6 +43,7 @@ abstract class LoadingViewModel : ViewModel() {
                 }
                 loadingState = LoadingState.Success
             } catch (e: Exception) {
+                println("LoadingViewModel Error: ${e.message}")
                 loadingState = LoadingState.Failure(e)
             }
         }

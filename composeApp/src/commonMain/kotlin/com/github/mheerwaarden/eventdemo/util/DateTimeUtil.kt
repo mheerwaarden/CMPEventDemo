@@ -17,6 +17,11 @@
 
 package com.github.mheerwaarden.eventdemo.util
 
+import com.github.mheerwaarden.eventdemo.module.NameStyle
+import com.github.mheerwaarden.eventdemo.module.localizedMonthNames
+import com.github.mheerwaarden.eventdemo.module.toLocalizedDateString
+import com.github.mheerwaarden.eventdemo.module.toLocalizedDateTimeString
+import com.github.mheerwaarden.eventdemo.module.toLocalizedTimeString
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
@@ -27,7 +32,10 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.daysUntil
+import kotlinx.datetime.format
 import kotlinx.datetime.format.DateTimeComponents
+import kotlinx.datetime.format.DateTimeFormat
+import kotlinx.datetime.format.MonthNames
 import kotlinx.datetime.format.char
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.minus
@@ -66,11 +74,11 @@ fun endOfMonth(): LocalDate {
 
 /** Convert UTC milliseconds to LocalDateTime in the default time zone */
 fun ofEpochMilli(utcMillis: Long): LocalDateTime =
-        Instant.fromEpochMilliseconds(utcMillis).toLocalDateTime(TimeZone.currentSystemDefault())
+    Instant.fromEpochMilliseconds(utcMillis).toLocalDateTime(TimeZone.currentSystemDefault())
 
 /** Convert LocalDateTime to UTC milliseconds */
 fun LocalDateTime.toEpochMilli(): Long =
-        toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+    toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
 
 /** Convert Instant to LocalDateTime using the default time zone */
 fun Instant.toLocalDateTime(): LocalDateTime = toLocalDateTime(TimeZone.currentSystemDefault())
@@ -80,20 +88,91 @@ fun LocalDate.toInstant(): Instant = atStartOfDayIn(TimeZone.currentSystemDefaul
 
 // endregion
 
-// region Formatting
-val DATE_FORMAT by lazy {
+// region Custom formatting
+private val regex = """(yyyy|yy|MM|dd|HH|mm|ss)|(.)""".toRegex()
+private fun getDateTimeFormat(pattern: String): DateTimeFormat<LocalDateTime> = LocalDateTime.Format {
+    regex.findAll(pattern).forEach { matchResult ->
+        val token = matchResult.groupValues[1]
+        val literal = matchResult.groupValues[2]
+
+        when (token) {
+            "yyyy" -> year()
+            "yy" -> yearTwoDigits(2020)
+            "MM" -> monthNumber()
+            "dd" -> dayOfMonth()
+            "HH" -> hour()
+            "mm" -> minute()
+            "ss" -> second()
+            else -> {
+                // This means it's a literal character
+                if (literal.isNotEmpty()) {
+                    char(literal.first())
+                }
+            }
+        }
+    }
+}
+
+private fun getDateFormat(pattern: String): DateTimeFormat<LocalDate> = LocalDate.Format {
+    regex.findAll(pattern).forEach { matchResult ->
+        val token = matchResult.groupValues[1]
+        val literal = matchResult.groupValues[2]
+
+        when (token) {
+            "yyyy" -> year()
+            "yy" -> yearTwoDigits(2020)
+            "MM" -> monthNumber()
+            "dd" -> dayOfMonth()
+            else -> {
+                // This means it's a literal character
+                if (literal.isNotEmpty()) {
+                    char(literal.first())
+                }
+            }
+        }
+    }
+}
+
+private fun getTimeFormat(pattern: String): DateTimeFormat<LocalTime> = LocalTime.Format {
+    regex.findAll(pattern).forEach { matchResult ->
+        val token = matchResult.groupValues[1]
+        val literal = matchResult.groupValues[2]
+
+        when (token) {
+            "HH" -> hour()
+            "mm" -> minute()
+            "ss" -> second()
+            else -> {
+                // This means it's a literal character
+                if (literal.isNotEmpty()) {
+                    char(literal.first())
+                }
+            }
+        }
+    }
+}
+
+/** Format a LocalDateTime according to the given pattern */
+fun LocalDateTime.format(pattern: String): String = format(getDateTimeFormat(pattern))
+fun LocalDate.format(pattern: String): String = format(getDateFormat(pattern))
+fun LocalTime.format(pattern: String): String = format(getTimeFormat(pattern))
+
+// endregion
+
+// region Default formatting and parsing
+val DEFAULT_DATE_FORMAT by lazy {
     LocalDate.Format { year(); char('-'); monthNumber(); char('-'); dayOfMonth() }
 }
 
-val TIME_FORMAT by lazy { LocalTime.Format { hour(); char(':'); minute() } }
+val DEFAULT_TIME_FORMAT by lazy { LocalTime.Format { hour(); char(':'); minute() } }
 
-/** Date format for formatting only */
-val INSTANT_DATE_FORMAT by lazy {
+/** Short default date format for formatting only */
+val DEFAULT_INSTANT_DATE_FORMAT by lazy {
     DateTimeComponents.Format { year(); char('-'); monthNumber(); char('-'); dayOfMonth() }
 }
 
-/** Date and time format for parsing and formatting */
-val INSTANT_DATETIME_FORMAT by lazy {
+/** Short default date and time format for parsing and formatting */
+val DEFAULT_INSTANT_DATETIME_FORMAT by lazy {
     DateTimeComponents.Format {
         year(); char('-'); monthNumber(); char('-'); dayOfMonth()
         char(' ')
@@ -101,33 +180,44 @@ val INSTANT_DATETIME_FORMAT by lazy {
     }
 }
 
-/** Format UTC milliseconds as date and time according to the short system default format */
+/** Format UTC milliseconds as date and time according to the short default format */
 fun formatUtcMillis(utcMillis: Long?): String {
     if (utcMillis == null) return ""
     val dateTime = ofEpochMilli(utcMillis)
     return dateTime.formatDateTime()
 }
 
-/** Format a LocalDateTime according to the short system default format */
+/** Format a LocalDateTime according to the short default format */
 fun LocalDateTime.formatDateTime(): String = "${formatDate()} ${formatTime()}"
 
-/** Format a LocalDateTime as a date according to the short system default format */
+/** Format a LocalDateTime as a date according to the short default format */
 fun LocalDateTime.formatDate(): String = date.format()
 
-/** Format a LocalDateTime as a time according to the short system default format */
+/** Format a LocalDateTime as a time according to the short default format */
 fun LocalDateTime.formatTime(): String = time.format()
 
-/** Format a LocalDate according to the short system default format */
-fun LocalDate.format(): String = DATE_FORMAT.format(this)
 
-/** Format a LocalTime according to the short system default format */
-fun LocalTime.format(): String = TIME_FORMAT.format(this)
+/** Format a LocalDate according to the short default format */
+fun LocalDate.format(): String = DEFAULT_DATE_FORMAT.format(this)
 
-/** Format the time component of an Instant according to the short system default format */
+/** Format a LocalTime according to the short default format */
+fun LocalTime.format(): String = DEFAULT_TIME_FORMAT.format(this)
+
+/** Format the time component of an Instant according to the short default format */
 fun Instant.formatTime(): String = toLocalDateTime().formatTime()
 
-/** Parse a date string according to the short system default format */
-fun String.parseDate(): LocalDate = DATE_FORMAT.parse(this)
+/** Parse a date string according to the short default format */
+fun String.parseDate(): LocalDate = DEFAULT_DATE_FORMAT.parse(this)
+
+// endregion
+
+// region Localized formatting
+
+fun LocalDateTime.toLocalizedDateTimeString(): String = toLocalizedDateTimeString(this)
+fun LocalDate.toLocalizedDateString(): String = toLocalizedDateString(this)
+fun LocalTime.toLocalizedTimeString(): String = toLocalizedTimeString(this)
+val fullMonthNames by lazy { MonthNames(localizedMonthNames(NameStyle.FULL)) }
+val shortMonthNames by lazy { MonthNames(localizedMonthNames(NameStyle.ABBREVIATED)) }
 
 // endregion
 
@@ -184,7 +274,7 @@ fun LocalDateTime.daysInMonth(): Int = date.daysInMonth()
  * @return The number of days between this date and [otherDate], inclusive of the end date.
  */
 fun LocalDate.daysBetween(otherDate: LocalDate) =
-        periodUntil(otherDate.plus(1, DateTimeUnit.DAY)).days
+    periodUntil(otherDate.plus(1, DateTimeUnit.DAY)).days
 
 /**
  * Returns the date of the previous or same occurrence of the specified [dayOfWeek].
