@@ -40,6 +40,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.mheerwaarden.eventdemo.Dimensions
 import com.github.mheerwaarden.eventdemo.data.database.DummyEventRepository
 import com.github.mheerwaarden.eventdemo.data.model.Event
+import com.github.mheerwaarden.eventdemo.localization.toLocalizedString
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.add_extra_event
 import com.github.mheerwaarden.eventdemo.resources.cancel_event
@@ -55,8 +56,6 @@ import com.github.mheerwaarden.eventdemo.ui.util.DISABLED_ICON_OPACITY
 import com.github.mheerwaarden.eventdemo.util.now
 import com.github.mheerwaarden.eventdemo.util.toInstant
 import com.github.mheerwaarden.eventdemo.util.toLocalDateTime
-import com.github.mheerwaarden.eventdemo.util.toLocalizedDateString
-import com.github.mheerwaarden.eventdemo.util.toLocalizedTimeString
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -222,7 +221,7 @@ private fun EventHeader(
             .padding(Dimensions.padding_small)
     ) {
         Text(
-            text = startDate.toLocalizedDateString(),
+            text = startDate.toLocalizedString(),
             color = overviewConfig.dateColor,
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.weight(1f).padding(Dimensions.padding_small)
@@ -257,12 +256,12 @@ private fun EventRow(
             .clickable { navigateToEvent(event.id) }
     ) {
         Text(
-            text = event.startInstant.toLocalDateTime(overviewConfig.timeZone).time.toLocalizedTimeString(),
+            text = event.startInstant.toLocalDateTime(overviewConfig.timeZone).time.toLocalizedString(),
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(overviewConfig.columnTimeWeight)
         )
         Text(
-            text = event.endInstant.toLocalDateTime(overviewConfig.timeZone).time.toLocalizedTimeString(),
+            text = event.endInstant.toLocalDateTime(overviewConfig.timeZone).time.toLocalizedString(),
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(overviewConfig.columnTimeWeight)
         )

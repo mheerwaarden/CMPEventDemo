@@ -5,6 +5,11 @@ import com.github.mheerwaarden.eventdemo.data.preferences.UserPreferencesReposit
 import com.github.mheerwaarden.eventdemo.data.preferences.UserPreferencesSettingsRepository
 import com.github.mheerwaarden.eventdemo.i18n.LocaleViewModel
 import com.github.mheerwaarden.eventdemo.initLogger
+import com.github.mheerwaarden.eventdemo.localization.DateTimeFormatter
+import com.github.mheerwaarden.eventdemo.localization.NumberFormatter
+import com.github.mheerwaarden.eventdemo.localization.PlatformLocaleManager
+import com.github.mheerwaarden.eventdemo.localization.PlatformLocaleProvider
+import com.russhwolf.settings.Settings
 import kotlinx.datetime.Clock
 import org.koin.core.KoinApplication
 import org.koin.core.component.KoinComponent
@@ -15,14 +20,21 @@ import org.koin.core.parameter.parametersOf
 import org.koin.core.scope.Scope
 import org.koin.dsl.module
 
-
-fun initKoin(appModule: Module, inJsModule: Module? = null): KoinApplication {
+fun initKoin(platformModule: Module): KoinApplication {
     val koinApplication = startKoin {
         modules(
-            appModule, // Platform dependent, not in Kotlin
-            inJsModule // Only in js for now
-                ?: platformModule, // Platform dependent, in Kotlin
-            coreModule // Platform independent
+            // Platform info
+            // Platform dependent, not in Kotlin
+            platformModule,
+            // Localization info: locale handling; date, time and number formatting
+            // Platform dependent, partly in Kotlin
+            platformLocalizationModule,
+            // Settings storage
+            // Platform dependent, in Kotlin
+            settingsModule,
+            // Common core modules
+            // Platform independent, in Kotlin
+            coreModule
         )
     }
 
@@ -35,7 +47,17 @@ fun initKoin(appModule: Module, inJsModule: Module? = null): KoinApplication {
     return koinApplication
 }
 
-expect val platformModule: Module
+/**
+ * Expected Koin module that provides platform-specific implementations for
+ * [PlatformLocaleManager], [DateTimeFormatter], and [NumberFormatter].
+ * The [PlatformLocaleProvider] will typically be the same instance as [PlatformLocaleManager].
+ */
+expect val platformLocalizationModule: Module
+
+/**
+ * Expected Koin module that provides platform-specific implementation for the [Settings] storage.
+ */
+expect val settingsModule: Module
 
 private val coreModule = module {
     factory { (tag: String?) -> get<Logger>().withTag(tag ?: "Event") }

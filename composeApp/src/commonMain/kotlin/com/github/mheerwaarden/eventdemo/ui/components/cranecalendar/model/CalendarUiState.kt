@@ -16,11 +16,11 @@
 
 package com.github.mheerwaarden.eventdemo.ui.components.cranecalendar.model
 
+import com.github.mheerwaarden.eventdemo.localization.shortMonthYearFormat
 import com.github.mheerwaarden.eventdemo.util.daysBetween
-import com.github.mheerwaarden.eventdemo.util.shortMonthNames
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.format.char
+import kotlinx.datetime.format
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlin.math.abs
@@ -44,9 +44,11 @@ data class CalendarUiState(
     val selectedDatesFormatted: String
         get() {
             if (selectedStartDate == null) return ""
-            var result = MONTH_FORMAT.format(selectedStartDate)
+
+            val shortMonthYearFormat = LocalDate.shortMonthYearFormat()
+            var result = selectedStartDate.format(shortMonthYearFormat)
             if (selectedEndDate != null) {
-                result += " - ${MONTH_FORMAT.format(selectedEndDate)}"
+                result += " - ${selectedEndDate.format(shortMonthYearFormat)}"
             }
             return result
         }
@@ -217,8 +219,6 @@ data class CalendarUiState(
     }
 
     companion object {
-        private val MONTH_FORMAT by lazy {
-            LocalDate.Format { monthName(shortMonthNames); char(' '); year(); }
-        }
+
     }
 }

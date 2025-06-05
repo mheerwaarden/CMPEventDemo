@@ -6,7 +6,7 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 import java.util.prefs.Preferences
 
-actual val platformModule: Module = module {
+actual val settingsModule: Module = module {
     single<Preferences> { Preferences.userRoot() }
     single<Settings> { PreferencesSettings(get()) }
 }

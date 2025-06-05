@@ -46,7 +46,7 @@ actual fun applyPlatformLocale(localeTag: String?) {
 }
 
 // Functions defined by js() must be top-level
-fun setCustomLocaleJs(localeTag: String?) = js(
+private fun setCustomLocaleJs(localeTag: String?) = js(
     """
     { 
         try {

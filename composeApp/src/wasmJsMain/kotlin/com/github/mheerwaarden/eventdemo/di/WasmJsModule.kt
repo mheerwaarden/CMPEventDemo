@@ -9,7 +9,7 @@ import org.w3c.dom.Storage
 import org.w3c.dom.Window
 import co.touchlab.kermit.Logger
 
-actual val platformModule: Module = module {
+actual val settingsModule: Module = module {
     single<Storage> { getLocalStorage() }
     single<Settings> { StorageSettings(get()) }
     single { UserPreferencesSettingsRepository(get(), Logger) }

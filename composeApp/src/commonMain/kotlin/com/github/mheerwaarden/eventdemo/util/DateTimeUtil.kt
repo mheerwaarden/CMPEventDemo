@@ -17,11 +17,6 @@
 
 package com.github.mheerwaarden.eventdemo.util
 
-import com.github.mheerwaarden.eventdemo.module.NameStyle
-import com.github.mheerwaarden.eventdemo.module.localizedMonthNames
-import com.github.mheerwaarden.eventdemo.module.toLocalizedDateString
-import com.github.mheerwaarden.eventdemo.module.toLocalizedDateTimeString
-import com.github.mheerwaarden.eventdemo.module.toLocalizedTimeString
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
@@ -35,7 +30,6 @@ import kotlinx.datetime.daysUntil
 import kotlinx.datetime.format
 import kotlinx.datetime.format.DateTimeComponents
 import kotlinx.datetime.format.DateTimeFormat
-import kotlinx.datetime.format.MonthNames
 import kotlinx.datetime.format.char
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.minus
@@ -208,16 +202,6 @@ fun Instant.formatTime(): String = toLocalDateTime().formatTime()
 
 /** Parse a date string according to the short default format */
 fun String.parseDate(): LocalDate = DEFAULT_DATE_FORMAT.parse(this)
-
-// endregion
-
-// region Localized formatting
-
-fun LocalDateTime.toLocalizedDateTimeString(): String = toLocalizedDateTimeString(this)
-fun LocalDate.toLocalizedDateString(): String = toLocalizedDateString(this)
-fun LocalTime.toLocalizedTimeString(): String = toLocalizedTimeString(this)
-val fullMonthNames by lazy { MonthNames(localizedMonthNames(NameStyle.FULL)) }
-val shortMonthNames by lazy { MonthNames(localizedMonthNames(NameStyle.ABBREVIATED)) }
 
 // endregion
 

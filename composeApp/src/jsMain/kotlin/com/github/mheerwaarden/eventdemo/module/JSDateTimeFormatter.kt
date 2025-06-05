@@ -1,5 +1,6 @@
 package com.github.mheerwaarden.eventdemo.module
 
+import com.github.mheerwaarden.eventdemo.localization.NameStyle
 import kotlinx.browser.window
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -27,6 +28,8 @@ class JsDateTimeFormatter : DateTimeFormatter {
                 || resolvedOptions.hourCycle == "h23" || resolvedOptions.hourCycle == "h24"
     }
 
+
+    @Suppress("UNUSED_PARAMETER")
     private fun getResolvedOptions(locale: dynamic): dynamic =
         js("new Intl.DateTimeFormat(locale, { hour: 'numeric' }).resolvedOptions()")
 
@@ -36,6 +39,8 @@ class JsDateTimeFormatter : DateTimeFormatter {
 }
 
 // Functions defined by js() must be top-level
+
+@Suppress("UNUSED_PARAMETER", "UNUSED_VARIABLE")
 fun formatDateJs(millis: Long, locale: dynamic): String {
     val options = js("{ dateStyle: 'full' }")
     // or define explicit:
@@ -122,24 +127,28 @@ private const val minuteOption = "2-digit"
 private const val dateOptions = "year: '$yearOption', month: '$monthOption', day: '$dayOption'"
 private const val timeOptions = "hour: '$hourOption', minute: '$minuteOption'"
 
+@Suppress("UNUSED_PARAMETER", "UNUSED_VARIABLE")
 private fun formatDateTimeJs(millis: Long): String {
     val locale = getCurrentBrowserLocale()
     val options = js("({ $dateOptions, $timeOptions })")
     return js("new Date(Number(millis)).toLocaleString(locale, options)") as String
 }
 
+@Suppress("UNUSED_PARAMETER", "UNUSED_VARIABLE")
 private fun formatDateJs(millis: Long): String {
     val locale = getCurrentBrowserLocale()
     val options = js("({ $dateOptions })")
     return js("new Date(Number(millis)).toLocaleString(locale, options)") as String
 }
 
+@Suppress("UNUSED_PARAMETER", "UNUSED_VARIABLE")
 private fun formatTimeJs(millis: Long): String {
     val locale = getCurrentBrowserLocale()
     val options = js("({ $timeOptions })")
     return js("new Date(Number(millis)).toLocaleString(locale, options)") as String
 }
 
+@Suppress("UNUSED_PARAMETER", "UNUSED_VARIABLE")
 private fun getMonthName(monthNumber: Int, isFull: Boolean): String {
     val locale = getCurrentBrowserLocale()
     val isFullOption = if (isFull) "long" else "short"

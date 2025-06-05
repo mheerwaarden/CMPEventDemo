@@ -8,7 +8,7 @@ import org.koin.dsl.module
 import platform.Foundation.NSUserDefaults
 import com.github.mheerwaarden.eventdemo.module.IOSDateTimeFormatter
 
-actual val platformModule: Module = module {
+actual val settingsModule: Module = module {
     single<NSUserDefaults> { NSUserDefaults.standardUserDefaults }
     single<Settings> { NSUserDefaultsSettings(get()) }
     single<DateTimeFormatter> { IOSDateTimeFormatter() }

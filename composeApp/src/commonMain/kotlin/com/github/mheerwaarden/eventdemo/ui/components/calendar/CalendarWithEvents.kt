@@ -51,12 +51,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import com.github.mheerwaarden.eventdemo.Dimensions
 import com.github.mheerwaarden.eventdemo.data.model.Event
+import com.github.mheerwaarden.eventdemo.localization.dayMonthFormat
+import com.github.mheerwaarden.eventdemo.localization.fullMonthYearFormat
+import com.github.mheerwaarden.eventdemo.localization.toLocalizedString
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.events
 import com.github.mheerwaarden.eventdemo.resources.friday
 import com.github.mheerwaarden.eventdemo.resources.hide_calendar
 import com.github.mheerwaarden.eventdemo.resources.monday
-import com.github.mheerwaarden.eventdemo.resources.month_day
 import com.github.mheerwaarden.eventdemo.resources.next_month
 import com.github.mheerwaarden.eventdemo.resources.previous_month
 import com.github.mheerwaarden.eventdemo.resources.saturday
@@ -71,12 +73,12 @@ import com.github.mheerwaarden.eventdemo.util.DEFAULT_INSTANT_DATETIME_FORMAT
 import com.github.mheerwaarden.eventdemo.util.daysInMonth
 import com.github.mheerwaarden.eventdemo.util.now
 import com.github.mheerwaarden.eventdemo.util.toLocalDateTime
-import com.github.mheerwaarden.eventdemo.util.toLocalizedTimeString
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.format
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.plus
 import org.jetbrains.compose.resources.stringResource
@@ -258,7 +260,7 @@ fun CalendarControls(
         }
         // Display month and year
         Text(
-            text = "${currentMonth.month.name} ${currentMonth.year}"
+            text = currentMonth.format(LocalDate.fullMonthYearFormat())
         )
         // Button to scroll to next month and button to expand/collapse calendar
         Row(
@@ -393,6 +395,7 @@ fun EventList(
     val titleText = stringResource(Res.string.events)
     val columnTimeWeight = .2f // 20%
     val columnDescriptionWeight = .6f // 60%
+    val dayMonthFormat = LocalDate.dayMonthFormat()
     LazyColumn(
         modifier = modifier
             .padding(top = Dimensions.padding_small)
@@ -412,9 +415,11 @@ fun EventList(
                     modifier = Modifier.weight(columnTimeWeight * 2)
                 )
                 Text(
-                    text = if (selectedDay > 0) "$titleText ${
-                        stringResource(Res.string.month_day, currentMonth.month.name, selectedDay)
-                    }" else "",
+                    text = if (selectedDay > 0) {
+                        "$titleText ${currentMonth.format(dayMonthFormat)}"
+                    } else {
+                        ""
+                    },
                     color = foregroundColor,
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
@@ -441,11 +446,11 @@ fun EventList(
                     )
             ) {
                 Text(
-                    text = item.startInstant.toLocalDateTime().time.toLocalizedTimeString(),
+                    text = item.startInstant.toLocalDateTime().time.toLocalizedString(),
                     modifier = Modifier.weight(columnTimeWeight)
                 )
                 Text(
-                    text = item.endInstant.toLocalDateTime().time.toLocalizedTimeString(),
+                    text = item.endInstant.toLocalDateTime().time.toLocalizedString(),
                     modifier = Modifier.weight(columnTimeWeight)
                 )
                 Row(

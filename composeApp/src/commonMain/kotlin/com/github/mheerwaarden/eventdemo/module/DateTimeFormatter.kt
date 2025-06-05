@@ -1,5 +1,6 @@
 package com.github.mheerwaarden.eventdemo.module
 
+import com.github.mheerwaarden.eventdemo.localization.NameStyle
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
@@ -20,10 +21,5 @@ expect fun toLocalizedDateTimeString(dateTime: LocalDateTime) : String
 expect fun toLocalizedDateString(date: LocalDate) : String
 expect fun toLocalizedTimeString(time: LocalTime) : String
 
-
-enum class NameStyle {
-    FULL,
-    ABBREVIATED
-}
 
 expect fun localizedMonthNames(style: NameStyle): List<String>

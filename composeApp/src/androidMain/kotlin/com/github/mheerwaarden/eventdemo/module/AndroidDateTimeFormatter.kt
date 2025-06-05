@@ -2,6 +2,7 @@ package com.github.mheerwaarden.eventdemo.module
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import com.github.mheerwaarden.eventdemo.localization.NameStyle
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime

@@ -15,7 +15,8 @@ import org.koin.compose.koinInject
  * to the rest of the UI tree.
  * Compose Multiplatform resource libraries look for such a local to determine
  * which language's resources to load.
- * Use as default the value for no locale in preferences or on the platform, which is English.
+ * If no locale is set in preferences or on the platform, the default is English; use this as the
+ * initialization value for the effective LocalAppLocale.
  */
 val LocalAppLocale = staticCompositionLocalOf { DEFAULT_LOCALE }
 

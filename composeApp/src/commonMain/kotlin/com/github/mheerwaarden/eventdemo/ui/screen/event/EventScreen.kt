@@ -32,6 +32,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.mheerwaarden.eventdemo.Dimensions
 import com.github.mheerwaarden.eventdemo.data.database.DummyEventRepository
 import com.github.mheerwaarden.eventdemo.data.model.Event
+import com.github.mheerwaarden.eventdemo.localization.toLocalizedString
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.color
 import com.github.mheerwaarden.eventdemo.resources.contact
@@ -53,9 +54,6 @@ import com.github.mheerwaarden.eventdemo.ui.screen.LoadingScreen
 import com.github.mheerwaarden.eventdemo.ui.screen.settings.SettingsViewModel
 import com.github.mheerwaarden.eventdemo.ui.theme.EventDemoAppTheme
 import com.github.mheerwaarden.eventdemo.ui.util.DISABLED_ICON_OPACITY
-import com.github.mheerwaarden.eventdemo.util.toLocalizedDateString
-import com.github.mheerwaarden.eventdemo.util.toLocalizedDateTimeString
-import com.github.mheerwaarden.eventdemo.util.toLocalizedTimeString
 import kotlinx.datetime.LocalDateTime
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -157,10 +155,10 @@ private fun EventHeader(
             .padding(Dimensions.padding_small)
     ) {
         val dateString = if (startDateTime.date == endDateTime.date) {
-            "${startDateTime.date.toLocalizedDateString()} ${startDateTime.time.toLocalizedTimeString()}" +
-                    " - ${endDateTime.time.toLocalizedTimeString()}"
+            "${startDateTime.date.toLocalizedString()} ${startDateTime.time.toLocalizedString()}" +
+                    " - ${endDateTime.time.toLocalizedString()}"
         } else {
-            "${startDateTime.toLocalizedDateTimeString()} - ${endDateTime.toLocalizedDateTimeString()}"
+            "${startDateTime.toLocalizedString()} - ${endDateTime.toLocalizedString()}"
         }
         Text(
             text = dateString,

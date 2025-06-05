@@ -11,7 +11,7 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 import com.github.mheerwaarden.eventdemo.module.AndroidDateTimeFormatter
 
-actual val platformModule: Module = module {
+actual val settingsModule: Module = module {
     single<SharedPreferences> { PreferenceManager.getDefaultSharedPreferences(androidContext()) }
     single<Settings> { SharedPreferencesSettings(get()) }
     single<DateTimeFormatter> { AndroidDateTimeFormatter() }

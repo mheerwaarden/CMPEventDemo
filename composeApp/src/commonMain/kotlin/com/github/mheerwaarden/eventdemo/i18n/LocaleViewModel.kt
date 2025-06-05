@@ -5,6 +5,8 @@ import com.github.mheerwaarden.eventdemo.data.preferences.DEFAULT_LOCALE
 import com.github.mheerwaarden.eventdemo.data.preferences.DEFAULT_LOCALE_FROM_PLATFORM
 import com.github.mheerwaarden.eventdemo.data.preferences.UserPreferences
 import com.github.mheerwaarden.eventdemo.data.preferences.UserPreferencesRepository
+import com.github.mheerwaarden.eventdemo.localization.PlatformLocaleManager
+import com.github.mheerwaarden.eventdemo.localization.PlatformLocaleProvider
 import com.github.mheerwaarden.eventdemo.ui.screen.LoadingViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
@@ -14,6 +16,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 /**
  * Platform-specific function to get the current system's locale tag (e.g., "en-US", "fr-CA").
@@ -41,7 +45,9 @@ expect fun applyPlatformLocale(localeTag: String?)
  */
 class LocaleViewModel(
     private val userPreferencesRepository: UserPreferencesRepository,
-) : LoadingViewModel() {
+) : LoadingViewModel(), KoinComponent {
+    private val platformLocaleManager: PlatformLocaleManager by inject()
+
     /**
      * A StateFlow representing the currently effective application locale tag.
      * This will be either the user's preferred language (read from settings)
@@ -76,7 +82,7 @@ class LocaleViewModel(
 
     private fun getEffectiveLocale(preferences: UserPreferences) =
         if (preferences.localeTag == DEFAULT_LOCALE_FROM_PLATFORM) {
-            getPlatformSystemLocaleTag() ?: DEFAULT_LOCALE
+            platformLocaleManager.getCurrentLocaleTag() ?: DEFAULT_LOCALE
         } else {
             preferences.localeTag
         }
@@ -101,7 +107,7 @@ class LocaleViewModel(
             // If the preference is now "System", then the platform should be told to use its
             // system default, which is represented by "null". Otherwise, apply the specific
             // chosen locale.
-            applyPlatformLocale(
+            platformLocaleManager.setAppLocale(
                 if (localeTag.isNullOrBlank() || localeTag == DEFAULT_LOCALE_FROM_PLATFORM) null else localeTag
             )
         }

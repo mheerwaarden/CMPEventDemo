@@ -1,5 +1,6 @@
 package com.github.mheerwaarden.eventdemo.module
 
+import com.github.mheerwaarden.eventdemo.localization.NameStyle
 import com.github.mheerwaarden.eventdemo.util.toEpochMilli
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
