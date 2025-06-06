@@ -26,7 +26,7 @@ class AndroidDateTimeFormatter : DateTimeFormatter {
             dateTime.second,
             dateTime.nanosecond
         ).atZone(zoneId)
-        val formatter = java.time.format.DateTimeFormatter.ofPattern(pattern, Locale.getDefault())
+        val formatter = JavaDateTimeFormatter.ofPattern(pattern, Locale.getDefault())
         return zonedDateTime.format(formatter)
     }
 

@@ -44,3 +44,13 @@ private fun toJavaDateTime(date: LocalDate?, time: LocalTime?): JavaLocalDateTim
     return JavaLocalDateTime.of(year, monthNumber, dayOfMonth, hour, minute, second, nanosecond)
 }
 
+fun isSystem24HourFormat(): Boolean {
+    // Heuristic: Format 11 PM using the default locale's short time style.
+    // If it contains "23", assume 24-hour format.
+    val referenceTime = JavaLocalDateTime.of(1970, 1, 1, 23, 0) // Month 1 for January
+    val formatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
+        .withLocale(Locale.getDefault()) // Use the JVM's default locale
+
+    val referenceString = formatter.format(referenceTime)
+    return referenceString.contains("23")
+}
