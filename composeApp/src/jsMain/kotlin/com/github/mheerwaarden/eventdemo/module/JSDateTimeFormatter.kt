@@ -9,9 +9,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toInstant
 
-// Properties defined by js() must be top-level
-private val jsUndefined: dynamic = js("undefined")
-
 class JsDateTimeFormatter : DateTimeFormatter {
 
     override fun format(dateTime: LocalDateTime, pattern: String): String {
@@ -102,7 +99,7 @@ private fun getCurrentBrowserLocale(): dynamic {
     return if (window.navigator.languages.isNotEmpty()) {
         window.navigator.languages[0]
     } else {
-        jsUndefined
+        undefined
     }
 }
 

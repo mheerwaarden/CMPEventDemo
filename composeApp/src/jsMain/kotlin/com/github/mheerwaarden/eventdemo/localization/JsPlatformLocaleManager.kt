@@ -2,14 +2,29 @@ package com.github.mheerwaarden.eventdemo.localization
 
 import kotlinx.browser.window
 
+/**
+ * Actual implementation to get and set the current Web (Browser) platform locale tag. For the web
+ * platform, bypass the read-only restriction of the window.navigator.languages property to
+ * introduce a custom locale logic, following the example from:
+ * https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-resource-environment.html#locale.
+ * - In index.html, a custom getter for the window.navigator.languages property is installed that
+ *   returns window.__customLocale when set or the default value when not set.
+ * - setPlatformLocale sets the value of window.__customLocale. By setting null, the default
+ *   locale will be used by the getter.
+ * - getPlatformSystemLocaleTag returns the value of window.navigator.languages, which will be
+ *   window.__customLocale when set or the default value when not set.
+ */
 class JsPlatformLocaleManager : PlatformLocaleManager {
 
-    override fun setAppLocale(localeTag: String?) {
-        println("JsAppLocaleManager: Setting app locale to '$localeTag'")
-        setCustomLocaleJs(localeTag)
+    // Set window.__customLocale that effectively controls the navigator.languages property
+    override fun setPlatformLocale(localeTag: String?) {
+        println("Web: Setting platform locale to '$localeTag'")
+        setPlatformLocaleJs(localeTag)
     }
 
-    override fun getCurrentLocaleTag(): String? {
+    // Get the navigator.languages property that will return window.__customLocale because of the
+    // custom getter defined in index.html
+    override fun getPlatformLocaleTag(): String? {
         // Retrieve window.__customLocale using the custom handler installed in index.html
         val languages = window.navigator.languages
         // Testing languages against null includes testing against undefined
@@ -28,7 +43,8 @@ class JsPlatformLocaleManager : PlatformLocaleManager {
 
 // Functions defined by js() must be top-level
 @Suppress("UNUSED_PARAMETER")
-private fun setCustomLocaleJs(localeTag: String?) = js(
+// Set window.__customLocale that effectively controls the navigator.languages property
+private fun setPlatformLocaleJs(localeTag: String?) = js(
     """
     { 
         try {

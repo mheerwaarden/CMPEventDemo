@@ -9,6 +9,18 @@ import kotlinx.datetime.toInstant
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
+/*
+1. Functions defined by js() must be top-level
+2. When you pass a Kotlin Long to a JavaScript function via js(...), the Kotlin/Wasm runtime
+   converts it to a JavaScript BigInt if the number is large enough to potentially exceed
+   JavaScript's Number.MAX_SAFE_INTEGER. However, the new Date(value) constructor in JavaScript
+   expects its value argument to be a standard JavaScript Number, therefore an explicit conversion
+   of the BigInt back to a Number is necessary.
+3. Returning a value from a multiline JavaScript block is not supported. Therefore, use kotlin
+   statements to provide the values for the final return statement.
+4. For sensible error messages, add a try-catch around the JS call with logging in the catch:
+    `console.error("[JS] Error in formatDateJs:", e_js.message, e_js.stack);`
+*/
 class JsDateTimeFormatter : DateTimeFormatter, KoinComponent {
     private val platformLocaleProvider: PlatformLocaleProvider by inject()
 
@@ -17,7 +29,7 @@ class JsDateTimeFormatter : DateTimeFormatter, KoinComponent {
      * set, since that implies the system default in the formatting functions.
      */
     private fun getLocaleForFormatting(): dynamic {
-        return platformLocaleProvider.getCurrentLocaleTag() ?: jsUndefined
+        return platformLocaleProvider.getPlatformLocaleTag() ?: undefined
     }
 
     @Suppress("UNUSED_VARIABLE")
@@ -71,7 +83,7 @@ class JsDateTimeFormatter : DateTimeFormatter, KoinComponent {
             }
             return monthNames
         } catch (e: Throwable) {
-            println("Kotlin caught Throwable: ${e.message}")
+            println("localizedMonthNames caught Throwable: ${e.message}")
             println("Kotlin stack trace:\n${e.stackTraceToString()}")
             return if (style == NameStyle.FULL) {
                 listOf(
@@ -99,22 +111,19 @@ class JsDateTimeFormatter : DateTimeFormatter, KoinComponent {
 
     @Suppress("UNUSED_VARIABLE")
     override fun is24HourFormat(): Boolean {
+        // Format the hour of 23h with the current locale and find out if it contains "23".
         val locale = getLocaleForFormatting()
-        val optionsForHourCycleCheck = localeOptions { hour("numeric") }
-        val resolvedOptions =
-            js("new Intl.DateTimeFormat(locale, optionsForHourCycleCheck).resolvedOptions()")
-
-        // Access hourCycle from the Kotlin dynamic variable
-        // Convert to String? in Kotlin for safer comparison
-        val hourCycle = js("resolvedOptsDynamic.hourCycle") as? String
-
-        return when (hourCycle) {
-            "h23", "h24" -> true  // Explicitly 24-hour
-            "h11", "h12" -> false // Explicitly 12-hour
-            null -> true          // Undefined/null defaults to 24-hour
-            else -> true          // For any other unexpected hourCycle string, default to 24-hour
+        val options: dynamic = localeOptions {
+            hour("numeric")
         }
-    }
 
+        val formattedHourString: String = js(
+            "new Date(1970, 0, 1, 23, 0).toLocaleTimeString(locale, options)"
+        ) as String
+
+        // Heuristic: If the formatted string for the 23rd hour contains "23",
+        // For 12-hour format, "23:00" would typically be formatted as "11 PM", "11", etc.
+        return formattedHourString.contains("23")
+    }
 
 }

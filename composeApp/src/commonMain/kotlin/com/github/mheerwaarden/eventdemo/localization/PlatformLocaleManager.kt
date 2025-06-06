@@ -16,5 +16,5 @@ interface PlatformLocaleManager : PlatformLocaleProvider { // Extends LocaleProv
      *                  implies that the application should revert to using the system's default
      *                  locale. An invalid tag will be ignored.
      */
-    fun setAppLocale(localeTag: String?)
+    fun setPlatformLocale(localeTag: String?)
 }

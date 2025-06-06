@@ -21,7 +21,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.github.mheerwaarden.eventdemo.AppContext
+import com.github.mheerwaarden.eventdemo.localization.DateTimeFormatter
+import com.github.mheerwaarden.eventdemo.localization.toLocalizedString
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.select_time
 import com.github.mheerwaarden.eventdemo.resources.show_time_picker
@@ -38,12 +39,12 @@ data class TimeFieldPreferences(
     val isHorizontalLayout: Boolean = false,
 ) {
     constructor(
-        context: AppContext,
+        dateTimeFormatter: DateTimeFormatter,
         isUseKeyboard: Boolean = false,
         onToggleKeyboard: (Boolean) -> Unit = { _ -> },
         isHorizontalLayout: Boolean = false,
     ) : this(
-        is24Hour = context.is24HourFormat,
+        is24Hour = dateTimeFormatter.is24HourFormat(),
         isUseKeyboard = isUseKeyboard,
         onToggleKeyboard = onToggleKeyboard,
         isHorizontalLayout = isHorizontalLayout
@@ -61,8 +62,9 @@ fun TimeField(
 ) {
     // String value of the date
     var time by rememberSaveable { mutableStateOf("") }
-    time = currentTime.format()
-    DialogField(label = stringResource(labelId),
+    time = currentTime.toLocalizedString()
+    DialogField(
+        label = stringResource(labelId),
         value = time,
         modifier = modifier.fillMaxWidth(),
         isRequired = true,

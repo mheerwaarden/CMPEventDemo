@@ -117,7 +117,7 @@ fun EventEntryScreen(
                 onToggleKeyboard = settingsViewModel::setDatePickerUsesKeyboard
             ),
             timeFieldPreferences = TimeFieldPreferences(
-                context = koinInject(),
+                dateTimeFormatter = koinInject(),
                 isUseKeyboard = preferences.timePickerUsesKeyboard,
                 onToggleKeyboard = settingsViewModel::setTimePickerUsesKeyboard,
                 isHorizontalLayout = isHorizontalLayout

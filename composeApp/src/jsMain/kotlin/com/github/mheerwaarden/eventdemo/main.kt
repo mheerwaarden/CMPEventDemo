@@ -17,7 +17,7 @@ fun main() {
             try {
                 initKoin(
                     module {
-                        // define desktop dependencies here
+                        // define js dependencies here
                         single<PlatformAppInfo> {
                             PlatformAppInfo(
                                 appId = get(named("appId")),

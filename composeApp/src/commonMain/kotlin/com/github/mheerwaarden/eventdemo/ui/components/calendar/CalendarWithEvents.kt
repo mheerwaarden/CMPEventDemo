@@ -407,6 +407,8 @@ fun EventList(
                 modifier = Modifier.background(color = MaterialTheme.colorScheme.surfaceTint)
             ) {
                 val foregroundColor = MaterialTheme.colorScheme.surface
+                val selectedDate =
+                    LocalDate(currentMonth.year, currentMonth.monthNumber, selectedDay)
                 Text(
                     text = stringResource(Res.string.time),
                     color = foregroundColor,
@@ -416,7 +418,7 @@ fun EventList(
                 )
                 Text(
                     text = if (selectedDay > 0) {
-                        "$titleText ${currentMonth.format(dayMonthFormat)}"
+                        "$titleText ${selectedDate.format(dayMonthFormat)}"
                     } else {
                         ""
                     },

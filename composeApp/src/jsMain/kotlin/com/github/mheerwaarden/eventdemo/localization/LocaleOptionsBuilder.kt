@@ -107,7 +107,7 @@ class LocaleOptionsBuilder {
      */
     fun build(): dynamic {
         if (optionsMap.isEmpty()) {
-            return jsUndefined
+            return undefined
         }
 
         val jsOptions: dynamic = js("({})") // Create an empty JavaScript object
@@ -127,10 +127,11 @@ class LocaleOptionsBuilder {
  * Convenience function to start building Intl options using a lambda with receiver.
  *
  * Example:
- * val options = intlOptions {
+ * val options = localeOptions {
  *    year("numeric")
  *    month("long")
- *    day("numeric")}
+ *    day("numeric")
+ * }
  */
 fun localeOptions(init: LocaleOptionsBuilder.() -> Unit): dynamic {
     return LocaleOptionsBuilder().apply(init).build()

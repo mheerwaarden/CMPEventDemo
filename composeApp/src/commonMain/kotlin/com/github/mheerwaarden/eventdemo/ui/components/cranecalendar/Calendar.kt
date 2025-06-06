@@ -46,6 +46,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.github.mheerwaarden.eventdemo.localization.LocalizedFormatter
+import com.github.mheerwaarden.eventdemo.localization.NameStyle
 import com.github.mheerwaarden.eventdemo.ui.components.cranecalendar.model.CalendarState
 import com.github.mheerwaarden.eventdemo.ui.components.cranecalendar.model.CalendarUiState
 import com.github.mheerwaarden.eventdemo.ui.components.cranecalendar.model.Month
@@ -55,6 +57,7 @@ import com.github.mheerwaarden.eventdemo.util.previousOrSame
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.format.MonthNames
 import kotlinx.datetime.plus
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -149,7 +152,8 @@ private fun LazyListScope.itemsCalendarMonth(
             modifier = Modifier
                 .background(color = MaterialTheme.colorScheme.surfaceVariant)
                 .padding(start = 32.dp, end = 32.dp, top = 16.dp),
-            month = month.yearMonth.month.name,
+            month = MonthNames(LocalizedFormatter.dateTimeFormatter.localizedMonthNames(NameStyle.FULL))
+                .names[month.yearMonth.monthNumber - 1],
             year = month.yearMonth.year.toString()
         )
     }

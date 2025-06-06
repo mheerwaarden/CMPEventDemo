@@ -11,5 +11,5 @@ interface PlatformLocaleProvider {
      *
      * @return The IETF BCP 47 language tag (e.g., "en-US") of the currently active locale.
      */
-    fun getCurrentLocaleTag(): String?
+    fun getPlatformLocaleTag(): String?
 }

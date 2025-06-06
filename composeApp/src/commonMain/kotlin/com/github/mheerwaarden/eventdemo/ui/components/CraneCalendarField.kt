@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.github.mheerwaarden.eventdemo.localization.toLocalizedString
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.select_date
 import com.github.mheerwaarden.eventdemo.resources.show_date_picker
@@ -29,7 +30,7 @@ fun CraneCalendarField(
 ) {
     // String value showing start date - end date
     var period by rememberSaveable { mutableStateOf("") }
-    period = "${startDate?.format() ?: ""} - ${endDate?.format() ?: ""}"
+    period = "${startDate?.toLocalizedString() ?: ""} - ${endDate?.toLocalizedString() ?: ""}"
 
     DialogField(
         label = stringResource(labelId),

@@ -7,7 +7,7 @@ class JsNumberFormatter : NumberFormatter, KoinComponent {
     private val platformLocaleProvider: PlatformLocaleProvider by inject()
 
     private fun getLocaleForFormatting(): dynamic {
-        return platformLocaleProvider.getCurrentLocaleTag() ?: jsUndefined
+        return platformLocaleProvider.getPlatformLocaleTag() ?: undefined
     }
 
     @Suppress("UNUSED_VARIABLE")

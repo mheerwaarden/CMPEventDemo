@@ -6,7 +6,6 @@ import com.github.mheerwaarden.eventdemo.data.preferences.DEFAULT_LOCALE_FROM_PL
 import com.github.mheerwaarden.eventdemo.data.preferences.UserPreferences
 import com.github.mheerwaarden.eventdemo.data.preferences.UserPreferencesRepository
 import com.github.mheerwaarden.eventdemo.localization.PlatformLocaleManager
-import com.github.mheerwaarden.eventdemo.localization.PlatformLocaleProvider
 import com.github.mheerwaarden.eventdemo.ui.screen.LoadingViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
@@ -82,7 +81,7 @@ class LocaleViewModel(
 
     private fun getEffectiveLocale(preferences: UserPreferences) =
         if (preferences.localeTag == DEFAULT_LOCALE_FROM_PLATFORM) {
-            platformLocaleManager.getCurrentLocaleTag() ?: DEFAULT_LOCALE
+            platformLocaleManager.getPlatformLocaleTag() ?: DEFAULT_LOCALE
         } else {
             preferences.localeTag
         }
@@ -107,7 +106,7 @@ class LocaleViewModel(
             // If the preference is now "System", then the platform should be told to use its
             // system default, which is represented by "null". Otherwise, apply the specific
             // chosen locale.
-            platformLocaleManager.setAppLocale(
+            platformLocaleManager.setPlatformLocale(
                 if (localeTag.isNullOrBlank() || localeTag == DEFAULT_LOCALE_FROM_PLATFORM) null else localeTag
             )
         }

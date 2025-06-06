@@ -27,6 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.github.mheerwaarden.eventdemo.localization.toLocalizedString
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.cancel
 import com.github.mheerwaarden.eventdemo.resources.ok
@@ -55,7 +56,7 @@ fun DateField(
 ) {
     // String value of the date
     var date by rememberSaveable { mutableStateOf("") }
-    date = currentDate.format()
+    date = currentDate.toLocalizedString()
 
     DialogField(
         label = stringResource(labelId),
