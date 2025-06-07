@@ -1,11 +1,10 @@
 package com.github.mheerwaarden.eventdemo.localization
 
-import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import java.util.Locale
 
-@SuppressLint("ConstantLocale")
+@Suppress("ConstantLocale")
 // Remember the default Locale on app startup to revert to it if needed
 private val defaultLocale = Locale.getDefault()
 

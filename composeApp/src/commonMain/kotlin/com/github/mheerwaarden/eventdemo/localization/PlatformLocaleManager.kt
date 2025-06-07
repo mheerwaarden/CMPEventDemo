@@ -11,6 +11,7 @@ interface PlatformLocaleManager : PlatformLocaleProvider { // Extends LocaleProv
      * On Android, this would call AppCompatDelegate.setApplicationLocales().
      * On Web, this might involve a page reload or other framework-specific actions.
      * On other platforms, it might set the default locale or do nothing if not applicable.
+     * The actual implementation is injected in Koin
      *
      * @param localeTag The BCP 47 language tag  (e.g., "en-US", "fr-FR") to apply. If null, it
      *                  implies that the application should revert to using the system's default

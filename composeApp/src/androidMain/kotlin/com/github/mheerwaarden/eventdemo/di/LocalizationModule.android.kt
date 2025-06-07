@@ -10,11 +10,6 @@ import com.github.mheerwaarden.eventdemo.localization.PlatformLocaleProvider
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
-/**
- * Expected Koin module that provides platform-specific implementations for
- * [PlatformLocaleManager], [DateTimeFormatter], and [NumberFormatter].
- * The [PlatformLocaleProvider] will typically be the same instance as [PlatformLocaleManager].
- */
 actual val platformLocalizationModule: Module = module {
     // AppLocaleManager is also the LocaleProvider
     single<PlatformLocaleManager> { AndroidPlatformLocaleManager() }
