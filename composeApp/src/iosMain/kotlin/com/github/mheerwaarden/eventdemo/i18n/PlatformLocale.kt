@@ -6,18 +6,10 @@ import platform.Foundation.preferredLanguages
 
 private const val LANG_KEY = "AppleLanguages"
 
-/**
- * Actual implementation to get the current iOS system locale tag.
- */
 actual fun getPlatformSystemLocaleTag(): String? {
     return NSLocale.preferredLanguages.firstOrNull() as? String?
 }
 
-/**
- * Actual implementation to apply the chosen locale tag on iOS.
- *
- * @param localeTag The BCP 47 language tag that was chosen.
- */
 actual fun applyPlatformLocale(localeTag: String?) {
     if (localeTag == null) {
         NSUserDefaults.standardUserDefaults.removeObjectForKey(LANG_KEY)
