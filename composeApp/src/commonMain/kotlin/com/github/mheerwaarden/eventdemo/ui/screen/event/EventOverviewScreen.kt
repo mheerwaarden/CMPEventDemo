@@ -124,6 +124,7 @@ private class OverviewConfig(colorScheme: ColorScheme) {
         disabledContainerColor = Color.Transparent,
         disabledContentColor = colorScheme.surfaceTint.copy(alpha = DISABLED_ICON_OPACITY)
     )
+    val headerColor = colorScheme.surfaceTint
     val dateColor = colorScheme.surface
     val evenColor = colorScheme.surfaceContainer
     val oddColor = colorScheme.surfaceVariant
@@ -217,7 +218,7 @@ private fun EventHeader(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier.fillMaxWidth()
-            .background(color = MaterialTheme.colorScheme.surfaceTint)
+            .background(color = overviewConfig.headerColor)
             .padding(Dimensions.padding_small)
     ) {
         Text(

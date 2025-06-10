@@ -1,10 +1,15 @@
 package com.github.mheerwaarden.eventdemo.localization
 
-import com.github.mheerwaarden.eventdemo.util.toEpochMilli
+import com.github.mheerwaarden.eventdemo.util.format
+import com.github.mheerwaarden.eventdemo.util.formatDateTime
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import platform.Foundation.NSCalendar
 import platform.Foundation.NSDate
+import platform.Foundation.NSDateComponents
 import platform.Foundation.NSDateFormatter
 import platform.Foundation.NSDateFormatterLongStyle
 import platform.Foundation.NSDateFormatterNoStyle
@@ -12,77 +17,76 @@ import platform.Foundation.NSDateFormatterShortStyle
 import platform.Foundation.NSLocale
 import platform.Foundation.NSTimeZone
 import platform.Foundation.currentLocale
-import platform.Foundation.dateWithTimeIntervalSince1970
 import platform.Foundation.systemTimeZone
 
-class IOSDateTimeFormatter : DateTimeFormatter {
-    override fun formatDateTime(dateTime: LocalDateTime): String  =
+class IOSDateTimeFormatter : DateTimeFormatter, KoinComponent {
+    private val platformLocaleProvider: PlatformLocaleProvider by inject()
+
+    /**
+     * Returns the locale to use for formatting. Returns JavaScript 'undefined' if not locale is
+     * set, since that implies the system default in the formatting functions.
+     */
+    private fun getLocaleForFormatting(): NSLocale {
+        val locale = platformLocaleProvider.getPlatformLocaleTag()
+        return if (locale == null) {
+            NSLocale.currentLocale
+        } else {
+            NSLocale(locale)
+        }
+    }
+
+    override fun formatDateTime(dateTime: LocalDateTime): String =
         getFormattedStringForDate(
-            LocalDateTime(
-                dateTime.year,
-                dateTime.monthNumber,
-                dateTime.dayOfMonth,
-                dateTime.hour,
-                dateTime.minute,
-                dateTime.second
-            ),
+            dateTime,
             NSDateFormatterLongStyle,
             NSDateFormatterShortStyle
-        )
-    override fun formatDate(date: LocalDate): String  =
-        getFormattedStringForDate(
+        ) ?: dateTime.formatDateTime()
+
+    override fun formatDate(date: LocalDate): String = getFormattedStringForDate(
             LocalDateTime(date.year, date.monthNumber, date.dayOfMonth, 0, 0),
             NSDateFormatterLongStyle,
             NSDateFormatterNoStyle
-        )
+        ) ?: date.format()
 
     override fun formatTime(time: LocalTime): String =
         getFormattedStringForDate(
             LocalDateTime(1970, 1, 1, time.hour, time.minute),
             NSDateFormatterNoStyle,
             NSDateFormatterShortStyle
-        )
+        ) ?: time.format()
 
     override fun localizedMonthNames(style: NameStyle): List<String> {
         val pattern = if (style == NameStyle.ABBREVIATED) "MM" else "MMMM"
         val formatter = NSDateFormatter().apply {
-            locale = NSLocale.currentLocale
+            locale = getLocaleForFormatting()
             timeZone = NSTimeZone.systemTimeZone()
         }
         formatter.setLocalizedDateFormatFromTemplate(pattern)
 
+        val calendar = NSCalendar.currentCalendar
+        val components = NSDateComponents().apply {
+            year = 1970
+            day = 1
+            hour = 0
+            minute = 0
+            second = 0
+        }
         val monthNames = mutableListOf<String>()
         for (monthNumber in 1..12) {
+            components.month = monthNumber.toLong()
+            val date = (calendar.dateFromComponents(components)
+                ?: throw IllegalStateException("localizedMonthNames: Failed NSDate conversion for month $monthNumber"))
             monthNames.add(
-                formatter.stringFromDate(
-                    LocalDateTime(1970, monthNumber, 1, 0, 0).toNSDate()
-                )
+                formatter.stringFromDate(date)
             )
         }
         return monthNames
     }
 
     override fun is24HourFormat(): Boolean {
-        val formatter = NSDateFormatter()
-        formatter.setLocale(NSLocale.currentLocale()) // Use current user's locale
-        formatter.setDateStyle(NSDateFormatterNoStyle)
-        formatter.setTimeStyle(NSDateFormatterShortStyle)
-
-        // Create an NSDate object representing 11 PM (23:00) on some day
-        // The exact date doesn't matter, only the time 23:00.
-        // For simplicity, let's format a known "late" time.
-        // NSDateComponents could also be used here to construct 23:00 precisely.
-        // An alternative: format current time, then check string for AM/PM.
-        // However, checking a fixed "23:00" time is more direct for the "23" heuristic.
-
-        // To create a date representing 23:00, it's a bit tricky with just epoch time.
-        // It's often easier to format a string and parse it, or use NSDateComponents.
-        // For a heuristic similar to JS/Android:
-        // Let's create a date representing January 1, 1970, 23:00:00 in the *current system time zone*.
-        // This is hard to do directly without NSDateComponents easily from Kotlin/Native.
-
-        // A more common iOS approach is to check if the locale's date format string contains 'a' (for AM/PM marker).
-        val dateFormatString = NSDateFormatter.dateFormatFromTemplate("j", 0u, NSLocale.currentLocale())
+        // Check if the locale's date format string contains 'a' (for AM/PM marker).
+        val dateFormatString =
+            NSDateFormatter.dateFormatFromTemplate("j", 0u, getLocaleForFormatting())
         // "j" is the preferred hour format skeleton (h, H, K, k).
         // If it contains 'a' (AM/PM marker), it's 12-hour.
         // If it's 'H' or 'k', it's 24-hour. 'h' or 'K' is 12-hour.
@@ -95,20 +99,30 @@ class IOSDateTimeFormatter : DateTimeFormatter {
         localDateTime: LocalDateTime,
         dateStyle: ULong,
         timeStyle: ULong
-    ): String {
-        val formatter = NSDateFormatter().apply {
-            this.dateStyle = dateStyle
-            this.timeStyle = timeStyle
-            this.locale = NSLocale.currentLocale
-            this.timeZone = NSTimeZone.systemTimeZone()
+    ): String? {
+        val nsDate = localDateTime.toNsDate()
+        return if (nsDate == null) {
+            null
+        } else {
+            val formatter = NSDateFormatter().apply {
+                this.dateStyle = dateStyle
+                this.timeStyle = timeStyle
+                this.locale = getLocaleForFormatting()
+                this.timeZone = NSTimeZone.systemTimeZone()
+            }
+            formatter.stringFromDate(nsDate)
         }
-        return formatter.stringFromDate(localDateTime.toNSDate())
-
     }
 
-    private fun LocalDateTime.toNSDate(): NSDate {
-        val epochSeconds = this.toEpochMilli() * 1000
-        return NSDate.dateWithTimeIntervalSince1970(epochSeconds.toDouble())
+    private fun LocalDateTime.toNsDate(): NSDate? {
+        val calendar = NSCalendar.currentCalendar
+        val components = NSDateComponents()
+        components.year = this.year.toLong()
+        components.month = this.monthNumber.toLong()
+        components.day = this.dayOfMonth.toLong()
+        components.hour = this.hour.toLong()
+        components.minute = this.minute.toLong()
+        components.second = this.second.toLong()
+        return calendar.dateFromComponents(components)
     }
-
 }

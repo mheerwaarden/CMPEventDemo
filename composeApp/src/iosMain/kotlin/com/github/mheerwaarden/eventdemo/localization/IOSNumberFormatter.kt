@@ -1,21 +1,43 @@
 package com.github.mheerwaarden.eventdemo.localization
 
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import platform.Foundation.NSLocale
 import platform.Foundation.NSNumber
 import platform.Foundation.NSNumberFormatter
 import platform.Foundation.NSNumberFormatterCurrencyStyle
+import platform.Foundation.NSNumberFormatterDecimalStyle
+import platform.Foundation.currentLocale
 
-class IOSNumberFormatter : NumberFormatter {
+class IOSNumberFormatter : NumberFormatter, KoinComponent {
+    private val platformLocaleProvider: PlatformLocaleProvider by inject()
+
+    /**
+     * Returns the locale to use for formatting. Returns JavaScript 'undefined' if not locale is
+     * set, since that implies the system default in the formatting functions.
+     */
+    private fun getLocaleForFormatting(): NSLocale {
+        val locale = platformLocaleProvider.getPlatformLocaleTag()
+        return if (locale == null) {
+            NSLocale.currentLocale
+        } else {
+            NSLocale(locale)
+        }
+    }
+
     override fun formatDecimal(
         number: Double,
         minIntegerDigits: Int,
         minFractionDigits: Int,
         maxFractionDigits: Int
     ): String {
-        val formatter = NSNumberFormatter()
-        formatter.minimumIntegerDigits = minIntegerDigits.toULong()
-        formatter.minimumFractionDigits = minFractionDigits.toULong()
-        formatter.maximumFractionDigits = maxFractionDigits.toULong()
-        formatter.numberStyle = platform.Foundation.NSNumberFormatterDecimalStyle
+        val formatter = NSNumberFormatter().apply {
+            numberStyle = NSNumberFormatterDecimalStyle
+            locale = getLocaleForFormatting()
+            minimumIntegerDigits = minIntegerDigits.toULong()
+            minimumFractionDigits = minFractionDigits.toULong()
+            maximumFractionDigits = maxFractionDigits.toULong()
+        }
         return formatter.stringFromNumber(NSNumber(number)) ?: ""
     }
 
@@ -26,12 +48,14 @@ class IOSNumberFormatter : NumberFormatter {
         minFractionDigits: Int,
         maxFractionDigits: Int
     ): String {
-        val formatter = NSNumberFormatter()
-        formatter.numberStyle = NSNumberFormatterCurrencyStyle
+        val formatter = NSNumberFormatter().apply {
+            numberStyle = NSNumberFormatterCurrencyStyle
+            locale = getLocaleForFormatting()
+            minimumIntegerDigits = minIntegerDigits.toULong()
+            minimumFractionDigits = minFractionDigits.toULong()
+            maximumFractionDigits = maxFractionDigits.toULong()
+        }
         formatter.currencyCode = currencyCode
-        formatter.minimumIntegerDigits = minIntegerDigits.toULong()
-        formatter.minimumFractionDigits = minFractionDigits.toULong()
-        formatter.maximumFractionDigits = maxFractionDigits.toULong()
         return formatter.stringFromNumber(NSNumber(amount)) ?: ""
     }
 }
