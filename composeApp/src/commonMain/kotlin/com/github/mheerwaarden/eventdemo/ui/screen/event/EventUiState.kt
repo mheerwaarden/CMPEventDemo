@@ -34,6 +34,8 @@ data class EventUiState(
     val eventType: EventType = EventType.ACTIVITY,
     val eventCategory: EventCategory = EventCategory.PRIVATE,
     val htmlColor: HtmlColors = HtmlColors.OLIVE_DRAB,
+    val amount: Double? = null,
+    val price: Double? = null,
     // UI fields
     val isEntryValid: Boolean = false,
 ) {
@@ -51,6 +53,8 @@ data class EventUiState(
             eventType = eventType,
             eventCategory = eventCategory,
             htmlColor = htmlColor,
+            amount = amount,
+            price = price,
         )
     }
 
@@ -70,6 +74,8 @@ fun Event.toEventUiState(isEntryValid: Boolean = false): EventUiState {
         eventType = eventType,
         eventCategory = eventCategory,
         htmlColor = htmlColor,
+        amount = amount,
+        price = price,
         isEntryValid = isEntryValid,
     )
 }

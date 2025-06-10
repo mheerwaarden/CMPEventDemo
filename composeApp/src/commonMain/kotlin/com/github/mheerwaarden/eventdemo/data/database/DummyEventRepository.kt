@@ -174,7 +174,9 @@ class DummyEventRepository : EventRepository {
         else EventCategory.PRIVATE,
         isOnline = type.name.contains(other = "online", ignoreCase = true)
                 || type.name.contains(other = "virtual", ignoreCase = true),
-        htmlColor = type.htmlColor
+        htmlColor = type.htmlColor,
+        amount = if (isCorporate) 100.0 else null,
+        price = if (isCorporate) 250.0 else null
     )
 
     private fun getRandomPhoneNr(): String {

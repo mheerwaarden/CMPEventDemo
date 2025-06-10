@@ -48,5 +48,14 @@ fun Double.toLocalizedDecimalString(
     this, minIntegerDigits, minFractionDigits, maxFractionDigits
 )
 
+fun Double.toLocalizedCurrencyString(
+    minIntegerDigits: Int = 1, minFractionDigits: Int = 2, maxFractionDigits: Int = 2
+): String = LocalizedFormatter.numberFormatter.formatCurrency(
+    amount = this,
+    minIntegerDigits = minIntegerDigits,
+    minFractionDigits = minFractionDigits,
+    maxFractionDigits = maxFractionDigits
+)
+
 fun String.toLocaleFormattedDoubleOrNull(): Double? =
     LocalizedFormatter.numberFormatter.parseDecimal(this)

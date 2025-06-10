@@ -1,6 +1,8 @@
 package com.github.mheerwaarden.eventdemo.localization
 
 import java.text.DecimalFormat
+import java.text.NumberFormat
+import java.util.Currency
 import java.util.Locale
 
 class DesktopNumberFormatter : NumberFormatter {
@@ -15,5 +17,20 @@ class DesktopNumberFormatter : NumberFormatter {
         decimalFormat.minimumFractionDigits = minFractionDigits
         decimalFormat.maximumFractionDigits = maxFractionDigits
         return decimalFormat.format(number)
+    }
+
+    override fun formatCurrency(
+        amount: Double,
+        currencyCode: String,
+        minIntegerDigits: Int,
+        minFractionDigits: Int,
+        maxFractionDigits: Int
+    ): String {
+        val currencyFormat = NumberFormat.getCurrencyInstance(Locale.getDefault())
+        currencyFormat.currency = Currency.getInstance(currencyCode)
+        currencyFormat.minimumIntegerDigits = minIntegerDigits
+        currencyFormat.minimumFractionDigits = minFractionDigits
+        currencyFormat.maximumFractionDigits = maxFractionDigits
+        return currencyFormat.format(amount)
     }
 }

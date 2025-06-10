@@ -29,6 +29,8 @@ data class Event(
     val eventCategory: EventCategory = EventCategory.PRIVATE,
     val isOnline: Boolean = false,
     val htmlColor: HtmlColors = HtmlColors.OLIVE_DRAB,
+    val amount: Double? = null,
+    val price: Double? = null,
 ) : ModelItem(id) {
     companion object {
         val typeNameResId = Res.string.event

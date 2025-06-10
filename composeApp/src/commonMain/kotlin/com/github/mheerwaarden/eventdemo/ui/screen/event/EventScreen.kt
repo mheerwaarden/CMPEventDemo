@@ -32,8 +32,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.mheerwaarden.eventdemo.Dimensions
 import com.github.mheerwaarden.eventdemo.data.database.DummyEventRepository
 import com.github.mheerwaarden.eventdemo.data.model.Event
+import com.github.mheerwaarden.eventdemo.localization.toLocalizedCurrencyString
+import com.github.mheerwaarden.eventdemo.localization.toLocalizedDecimalString
 import com.github.mheerwaarden.eventdemo.localization.toLocalizedString
 import com.github.mheerwaarden.eventdemo.resources.Res
+import com.github.mheerwaarden.eventdemo.resources.amount
 import com.github.mheerwaarden.eventdemo.resources.color
 import com.github.mheerwaarden.eventdemo.resources.contact
 import com.github.mheerwaarden.eventdemo.resources.delete
@@ -46,6 +49,7 @@ import com.github.mheerwaarden.eventdemo.resources.event_type
 import com.github.mheerwaarden.eventdemo.resources.is_online
 import com.github.mheerwaarden.eventdemo.resources.location
 import com.github.mheerwaarden.eventdemo.resources.notes
+import com.github.mheerwaarden.eventdemo.resources.price
 import com.github.mheerwaarden.eventdemo.ui.AppViewModelProvider
 import com.github.mheerwaarden.eventdemo.ui.navigation.NavigationDestination
 import com.github.mheerwaarden.eventdemo.ui.screen.DeleteEventHeaderButton
@@ -228,6 +232,14 @@ fun EventBody(eventUiState: EventUiState, modifier: Modifier) {
                 append(eventUiState.htmlColor.text)
             },
         )
+        EventDetailRow(
+            labelResId = Res.string.amount,
+            detail = eventUiState.amount,
+        )
+        EventCurrencyDetailRow(
+            labelResId = Res.string.price,
+            detail = eventUiState.price,
+        )
     }
 }
 
@@ -250,6 +262,22 @@ private fun EventDetailRow(
         Spacer(modifier = Modifier.weight(1f))
         Text(text = detail)
     }
+}
+
+@Composable
+private fun EventDetailRow(
+    labelResId: StringResource, detail: Double?, modifier: Modifier = Modifier,
+) {
+    if (detail == null) return
+    EventDetailRow(labelResId = labelResId, detail = AnnotatedString(detail.toLocalizedDecimalString(minFractionDigits = 1)), modifier = modifier)
+}
+
+@Composable
+private fun EventCurrencyDetailRow(
+    labelResId: StringResource, detail: Double?, modifier: Modifier = Modifier,
+) {
+    if (detail == null) return
+    EventDetailRow(labelResId = labelResId, detail = AnnotatedString(detail.toLocalizedCurrencyString(minFractionDigits = 1)), modifier = modifier)
 }
 
 @Composable
