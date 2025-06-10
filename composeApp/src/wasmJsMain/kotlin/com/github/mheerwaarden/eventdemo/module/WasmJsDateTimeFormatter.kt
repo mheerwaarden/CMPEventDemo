@@ -120,7 +120,7 @@ private fun formatDateJs(millis: Long): String = js(
             month: "long",
             day: "numeric"
         };
-        return new Date(millis).toLocaleDateString(locale, options);
+        return new Date(Number(millis)).toLocaleDateString(locale, options);
     }"""
 )
 
@@ -140,9 +140,9 @@ private fun getMonthName(monthNumber: Int, isFull: Boolean): String = js(
         const locale = window.navigator.languages[0] || undefined;
         let options;
         if (isFull) {
-            options = { month: 'long' };
+            options = { month: "long" };
         } else {
-            options = { month: 'medium' };
+            options = { month: "medium" };
         }
         const formatter = Intl.DateTimeFormat(locale, options);
         return formatter.format(new Date(2003, monthNumber - 1, 12));

@@ -126,6 +126,7 @@ kotlin {
                         "-Xir-per-module",
                         "-P",
                         "plugin:org.jetbrains.compose.compiler:generateFunctionKeyMetaClass=true",
+                        "-Xwasm-attach-js-exception",
                     )
                 )
             }
@@ -269,7 +270,12 @@ kotlin {
         }
         val desktopTest by getting
 
-        val wasmJsMain by getting
+        val wasmJsMain by getting {
+            dependencies {
+                implementation(libs.kotlinx.browser)
+            }
+        }
+
         val wasmJsTest by getting
 
         val jsMain by getting {
@@ -359,7 +365,6 @@ dependencies {
 }
 
 compose.desktop {
-
     application {
         mainClass = "com.github.mheerwaarden.eventdemo.MainKt"
 

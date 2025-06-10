@@ -61,22 +61,28 @@ class LocaleViewModel(
     var preferredLocaleState: StateFlow<String> = MutableStateFlow(DEFAULT_LOCALE)
 
     override suspend fun loadState() {
-        // 1. Suspend while fetching the first preference value to ensure initial state is correct.
-        val initialPreferences = userPreferencesRepository.preferences.first()
-        val initialLocale = getEffectiveLocale(initialPreferences)
+        try {
+            // 1. Suspend while fetching the first preference value to ensure initial state is correct.
+            val initialPreferences = userPreferencesRepository.preferences.first()
 
-        // 2. Change the platform locale to the user's preferred locale.
-        setPreferredAppLocale(initialLocale)
+            // 2. Change the platform locale to the user's preferred locale.
+            val initialLocale = getEffectiveLocale(initialPreferences)
+            setPreferredAppLocale(initialLocale) //(getInitialLocale())
 
-        // 3. Set up the ongoing StateFlow to listen for subsequent changes
-        preferredLocaleState = userPreferencesRepository.preferences
-            .map { preferences -> getEffectiveLocale(preferences) }
-            .distinctUntilChanged()
-            .stateIn(
-                scope = viewModelScope,
-                started = WhileSubscribed(TIMEOUT_MILLIS),
-                initialValue = initialLocale
-            )
+            // 3. Set up the ongoing StateFlow to listen for subsequent changes
+            preferredLocaleState = userPreferencesRepository.preferences
+                .map { preferences -> getEffectiveLocale(preferences) }
+                .distinctUntilChanged()
+                .stateIn(
+                    scope = viewModelScope,
+                    started = WhileSubscribed(TIMEOUT_MILLIS),
+                    initialValue = initialLocale
+                )
+        } catch (e: Throwable) { // Catch Throwable to see everything
+            println("LocaleViewModel: Exception in loadState: ${e::class.simpleName} - ${e.message}")
+            println("LocaleViewModel: Stack trace for developer: \n${e.stackTraceToString()}")
+            throw e
+        }
     }
 
     private fun getEffectiveLocale(preferences: UserPreferences) =

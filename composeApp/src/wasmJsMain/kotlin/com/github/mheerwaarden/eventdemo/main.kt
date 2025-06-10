@@ -38,6 +38,7 @@ fun main() {
         println("Message: ${e.message}")
         println("Stack Trace:")
         println(e.stackTraceToString())
+    } finally {
+        println("onload finished")
     }
-
 }
