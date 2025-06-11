@@ -21,6 +21,7 @@ fun LocalDateTime.toLocalizedString(): String =
 
 fun LocalDate.toLocalizedString(): String = LocalizedFormatter.dateTimeFormatter.formatDate(this)
 fun LocalTime.toLocalizedString(): String = LocalizedFormatter.dateTimeFormatter.formatTime(this)
+fun LocalTime.Companion.is24HourFormat(): Boolean = LocalizedFormatter.dateTimeFormatter.is24HourFormat()
 
 fun LocalDate.Companion.dayMonthFormat(): DateTimeFormat<LocalDate> = Format {
     dayOfMonth()

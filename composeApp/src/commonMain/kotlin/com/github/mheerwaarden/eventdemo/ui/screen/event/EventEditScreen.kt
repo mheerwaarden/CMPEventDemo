@@ -64,7 +64,6 @@ fun EventEditScreen(
                 onToggleKeyboard = settingsViewModel::setDatePickerUsesKeyboard
             ),
             timeFieldPreferences = TimeFieldPreferences(
-                is24Hour = true,
                 isUseKeyboard = preferences.timePickerUsesKeyboard,
                 onToggleKeyboard = settingsViewModel::setTimePickerUsesKeyboard,
                 isHorizontalLayout = isHorizontalLayout

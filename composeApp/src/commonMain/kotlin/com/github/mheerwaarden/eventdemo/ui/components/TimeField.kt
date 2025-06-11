@@ -21,7 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.github.mheerwaarden.eventdemo.localization.DateTimeFormatter
+import com.github.mheerwaarden.eventdemo.localization.is24HourFormat
 import com.github.mheerwaarden.eventdemo.localization.toLocalizedString
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.select_time
@@ -33,23 +33,10 @@ import org.jetbrains.compose.resources.stringResource
 
 
 data class TimeFieldPreferences(
-    val is24Hour: Boolean = false,
     val isUseKeyboard: Boolean = false,
     val onToggleKeyboard: (Boolean) -> Unit = { _ -> },
     val isHorizontalLayout: Boolean = false,
-) {
-    constructor(
-        dateTimeFormatter: DateTimeFormatter,
-        isUseKeyboard: Boolean = false,
-        onToggleKeyboard: (Boolean) -> Unit = { _ -> },
-        isHorizontalLayout: Boolean = false,
-    ) : this(
-        is24Hour = dateTimeFormatter.is24HourFormat(),
-        isUseKeyboard = isUseKeyboard,
-        onToggleKeyboard = onToggleKeyboard,
-        isHorizontalLayout = isHorizontalLayout
-    )
-}
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,6 +47,8 @@ fun TimeField(
     preferences: TimeFieldPreferences = TimeFieldPreferences(),
     labelId: StringResource = Res.string.select_time
 ) {
+    val is24Hour = LocalTime.is24HourFormat()
+
     // String value of the date
     var time by rememberSaveable { mutableStateOf("") }
     time = currentTime.toLocalizedString()
@@ -77,7 +66,7 @@ fun TimeField(
         onShowDialog = { onClose ->
             ShowTimePickerDialog(
                 currentTime = currentTime,
-                is24Hour = preferences.is24Hour,
+                is24Hour = is24Hour,
                 isUseKeyboard = preferences.isUseKeyboard,
                 onSetTime = { hour, minute ->
                     val localTime = LocalTime(hour, minute)

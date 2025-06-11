@@ -70,7 +70,6 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import org.koin.compose.koinInject
 
 object EventEntryDestination : NavigationDestination {
     override val route = "event_entry"
@@ -117,7 +116,6 @@ fun EventEntryScreen(
                 onToggleKeyboard = settingsViewModel::setDatePickerUsesKeyboard
             ),
             timeFieldPreferences = TimeFieldPreferences(
-                dateTimeFormatter = koinInject(),
                 isUseKeyboard = preferences.timePickerUsesKeyboard,
                 onToggleKeyboard = settingsViewModel::setTimePickerUsesKeyboard,
                 isHorizontalLayout = isHorizontalLayout
