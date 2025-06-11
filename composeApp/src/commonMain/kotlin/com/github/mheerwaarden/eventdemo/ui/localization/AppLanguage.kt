@@ -1,4 +1,4 @@
-package com.github.mheerwaarden.eventdemo.i18n
+package com.github.mheerwaarden.eventdemo.ui.localization
 
 import com.github.mheerwaarden.eventdemo.data.preferences.DEFAULT_LOCALE_FROM_PLATFORM
 import com.github.mheerwaarden.eventdemo.resources.Res

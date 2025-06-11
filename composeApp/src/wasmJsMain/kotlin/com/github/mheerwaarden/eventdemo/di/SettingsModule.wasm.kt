@@ -8,8 +8,6 @@ import org.koin.dsl.module
 import org.w3c.dom.Storage
 
 actual val settingsModule: Module = module {
-    single<Storage> { getLocalStorage() }
+    single<Storage> { window.localStorage }
     single<Settings> { StorageSettings(get()) }
 }
-
-fun getLocalStorage(): Storage = window.localStorage

@@ -3,7 +3,6 @@ package com.github.mheerwaarden.eventdemo
 import android.app.Application
 import android.content.Context
 import android.util.Log
-import com.github.mheerwaarden.eventdemo.di.AndroidAppContext
 import com.github.mheerwaarden.eventdemo.di.initKoin
 import org.koin.dsl.module
 
@@ -15,7 +14,6 @@ class MainApp : Application() {
             module {
                 single<Context> { this@MainApp }
                 single<AppInfo> { AndroidAppInfo }
-                single<AppContext> { AndroidAppContext(this@MainApp) }
                 single {
                     { Log.i("Startup", "Startup Android/Kotlin") }
                 }

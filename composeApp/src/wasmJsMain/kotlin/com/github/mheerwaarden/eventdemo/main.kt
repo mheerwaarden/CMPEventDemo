@@ -22,7 +22,6 @@ fun main() {
                         versionCode = get(named("versionCode"))
                     )
                 }
-                single<AppContext> { WasmJsAppContext }
                 single {
                     {
                         println("Startup - WasmJs")

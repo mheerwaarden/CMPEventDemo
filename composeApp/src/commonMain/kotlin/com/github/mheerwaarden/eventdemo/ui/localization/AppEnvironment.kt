@@ -1,4 +1,4 @@
-package com.github.mheerwaarden.eventdemo.i18n
+package com.github.mheerwaarden.eventdemo.ui.localization
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider

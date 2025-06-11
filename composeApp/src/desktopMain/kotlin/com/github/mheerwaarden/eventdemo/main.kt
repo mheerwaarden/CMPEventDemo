@@ -10,9 +10,6 @@ import com.github.mheerwaarden.eventdemo.resources.calendar
 import org.jetbrains.compose.resources.painterResource
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
-import java.text.DateFormat
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 fun main() = application {
     initKoin(module {
@@ -23,18 +20,6 @@ fun main() = application {
                 versionName = get(named("versionName")),
                 versionCode = get(named("versionCode"))
             )
-        }
-        single<AppContext> {
-            object : AppContext {
-                override val is24HourFormat: Boolean
-                    get() {
-                        val dateFormat: DateFormat = SimpleDateFormat.getTimeInstance(
-                            SimpleDateFormat.SHORT, Locale.getDefault()
-                        )
-                        return dateFormat is SimpleDateFormat && dateFormat.toPattern()
-                            .contains("H")
-                    }
-            }
         }
         single {
             {

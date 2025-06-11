@@ -25,7 +25,6 @@ fun main() {
                                 versionCode = get(named("versionCode"))
                             )
                         }
-                        single<AppContext> { JsAppContext() }
                         single {
                             {
                                 println("Startup - Js")

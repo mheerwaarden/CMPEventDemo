@@ -3,7 +3,7 @@ package com.github.mheerwaarden.eventdemo.di
 import co.touchlab.kermit.Logger
 import com.github.mheerwaarden.eventdemo.data.preferences.UserPreferencesRepository
 import com.github.mheerwaarden.eventdemo.data.preferences.UserPreferencesSettingsRepository
-import com.github.mheerwaarden.eventdemo.i18n.LocaleViewModel
+import com.github.mheerwaarden.eventdemo.ui.localization.LocaleViewModel
 import com.github.mheerwaarden.eventdemo.initLogger
 import com.github.mheerwaarden.eventdemo.localization.DateTimeFormatter
 import com.github.mheerwaarden.eventdemo.localization.NumberFormatter

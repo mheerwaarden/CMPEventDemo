@@ -21,7 +21,6 @@ object KoinJsTestInitializer {
                                 versionCode = "0.0.1"
                             )
                         }
-                        single<AppContext> { JsAppContext() }
                     },
                     platformLocalizationModule,
                 )

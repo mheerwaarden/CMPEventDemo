@@ -1,5 +1,6 @@
 package com.github.mheerwaarden.eventdemo.localization
 
+@Suppress("unused")
 external interface LocaleOptions : JsAny {
     // Common
     /** Valid style values: "decimal", "currency", "percent", "unit". */

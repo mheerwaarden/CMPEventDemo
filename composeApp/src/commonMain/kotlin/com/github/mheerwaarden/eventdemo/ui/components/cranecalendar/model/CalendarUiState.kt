@@ -218,7 +218,4 @@ data class CalendarUiState(
         }
     }
 
-    companion object {
-
-    }
 }

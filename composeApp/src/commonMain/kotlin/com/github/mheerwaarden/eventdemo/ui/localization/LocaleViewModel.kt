@@ -1,4 +1,4 @@
-package com.github.mheerwaarden.eventdemo.i18n
+package com.github.mheerwaarden.eventdemo.ui.localization
 
 import androidx.lifecycle.viewModelScope
 import com.github.mheerwaarden.eventdemo.data.preferences.DEFAULT_LOCALE
@@ -17,26 +17,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-
-/**
- * Platform-specific function to get the current system's locale tag (e.g., "en-US", "fr-CA").
- * This function will be implemented by each platform (`actual` implementation).
- */
-expect fun getPlatformSystemLocaleTag(): String?
-
-/**
- * Platform-specific function to apply the chosen locale tag to the application's environment.
- * Passing null will result in using the system's default locale.
- * Passing an invalid locale tag will not change the current locale of the system.
- * On Android, this would call AppCompatDelegate.setApplicationLocales().
- * On Web, this might involve a page reload or other framework-specific actions.
- * On other platforms, it might set the default locale or do nothing if not applicable.
- *
- * @param localeTag The BCP 47 language tag to apply. If null, it implies that the application
- *                  should revert to using the system's default locale. An invalid tag will be
- *                  ignored.
- */
-expect fun applyPlatformLocale(localeTag: String?)
 
 /**
  * ViewModel responsible for managing the application's locale state and preferences.

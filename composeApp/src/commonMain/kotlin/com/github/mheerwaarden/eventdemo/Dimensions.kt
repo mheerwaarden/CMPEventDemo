@@ -3,6 +3,7 @@ package com.github.mheerwaarden.eventdemo
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+@Suppress("unused")
 object Dimensions {
     val padding_minimum: Dp = 1.dp
     val padding_extra_small: Dp = 2.dp

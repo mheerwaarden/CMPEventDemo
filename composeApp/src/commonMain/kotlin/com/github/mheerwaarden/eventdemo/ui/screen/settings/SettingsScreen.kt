@@ -24,8 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.mheerwaarden.eventdemo.Dimensions
-import com.github.mheerwaarden.eventdemo.i18n.AppLanguage
-import com.github.mheerwaarden.eventdemo.i18n.LocaleViewModel
+import com.github.mheerwaarden.eventdemo.ui.localization.AppLanguage
+import com.github.mheerwaarden.eventdemo.ui.localization.LocaleViewModel
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.language
 import com.github.mheerwaarden.eventdemo.resources.settings

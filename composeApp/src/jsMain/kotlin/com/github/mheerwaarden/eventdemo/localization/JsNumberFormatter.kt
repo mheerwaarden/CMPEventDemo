@@ -48,6 +48,7 @@ class JsNumberFormatter : NumberFormatter, KoinComponent {
 
 }
 
+@Suppress("unused")
 external interface NumberOptions {
     // Common
     /** Valid style values: "decimal", "currency", "percent", "unit". */

@@ -40,7 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.github.mheerwaarden.eventdemo.i18n.AppEnvironment
+import com.github.mheerwaarden.eventdemo.ui.localization.AppEnvironment
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.about
 import com.github.mheerwaarden.eventdemo.resources.app_name
