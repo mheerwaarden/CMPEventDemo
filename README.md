@@ -2,6 +2,13 @@
 
 This is a demo of a Compose Multiplatform app. The project is created by the [Kotlin Multiplatform Wizard](https://kmp.jetbrains.com/) and targeting Android, iOS, Web and Desktop (Windows, MacOS, Linux).
 
+## Installing the released versions
+* Android (app): Download the .apk-file on your device, allow install and trust the developer.
+* MacOS (desktop): Download the .dmg-file on your device and drop it into the application folder.
+* Linux (desktop): Download the .deb-file on your device and install it through your app manager or running `sudo dpkg -i PACKAGE.NAME_VERSION.deb` in a terminal. For uninstall, run `sudo dpkg -r PACKAGE.NAME`.
+* WasmJs (web): Download the .wasmJs.zip-file on your device and extract it. Make sure you have python on your system, otherwise install it from [python.org](https://www.python.org/downloads/). In a terminal, change to the folder where you extracted the zip-file and run `python3 -m http.server 8080`. Open a browser and navigate to `http://localhost:8080`.
+
+## Project structure
 * `/composeApp` is for code that will be shared across the Compose Multiplatform applications.
   It contains several subfolders:
   - `commonMain` is for code that’s common for all targets.
@@ -20,6 +27,7 @@ Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-mu
 Feedback on Compose/Web and Kotlin/Wasm is appreciated in the public Slack channel [#compose-web](https://slack-chats.kotlinlang.org/c/compose-web).
 If you face any issues, please report them on [GitHub](https://github.com/mheerwaarden/CMP-Event-prototype/issues).
 
+## Starting the app in Android Studio
 To run the Android App, it is recommended to use the Android Studio run configuration. 
 Using the command line, you need to do the following steps:
 - To build: `./gradlew :composeApp:assembleDebug`
@@ -39,6 +47,8 @@ You can start the application on other platforms by running the following Gradle
 * iOS app: `./gradlew :composeApp:iosX64Run`
 * JS app: `./gradlew :composeApp:jsBrowserDevelopmentRun`
 * WasmJS app: `./gradlew :composeApp:wasmJsBrowserDevelopmentRun`
+* Android app: `./gradlew :composeApp:assembleDebugAndroid*/` or menu item 'Run Build | Generate App Bundles or APKs | Generate APKs'
+  APK in composeApp/build/outputs/apk/debug/composeApp-debug.apk
 
 You can start the tests by running the following Gradle tasks:
 * Android app: `./gradlew :composeApp:androidUnitTest`
