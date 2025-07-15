@@ -1,6 +1,7 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -373,28 +374,57 @@ dependencies {
     add("kspIosSimulatorArm64", libs.koin.ksp.compiler)
 }
 
-// Add an explicit dependency for all platform compilation tasks on the kspCommonMainKotlinMetadata task
-// The specific KSP task names for platforms.
- val platformCompilationKspTaskNames = listOf(
-     "kspDebugKotlinAndroid",
-     "kspReleaseKotlinAndroid",
-     "kspKotlinDesktop",
-     "kspKotlinIosX64",
-     "kspKotlinIosArm64",
-     "kspKotlinIosSimulatorArm64",
-     "kspKotlinJs",
-     "kspKotlinWasmJs"
- )
-tasks.configureEach {
-    if (platformCompilationKspTaskNames.contains(this.name)) {
-        project.logger.info("Configuring KSP task '${this.name}' (from explicit list) to depend on 'kspCommonMainKotlinMetadata'")
-        dependsOn("kspCommonMainKotlinMetadata")
-        // }
+// Configure KSP tasks to depend on kspCommonMainKotlinMetadata. This is not done implicitly.
+// The specific KSP task names for platforms would be:
+//     val platformCompilationKspTaskNames = listOf(
+//         "kspDebugKotlinAndroid",
+//         "kspReleaseKotlinAndroid",
+//         "kspKotlinDesktop",
+//         "kspKotlinIosX64",
+//         "kspKotlinIosArm64",
+//         "kspKotlinIosSimulatorArm64",
+//         "kspKotlinJs",
+//         "kspKotlinWasmJs"
+//     )
+// For less maintenance when adding platforms, we examine if the task name matches a pattern.
+// This is done by name matching because accurately identifying these tasks by a common supertype
+// (e.g., with tasks.withType<SomeKspTask>()) proved unreliable due to Gradle's task decoration and
+// the specific class hierarchy of KSP tasks.
+tasks.matching { it.name.startsWith("ksp") }.configureEach {
+    // Now we know the name starts with "ksp".
+    // Log for clarity, showing the actual type.
+    project.logger.debug("Found potential KSP task (by name): ${this.name} of type ${this.javaClass.name}")
+
+    // 1. Exclude tasks that should NOT have this 'dependsOn' relationship.
+    //    'kspCommonMainKotlinMetadata' should not depend on itself.
+    //    '*ProcessorClasspath' tasks are for setting up class paths, not direct code generation consumed by other KSP tasks.
+    if (this.name == "kspCommonMainKotlinMetadata" || this.name.contains("ProcessorClasspath", ignoreCase = true)) {
+        project.logger.debug("Skipping task '${this.name}' (self or classpath task).")
+        return@configureEach // Exit this configuration block for the current task.
+    }
+
+    // 2. Define the patterns for the platform KSP tasks we want to target.
+    // Regex for typical Kotlin platform KSP tasks (JVM, Android, Native)
+    // e.g., kspKotlinDesktop, kspDebugKotlinAndroid, kspReleaseKotlinIosX64
+    val isKotlinPlatformKspTask =
+        this.name.matches(Regex("ksp([A-Z][a-zA-Z0-9]*)?Kotlin([A-Z][a-zA-Z0-9_]+)"))
+    // Regex for JS-based platform KSP tasks (JS, WasmJs)
+    // e.g., kspJs, kspSomeVariantJs, kspWasmJs, kspSomeVariantWasmJs
+    val isJsBasedPlatformKspTask = this.name.matches(Regex("ksp([A-Z][a-zA-Z0-9]*)?(Wasm)?Js"))
+
+    // 3. If the current KSP task matches one of our platform patterns, add the dependency.
+    if (isKotlinPlatformKspTask || isJsBasedPlatformKspTask) {
+        project.logger.info("Configuring task '${this.name}' (name match) to depend on 'kspCommonMainKotlinMetadata'")
+        this.dependsOn("kspCommonMainKotlinMetadata")
+    } else {
+        // This task started with "ksp" but didn't match the more specific platform patterns.
+        // This might include tasks like 'kspAARMetadataExtractor', etc., which are fine to ignore here.
+        project.logger.debug("Task '${this.name}' (name starts with ksp) did not match specific platform patterns for dependsOn.")
     }
 }
 
 // Task kspCommonMainKotlinMetadata is not automatically triggered, it needs a manual instruction to do so
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
+tasks.withType<KotlinCompile>().all {
     if (name != "kspCommonMainKotlinMetadata") {
         dependsOn("kspCommonMainKotlinMetadata")
     }
