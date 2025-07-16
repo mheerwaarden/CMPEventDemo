@@ -6,7 +6,7 @@ This is a demo of a Compose Multiplatform app. The project is created by the [Ko
 * Android (app): Download the .apk-file on your device, allow install and trust the developer.
 * MacOS (desktop): Download the .dmg-file on your device and drop it into the application folder.
 * Linux (desktop): Download the .deb-file on your device and install it through your app manager or running `sudo dpkg -i PACKAGE.NAME_VERSION.deb` in a terminal. For uninstall, run `sudo dpkg -r PACKAGE.NAME`.
-* WasmJs (web): Download the .wasmJs.zip-file on your device and extract it. Make sure you have python on your system, otherwise install it from [python.org](https://www.python.org/downloads/). In a terminal, change to the folder where you extracted the zip-file and run `python3 -m http.server 8080`. Open a browser and navigate to `http://localhost:8080`.
+* JS or WasmJs (web): Download the .wasmJs.zip-file or the js.zip-file on your device and extract it. Make sure you have Python on your system, otherwise install it from [python.org](https://www.python.org/downloads/). In a terminal, change to the folder where you extracted the zip-file and run `python3 -m http.server 8080`. Open a browser and navigate to `http://localhost:8080`.
 
 ## Project structure
 * `/composeApp` is for code that will be shared across the Compose Multiplatform applications.
