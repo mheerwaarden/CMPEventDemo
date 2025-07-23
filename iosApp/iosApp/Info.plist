@@ -46,5 +46,20 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSAppTransportSecurity</key>
+    <dict>
+        <!--TODO: Replace by key NSExceptionDomains in production
+                <key>NSExceptionDomains</key>
+                <dict>
+                    <key>your-domain.com</key>
+                    <dict>
+                        <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                        <true/>
+                    </dict>
+                </dict>
+        -->
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+    </dict>
 </dict>
 </plist>

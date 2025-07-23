@@ -6,6 +6,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.androidApplication)
@@ -73,6 +74,9 @@ kotlin {
             commonWebpackConfig {
                 outputFileName = "composeApp.js" // Replace with your desired output file name
                 output?.library = "composeApp" // Replace with your desired library name
+                cssSupport {
+                    enabled.set(true)
+                }
             }
             webpackTask {
                 // We don't need to do anything special here.
@@ -131,7 +135,6 @@ kotlin {
                     )
                 )
             }
-
         }
     }
 
@@ -158,6 +161,13 @@ kotlin {
                 implementation(libs.koin.compose)
                 implementation(libs.koin.compose.viewmodel)
                 implementation(libs.koin.compose.viewmodel.navigation)
+                // Networking & Serialization
+                implementation(libs.ktor.client.core)
+                implementation(libs.ktor.client.content.negotiation)
+                implementation(libs.ktor.serialization.kotlinx.json)
+                implementation(libs.ktor.client.websockets)
+                implementation(libs.ktor.client.auth)
+                implementation(libs.ktor.client.logging)
                 // Coroutines
                 implementation(libs.kotlinx.coroutines.core)
                 // Navigation
@@ -166,6 +176,9 @@ kotlin {
                 implementation(libs.multiplatform.settings)
                 // DateTime
                 implementation(libs.kotlinx.dateTime)
+                // Direct JSON support
+                implementation(libs.kotlinx.serialization.core)
+                implementation(libs.kotlinx.serialization.json)
                 // Logging
                 api(libs.touchlab.kermit)
             }
@@ -185,11 +198,13 @@ kotlin {
 
                 // Dependency injection
                 implementation(libs.koin.android)
+                // Networking & Serialization
+                implementation(libs.ktor.client.android)
+                // Coroutines
+                implementation(libs.kotlinx.coroutines.android)
                 // Preferences
                 implementation(libs.androidx.datastore.preferences)
                 implementation(libs.androidx.preference.ktx)
-                // ViewModel
-                implementation(libs.androidx.lifecycle.viewmodel)
                 // Window size calculation
                 implementation(libs.androidx.material3.window.size.clazz)
             }
@@ -235,6 +250,8 @@ kotlin {
         val iosSimulatorArm64Main by getting
         val iosMain by getting {
             dependencies {
+                // Networking & Serialization
+                implementation(libs.ktor.client.darwin)
                 // Logging
                 api(libs.touchlab.kermit.simple)
                 // Conversion of enum, sealed classes and coroutines to native iOS
@@ -259,6 +276,9 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutines.swing)
+                // Networking & Serialization
+                // Choose lightweight CIO engine, if not sufficient move to OkHttp
+                implementation(libs.ktor.client.cio)
             }
         }
         val desktopTest by getting
@@ -266,6 +286,8 @@ kotlin {
         val wasmJsMain by getting {
             dependencies {
                 implementation(libs.kotlinx.browser)
+                // Networking & Serialization
+                implementation(libs.ktor.client.wasm)
             }
         }
 
@@ -275,6 +297,8 @@ kotlin {
             dependencies {
                 implementation(compose.html.core)
                 implementation(libs.kotlin.browser)
+                // Networking & Serialization
+                implementation(libs.ktor.client.js)
             }
         }
 
@@ -374,7 +398,8 @@ dependencies {
     add("kspIosSimulatorArm64", libs.koin.ksp.compiler)
 }
 
-// Configure KSP tasks to depend on kspCommonMainKotlinMetadata. This is not done implicitly.
+// Configure KSP tasks to depend on kspCommonMainKotlinMetadata,to be able to use annotations in
+// commonMain. This is not done implicitly.
 // The specific KSP task names for platforms would be:
 //     val platformCompilationKspTaskNames = listOf(
 //         "kspDebugKotlinAndroid",
@@ -441,8 +466,8 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.github.mheerwaarden.eventdemo"
-            packageVersion = "1.0.0"
+            packageName = "Event Demo"
+            packageVersion = versionName
             description = "Compose Multiplatform Demo with an Event Calendar"
             linux {
                 iconFile.set(project.file("src/desktopMain/resources/desktopicon.png"))
@@ -452,6 +477,8 @@ compose.desktop {
             }
             windows {
                 iconFile.set(project.file("src/desktopMain/resources/desktopicon.ico"))
+                menuGroup = "Event Demo"
+                upgradeUuid = "34B4CD27-5D7A-4396-9172-CC11157BECC6"
             }
 
         }
@@ -465,7 +492,8 @@ compose.resources {
     generateResClass = auto
 }
 
-// For debugging: `.gradlew printKotlinDetails` shows the details of the configuration defined here.
+// For debugging the build configuration: `.gradlew printKotlinDetails` shows the details of the
+// configuration defined here.
 tasks.register("printKotlinDetails") {
     doLast {
         println(">>> Kotlin Source Sets <<<")

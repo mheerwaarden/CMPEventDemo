@@ -25,4 +25,8 @@ object Dimensions {
     val dialog_height: Dp = 568.dp
     val border_width: Dp = 1.dp
     val error_image_size: Dp = 64.dp
+    val max_compact_width: Dp = 600.dp
+    val max_medium_width: Dp = 840.dp
+    val max_compact_height: Dp = 800.dp
+    val max_medium_height: Dp = 1200.dp
 }

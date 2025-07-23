@@ -29,6 +29,7 @@ import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,8 +39,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.github.mheerwaarden.eventdemo.data.pocketbase.PocketBaseClient
 import com.github.mheerwaarden.eventdemo.ui.localization.AppEnvironment
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.about
@@ -48,14 +51,21 @@ import com.github.mheerwaarden.eventdemo.resources.back_button
 import com.github.mheerwaarden.eventdemo.resources.close
 import com.github.mheerwaarden.eventdemo.resources.more
 import com.github.mheerwaarden.eventdemo.resources.preferences
+import com.github.mheerwaarden.eventdemo.ui.AppViewModelProvider
 import com.github.mheerwaarden.eventdemo.ui.navigation.EventDemoAppNavHost
 import com.github.mheerwaarden.eventdemo.ui.navigation.MenuNavigator
 import com.github.mheerwaarden.eventdemo.ui.navigation.MenuNavigatorImpl
+import com.github.mheerwaarden.eventdemo.ui.screen.LoadingScreen
 import com.github.mheerwaarden.eventdemo.ui.screen.about.AboutDestination
+import com.github.mheerwaarden.eventdemo.ui.screen.event.AuthViewModel
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventOverviewDestination
+import com.github.mheerwaarden.eventdemo.ui.screen.event.EventsViewModel
+import com.github.mheerwaarden.eventdemo.ui.screen.settings.SettingsViewModel
 import com.github.mheerwaarden.eventdemo.ui.theme.EventDemoAppTheme
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import com.github.mheerwaarden.eventdemo.ui.screen.event.EventsScreen
+import com.github.mheerwaarden.eventdemo.ui.screen.auth.LoginScreen
 
 @Composable
 fun EventDemoApp(
@@ -65,8 +75,40 @@ fun EventDemoApp(
 ) {
     EventDemoAppTheme {
         AppEnvironment {
-            ThemedLocalizedApp(startDestination, modifier, isHorizontalLayout)
+            DemoChooser(startDestination, isHorizontalLayout, modifier)
         }
+    }
+}
+
+@Composable
+fun DemoChooser(
+    startDestination: String,
+    isHorizontalLayout: Boolean,
+    modifier: Modifier = Modifier,
+    settingsViewModel: SettingsViewModel = viewModel(factory = AppViewModelProvider.Factory),
+) {
+    LoadingScreen(loadingViewModel = settingsViewModel, modifier = modifier) {
+        val preferences by settingsViewModel.settingsUiState.collectAsState()
+        if (preferences.usePocketBase) {
+            PocketBaseEvents(modifier)
+        } else {
+            ThemedLocalizedApp(startDestination, isHorizontalLayout, modifier)
+        }
+    }
+}
+
+@Composable
+fun PocketBaseEvents(modifier: Modifier = Modifier) {
+    val pocketBase = remember { PocketBaseClient() }
+    val authViewModel = remember { AuthViewModel(pocketBase) }
+    val eventsViewModel = remember { EventsViewModel(pocketBase) }
+
+    val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
+
+    if (isAuthenticated) {
+        EventsScreen(eventsViewModel, modifier)
+    } else {
+        LoginScreen(authViewModel, modifier)
     }
 }
 
@@ -74,8 +116,8 @@ fun EventDemoApp(
 @Composable
 private fun ThemedLocalizedApp(
     startDestination: String,
-    modifier: Modifier,
-    isHorizontalLayout: Boolean
+    isHorizontalLayout: Boolean,
+    modifier: Modifier = Modifier
 ) {
     val appName = stringResource(resource = Res.string.app_name)
     var title by rememberSaveable { mutableStateOf(appName) }
@@ -128,6 +170,9 @@ private fun ThemedLocalizedApp(
     }
 }
 
+/**
+ * App bar to display title and conditionally display the back navigation.
+ */
 /**
  * App bar to display title and conditionally display the back navigation.
  */

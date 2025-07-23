@@ -42,7 +42,8 @@ class SettingsViewModel(
                 timePickerUsesKeyboard = preferences.timePickerUsesKeyboard,
                 isCalendarExpanded = preferences.isCalendarExpanded,
                 useCraneCalendar = preferences.useCraneCalendar,
-                localeTag = preferences.localeTag
+                localeTag = preferences.localeTag,
+                usePocketBase = preferences.usePocketBase,
             )
         }.stateIn(
             scope = viewModelScope,
@@ -53,7 +54,8 @@ class SettingsViewModel(
                 timePickerUsesKeyboard = initialPreferences.timePickerUsesKeyboard,
                 isCalendarExpanded = initialPreferences.isCalendarExpanded,
                 useCraneCalendar = initialPreferences.useCraneCalendar,
-                localeTag = initialPreferences.localeTag
+                localeTag = initialPreferences.localeTag,
+                usePocketBase = initialPreferences.usePocketBase,
             )
         )
     }
@@ -89,6 +91,12 @@ class SettingsViewModel(
         }
     }
 
+    fun setUsePocketBase(usePocketBase: Boolean) {
+        updatePreferenceJob?.cancel()
+        updatePreferenceJob = viewModelScope.launch {
+            userPreferencesRepository.saveUsePocketBase(usePocketBase)
+        }
+    }
 }
 
 /**
@@ -103,4 +111,5 @@ data class SettingsUiState(
     val useDynamicColor: Boolean = false,
     val useDarkTheme: Boolean = false,
     val localeTag: String = DEFAULT_LOCALE,
+    val usePocketBase: Boolean = false,
 )

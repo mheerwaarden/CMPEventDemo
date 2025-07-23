@@ -59,7 +59,7 @@ fun LoadingScreen(
             ErrorScreen(
                 message = message,
                 retryAction = { loadingViewModel.load() },
-                modifier = Modifier
+                modifier = modifier
                     .fillMaxSize()
                     .wrapContentSize(Alignment.Center)
             )

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberWindowState
 import com.github.mheerwaarden.eventdemo.di.initKoin
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.calendar
@@ -28,12 +29,21 @@ fun main() = application {
         }
 
     })
+
+    val windowState = rememberWindowState(
+        width = Dimensions.max_compact_width,
+        height = Dimensions.max_compact_height
+    )
     Window(
         onCloseRequest = ::exitApplication,
+        state = windowState,
         title = "Event Demo",
         icon = painterResource(Res.drawable.calendar)
     ) {
-        EventDemoApp(modifier = Modifier.fillMaxSize())
+        EventDemoApp(
+            modifier = Modifier.fillMaxSize(),
+            isHorizontalLayout = windowState.size.width > Dimensions.max_compact_width
+        )
     }
 
 }

@@ -25,5 +25,7 @@ data class UserPreferences(
     /** Use Crane calendar instead of Event calendar */
     val useCraneCalendar: Boolean = false,
     /** Locale for language, default to English */
-    val localeTag: String = DEFAULT_LOCALE_FROM_PLATFORM
+    val localeTag: String = DEFAULT_LOCALE_FROM_PLATFORM,
+    /** Use PocketBase as backend */
+    val usePocketBase: Boolean = false,
 )

@@ -30,6 +30,7 @@ import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.language
 import com.github.mheerwaarden.eventdemo.resources.settings
 import com.github.mheerwaarden.eventdemo.resources.use_crane_calendar
+import com.github.mheerwaarden.eventdemo.resources.use_database
 import com.github.mheerwaarden.eventdemo.resources.use_keyboard_for_date_input
 import com.github.mheerwaarden.eventdemo.resources.use_keyboard_for_time_input
 import com.github.mheerwaarden.eventdemo.ui.AppViewModelProvider
@@ -66,6 +67,7 @@ fun SettingsScreen(
             setTimePickerUsesKeyboard = settingsViewModel::setTimePickerUsesKeyboard,
             setUseCraneCalendar = settingsViewModel::setUseCraneCalendar,
             setLanguage = localeViewModel::setPreferredAppLocale,
+            setUsesPocketBase = settingsViewModel::setUsePocketBase,
             modifier = modifier.padding(Dimensions.padding_small)
         )
     }
@@ -79,6 +81,7 @@ fun SettingsBody(
     setTimePickerUsesKeyboard: (Boolean) -> Unit,
     setUseCraneCalendar: (Boolean) -> Unit,
     setLanguage: (String) -> Unit,
+    setUsesPocketBase: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -104,6 +107,13 @@ fun SettingsBody(
             labelId = Res.string.use_crane_calendar,
             value = settingsUiState.useCraneCalendar,
             onValueChange = setUseCraneCalendar,
+            isSwitch = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+        BooleanInputField(
+            labelId = Res.string.use_database,
+            value = settingsUiState.usePocketBase,
+            onValueChange = setUsesPocketBase,
             isSwitch = true,
             modifier = Modifier.fillMaxWidth()
         )
@@ -134,6 +144,7 @@ fun SettingsScreenPreview() {
             setTimePickerUsesKeyboard = {},
             setUseCraneCalendar = {},
             setLanguage = {},
+            setUsesPocketBase = {},
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.LightGray) // showBackground = true
