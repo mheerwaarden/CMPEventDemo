@@ -40,27 +40,30 @@ class EventEntryViewModel(
             now.date
         }
         eventUiState = eventUiState.copy(
-            startDateTime = LocalDateTime(startDate, now.time),
+            event = eventUiState.event.copy(startDateTime = LocalDateTime(startDate, now.time)),
             isEntryValid = validateInput()
         )
     }
 
     /** Independent fields can be updated in the [newEventUiState] and a call to this function. This method also triggers validation */
     fun updateState(newEventUiState: EventUiState) {
-        eventUiState = newEventUiState.copy(isEntryValid = validateInput(newDescription = newEventUiState.description))
+        eventUiState =
+            newEventUiState.copy(isEntryValid = validateInput(newDescription = newEventUiState.event.description))
     }
 
     fun updateEventDate(selectedStartDate: LocalDate?, selectedEndDate: LocalDate? = null) {
         if (selectedStartDate == null) return
 
         eventUiState = eventUiState.copy(
-            startDateTime = LocalDateTime(
-                date = selectedStartDate,
-                time = eventUiState.startDateTime.time
-            ),
-            endDateTime = LocalDateTime(
-                date = selectedEndDate ?: selectedStartDate,
-                time = eventUiState.endDateTime.time
+            event = eventUiState.event.copy(
+                startDateTime = LocalDateTime(
+                    date = selectedStartDate,
+                    time = eventUiState.event.startDateTime.time
+                ),
+                endDateTime = LocalDateTime(
+                    date = selectedEndDate ?: selectedStartDate,
+                    time = eventUiState.event.endDateTime.time
+                )
             ),
             isEntryValid = validateInput()
         )
@@ -68,9 +71,11 @@ class EventEntryViewModel(
 
     fun updateEventStartTime(time: LocalTime) {
         eventUiState = eventUiState.copy(
-            startDateTime = LocalDateTime(
-                date = eventUiState.startDateTime.date,
-                time = time
+            event = eventUiState.event.copy(
+                startDateTime = LocalDateTime(
+                    date = eventUiState.event.startDateTime.date,
+                    time = time
+                )
             ),
             isEntryValid = validateInput()
         )
@@ -78,9 +83,11 @@ class EventEntryViewModel(
 
     fun updateEventEndTime(time: LocalTime) {
         eventUiState = eventUiState.copy(
-            endDateTime = LocalDateTime(
-                date = eventUiState.endDateTime.date,
-                time = time
+            event = eventUiState.event.copy(
+                endDateTime = LocalDateTime(
+                    date = eventUiState.event.endDateTime.date,
+                    time = time
+                )
             ),
             isEntryValid = validateInput()
         )
@@ -90,7 +97,7 @@ class EventEntryViewModel(
         eventRepository.addEvent(eventUiState.toEvent())
     }
 
-    private fun validateInput(newDescription: String = eventUiState.description): Boolean {
+    private fun validateInput(newDescription: String = eventUiState.event.description): Boolean {
         return newDescription.isNotBlank()
     }
 

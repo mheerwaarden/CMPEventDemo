@@ -12,23 +12,23 @@ package com.github.mheerwaarden.eventdemo.data.model
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.event
 import com.github.mheerwaarden.eventdemo.ui.util.HtmlColors
-import com.github.mheerwaarden.eventdemo.util.nowInstant
+import com.github.mheerwaarden.eventdemo.util.now
+import com.github.mheerwaarden.eventdemo.util.plus
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.Instant
-import kotlinx.datetime.plus
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class Event(
-    override val id: Long = 0,
+    override val id: String = "",
     val collectionId: String = "",
     val collectionName: String = "",
     val created: String = "",
     val updated: String = "",
     val title: String = "",
     val description: String = "",
-    val startInstant: Instant = nowInstant(),
-    val endInstant: Instant = startInstant.plus(1, DateTimeUnit.HOUR),
+    val startDateTime: LocalDateTime = now(),
+    val endDateTime: LocalDateTime = startDateTime.plus(1, DateTimeUnit.HOUR),
     val location: String? = null,
     val contact: String? = null,
     val notes: String? = null,
@@ -38,7 +38,7 @@ data class Event(
     val htmlColor: HtmlColors = HtmlColors.OLIVE_DRAB,
     val amount: Double? = null,
     val price: Double? = null,
-    val owner: Long = 0,
+    val owner: String = "",
     val viewers: List<String> = emptyList(),
     val isPrivate: Boolean = false
 ) : ModelItem() {

@@ -74,7 +74,7 @@ object EventDestination : NavigationDestination {
 fun EventScreen(
     onUpdateTopAppBar: (String, (() -> Unit)?, @Composable (RowScope.() -> Unit)) -> Unit,
     navigateToEventOverview: () -> Unit,
-    navigateToEditEvent: (Long) -> Unit,
+    navigateToEditEvent: (String) -> Unit,
     navigateBack: () -> Unit,
     modifier: Modifier = Modifier,
     eventViewModel: EventEditViewModel = viewModel(factory = AppViewModelProvider.Factory),
@@ -103,10 +103,10 @@ fun EventScreen(
         EventScreen(
             eventUiState = eventUiState,
             deleteEvent = {
-                eventViewModel.deleteEvent(eventUiState.id)
+                eventViewModel.deleteEvent(eventUiState.event.id)
                 navigateBack()
             },
-            navigateToEditEvent = { navigateToEditEvent(eventUiState.id) },
+            navigateToEditEvent = { navigateToEditEvent(eventUiState.event.id) },
             modifier = modifier.fillMaxSize()
         )
     }
@@ -129,8 +129,8 @@ private fun EventScreen(
     ) {
         EventHeader(
             event = eventUiState.toEvent(),
-            startDateTime = eventUiState.startDateTime,
-            endDateTime = eventUiState.endDateTime,
+            startDateTime = eventUiState.event.startDateTime,
+            endDateTime = eventUiState.event.endDateTime,
             deleteEvent = deleteEvent,
             navigateToEditEvent = navigateToEditEvent,
             modifier = Modifier.fillMaxWidth()
@@ -190,55 +190,56 @@ fun EventBody(eventUiState: EventUiState, modifier: Modifier) {
         horizontalAlignment = Alignment.Start,
         modifier = modifier
     ) {
+        val event = eventUiState.event
         EventDetailRow(
             labelResId = Res.string.description,
-            detail = eventUiState.description,
+            detail = event.description,
         )
         EventDetailRow(
             labelResId = Res.string.location,
-            detail = eventUiState.location,
+            detail = event.location,
         )
         EventBooleanDetailRow(
             labelResId = Res.string.is_online,
-            detail = eventUiState.isOnline,
+            detail = event.isOnline,
         )
         EventDetailRow(
             labelResId = Res.string.contact,
-            detail = eventUiState.contact,
+            detail = event.contact,
         )
         EventDetailRow(
             labelResId = Res.string.notes,
-            detail = eventUiState.notes,
+            detail = event.notes,
         )
         EventDetailRow(
             labelResId = Res.string.event_type,
-            detail = stringResource(eventUiState.eventType.text),
+            detail = stringResource(event.eventType.text),
         )
         EventDetailRow(
             labelResId = Res.string.event_category,
-            detail = stringResource(eventUiState.eventCategory.text),
+            detail = stringResource(event.eventCategory.text),
         )
         EventDetailRow(
             labelResId = Res.string.color,
             detail = buildAnnotatedString {
                 withStyle(
                     style = SpanStyle(
-                        color = eventUiState.htmlColor.color,
+                        color = event.htmlColor.color,
                         fontSize = MaterialTheme.typography.headlineLarge.fontSize
                     )
                 ) {
                     append("• ")
                 }
-                append(eventUiState.htmlColor.text)
+                append(event.htmlColor.text)
             },
         )
         EventDetailRow(
             labelResId = Res.string.amount,
-            detail = eventUiState.amount,
+            detail = event.amount,
         )
         EventCurrencyDetailRow(
             labelResId = Res.string.price,
-            detail = eventUiState.price,
+            detail = event.price,
         )
     }
 }

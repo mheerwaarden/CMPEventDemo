@@ -45,7 +45,7 @@ class EventViewModel(
                 initialValue = UserPreferences()
             )
 
-    fun deleteEvent(id: Long) {
+    fun deleteEvent(id: String) {
         eventRepository.deleteEvent(id)
     }
 

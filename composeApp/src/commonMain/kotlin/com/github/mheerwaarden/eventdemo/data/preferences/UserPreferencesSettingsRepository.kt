@@ -110,9 +110,9 @@ class UserPreferencesSettingsRepository(
     override suspend fun saveUsePocketBase(usePocketBase: Boolean) {
         try {
             settings[KEY_USE_POCKETBASE] = usePocketBase
-            updatePreferences { it.copy(useCraneCalendar = usePocketBase) }
+            updatePreferences { it.copy(usePocketBase = usePocketBase) }
         } catch (e: Exception) {
-            logger.e(throwable = e) { "Error saving useCraneCalendar preference" }
+            logger.e(throwable = e) { "Error saving usePocketBase preference" }
         }
     }
 

@@ -125,8 +125,8 @@ fun DeleteEventHeaderButton(
 fun EditItemButtons(
     event: Event,
     editIconButtonColors: IconButtonColors,
-    onDelete: (Long) -> Unit,
-    navigateToEditScreen: (Long) -> Unit,
+    onDelete: (String) -> Unit,
+    navigateToEditScreen: (String) -> Unit,
     modifier: Modifier = Modifier,
     editContentDescription: StringResource = Res.string.edit,
     deleteContentDescription: StringResource = Res.string.delete,
@@ -171,7 +171,7 @@ fun EditItemButtons(
 fun RemoveItemButton(
     event: Event,
     editIconButtonColors: IconButtonColors,
-    onRemove: (Long) -> Unit,
+    onRemove: (String) -> Unit,
     modifier: Modifier = Modifier,
     removeContentDescription: StringResource = Res.string.remove,
 ) {

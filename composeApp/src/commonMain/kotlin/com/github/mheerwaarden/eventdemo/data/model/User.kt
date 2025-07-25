@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class User(
-    override val id: Long = 0,
+    override val id: String = "",
     val email: String,
     val username: String = "",
     val name: String = "",

@@ -69,15 +69,13 @@ import com.github.mheerwaarden.eventdemo.resources.time
 import com.github.mheerwaarden.eventdemo.resources.tuesday
 import com.github.mheerwaarden.eventdemo.resources.wednesday
 import com.github.mheerwaarden.eventdemo.ui.util.HtmlColors
-import com.github.mheerwaarden.eventdemo.util.DEFAULT_INSTANT_DATETIME_FORMAT
 import com.github.mheerwaarden.eventdemo.util.daysInMonth
 import com.github.mheerwaarden.eventdemo.util.now
-import com.github.mheerwaarden.eventdemo.util.toLocalDateTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.format
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.plus
@@ -100,7 +98,7 @@ private const val PAGE_COUNT = 2 * MONTHS_IN_YEAR + 1
 fun CalendarWithEvents(
     events: List<Event>,
     setPeriod: (LocalDate, LocalDate) -> Unit,
-    navigateToEvent: (Long) -> Unit,
+    navigateToEvent: (String) -> Unit,
     modifier: Modifier = Modifier,
     startDate: LocalDate = now().date,
     actions: @Composable () -> Unit = {},
@@ -332,7 +330,7 @@ fun CalendarGrid(
 
             // Determine the events for this day
             val eventsForDay =
-                getEventsForDay(events, day, currentMonth.monthNumber).sortedBy { it.startInstant }
+                getEventsForDay(events, day, currentMonth.monthNumber).sortedBy { it.startDateTime }
             val dotTextStyle = TextStyle(
                 fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                 lineHeight = MaterialTheme.typography.bodyLarge.fontSize * .8f,
@@ -380,7 +378,7 @@ fun CalendarGrid(
 
 private fun getEventsForDay(events: List<Event>, day: Int, currentMonth: Int) =
     events.filter { event ->
-        val startDate = event.startInstant.toLocalDateTime()
+        val startDate = event.startDateTime
         startDate.dayOfMonth == day && startDate.monthNumber == currentMonth
     }
 
@@ -389,7 +387,7 @@ fun EventList(
     selectedDay: Int,
     currentMonth: LocalDate,
     events: List<Event>,
-    navigateToEvent: (Long) -> Unit,
+    navigateToEvent: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val titleText = stringResource(Res.string.events)
@@ -448,11 +446,11 @@ fun EventList(
                     )
             ) {
                 Text(
-                    text = item.startInstant.toLocalDateTime().time.toLocalizedString(),
+                    text = item.startDateTime.time.toLocalizedString(),
                     modifier = Modifier.weight(columnTimeWeight)
                 )
                 Text(
-                    text = item.endInstant.toLocalDateTime().time.toLocalizedString(),
+                    text = item.endDateTime.time.toLocalizedString(),
                     modifier = Modifier.weight(columnTimeWeight)
                 )
                 Row(
@@ -477,37 +475,37 @@ fun EventList(
 fun CalendarWithEventsScreenPreview(isHorizontal: Boolean = false) {
     val events = listOf(
         Event(
-            id = 1,
-            startInstant = Instant.parse("2024-10-05 10:00", DEFAULT_INSTANT_DATETIME_FORMAT),
+            id = "1",
+            startDateTime = LocalDateTime(2024, 10, 5, 10, 0),
             description = "date 1a"
         ),
         Event(
-            id = 2,
-            startInstant = Instant.parse("2024-10-05 10:00", DEFAULT_INSTANT_DATETIME_FORMAT),
+            id = "2",
+            startDateTime = LocalDateTime(2024, 10, 5, 10, 0),
             description = "date 1b",
             htmlColor = HtmlColors.RED
         ),
         Event(
-            id = 3,
-            startInstant = Instant.parse("2024-10-05 10:00", DEFAULT_INSTANT_DATETIME_FORMAT),
+            id = "3",
+            startDateTime = LocalDateTime(2024, 10, 5, 10, 0),
             description = "date 1c",
             htmlColor = HtmlColors.BLUE
         ),
         Event(
-            id = 4,
-            startInstant = Instant.parse("2024-10-05 10:00", DEFAULT_INSTANT_DATETIME_FORMAT),
-            description = "date 1c",
+            id = "4",
+            startDateTime = LocalDateTime(2024, 10, 5, 10, 0),
+            description = "date 1d",
             htmlColor = HtmlColors.AQUAMARINE
         ),
         Event(
-            id = 5,
-            startInstant = Instant.parse("2024-10-10 10:00", DEFAULT_INSTANT_DATETIME_FORMAT),
+            id = "5",
+            startDateTime = LocalDateTime(2024, 10, 10, 10, 0),
             description = "date 2",
             htmlColor = HtmlColors.VIOLET
         ),
         Event(
-            id = 6,
-            startInstant = Instant.parse("2024-10-15 10:00", DEFAULT_INSTANT_DATETIME_FORMAT),
+            id = "6",
+            startDateTime = LocalDateTime(2024, 10, 15, 10, 0),
             description = "date 3",
             htmlColor = HtmlColors.PURPLE
         ),

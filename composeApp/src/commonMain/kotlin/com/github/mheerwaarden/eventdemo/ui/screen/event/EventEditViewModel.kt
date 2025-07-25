@@ -17,7 +17,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.mheerwaarden.eventdemo.data.database.EventRepository
 import com.github.mheerwaarden.eventdemo.util.now
-import com.github.mheerwaarden.eventdemo.util.toLocalDateTime
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -27,7 +26,7 @@ class EventEditViewModel(
     savedStateHandle: SavedStateHandle,
     private val eventRepository: EventRepository,
 ) : ViewModel() {
-    private val eventId: Long = checkNotNull(savedStateHandle[EventEditDestination.eventIdArg])
+    private val eventId: String = checkNotNull(savedStateHandle[EventEditDestination.eventIdArg])
 
     var eventUiState by mutableStateOf(EventUiState())
         private set
@@ -41,7 +40,7 @@ class EventEditViewModel(
             eventUiState =
                 event?.toEventUiState(
                     validateInput(
-                        newStartDateTime = event.startInstant.toLocalDateTime(),
+                        newStartDateTime = event.startDateTime,
                         newDescription = event.description
                     )
                 ) ?: throw NoSuchElementException("Event $eventId not found")
@@ -51,7 +50,7 @@ class EventEditViewModel(
     /** Independent fields can be updated in the [newEventUiState] and a call to this function. This method also triggers validation */
     fun updateState(newEventUiState: EventUiState) {
         eventUiState =
-            newEventUiState.copy(isEntryValid = validateInput(newDescription = newEventUiState.description))
+            newEventUiState.copy(isEntryValid = validateInput(newDescription = newEventUiState.event.description))
     }
 
     fun updateEventDate(selectedStartDate: LocalDate?, selectedEndDate: LocalDate? = null) {
@@ -59,13 +58,15 @@ class EventEditViewModel(
 
         val newStartDate = LocalDateTime(
             date = selectedStartDate,
-            time = eventUiState.startDateTime.time
+            time = eventUiState.event.startDateTime.time
         )
         eventUiState = eventUiState.copy(
-            startDateTime = newStartDate,
-            endDateTime = LocalDateTime(
-                date = selectedEndDate ?: selectedStartDate,
-                time = eventUiState.endDateTime.time
+            event = eventUiState.event.copy(
+                startDateTime = newStartDate,
+                endDateTime = LocalDateTime(
+                    date = selectedEndDate ?: selectedStartDate,
+                    time = eventUiState.event.endDateTime.time
+                )
             ),
             isEntryValid = validateInput(newStartDate)
         )
@@ -73,21 +74,21 @@ class EventEditViewModel(
 
     fun updateEventStartTime(time: LocalTime) {
         val newStartDateTime = LocalDateTime(
-            date = eventUiState.startDateTime.date,
+            date = eventUiState.event.startDateTime.date,
             time = time
         )
         eventUiState = eventUiState.copy(
-            startDateTime = newStartDateTime,
+            event = eventUiState.event.copy(startDateTime = newStartDateTime),
             isEntryValid = validateInput(newStartDateTime = newStartDateTime)
         )
     }
 
     fun updateEventEndTime(time: LocalTime) {
         eventUiState = eventUiState.copy(
-            endDateTime = LocalDateTime(
-                date = eventUiState.endDateTime.date,
+            event = eventUiState.event.copy(endDateTime = LocalDateTime(
+                date = eventUiState.event.endDateTime.date,
                 time = time
-            ),
+            )),
             isEntryValid = validateInput()
         )
     }
@@ -98,13 +99,13 @@ class EventEditViewModel(
         }
     }
 
-    fun deleteEvent(id: Long) {
+    fun deleteEvent(id: String) {
         eventRepository.deleteEvent(id)
     }
 
     private fun validateInput(
-        newStartDateTime: LocalDateTime = eventUiState.startDateTime,
-        newDescription: String = eventUiState.description
+        newStartDateTime: LocalDateTime = eventUiState.event.startDateTime,
+        newDescription: String = eventUiState.event.description
     ): Boolean {
         return newStartDateTime > now() && newDescription.isNotBlank()
     }

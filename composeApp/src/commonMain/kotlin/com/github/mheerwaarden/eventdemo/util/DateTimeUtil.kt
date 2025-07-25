@@ -158,6 +158,10 @@ val DEFAULT_DATE_FORMAT by lazy {
     LocalDate.Format { year(); char('-'); monthNumber(); char('-'); dayOfMonth() }
 }
 
+val DEFAULT_DATE_ONLY_FORMAT by lazy {
+    LocalDateTime.Format { year(); char('-'); monthNumber(); char('-'); dayOfMonth() }
+}
+
 val DEFAULT_TIME_FORMAT by lazy { LocalTime.Format { hour(); char(':'); minute() } }
 
 /** Short default date format for formatting only */

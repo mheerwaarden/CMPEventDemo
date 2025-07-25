@@ -37,7 +37,6 @@ import com.github.mheerwaarden.eventdemo.ui.screen.settings.SettingsViewModel
 import com.github.mheerwaarden.eventdemo.ui.theme.EventDemoAppTheme
 import com.github.mheerwaarden.eventdemo.ui.util.DISABLED_ICON_OPACITY
 import com.github.mheerwaarden.eventdemo.util.now
-import com.github.mheerwaarden.eventdemo.util.toLocalDateTime
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -51,7 +50,7 @@ object EventCalendarDestination : NavigationDestination {
 fun EventCalendarScreen(
     onUpdateTopAppBar: (String, (() -> Unit)?, @Composable (RowScope.() -> Unit)) -> Unit,
     navigateToEventOverview: () -> Unit,
-    navigateToEvent: (Long) -> Unit,
+    navigateToEvent: (String) -> Unit,
     modifier: Modifier = Modifier,
     isHorizontal: Boolean = false,
     eventViewModel: EventCalendarViewModel = viewModel(factory = AppViewModelProvider.Factory),
@@ -98,7 +97,7 @@ fun EventCalendarScreen(
 fun EventCalendarBody(
     events: List<Event>,
     setPeriod: (LocalDate, LocalDate) -> Unit,
-    navigateToEvent: (Long) -> Unit,
+    navigateToEvent: (String) -> Unit,
     modifier: Modifier = Modifier,
     startDate: LocalDate = now().date,
     currentFilter: EventFilter = EventFilter.GENERAL,
@@ -154,7 +153,7 @@ fun EventCalendarScreenPreview() {
         EventCalendarBody(
             events = events,
             // The first event is in the previous month
-            startDate = events[1].startInstant.toLocalDateTime().date,
+            startDate = events[1].startDateTime.date,
             setPeriod = { _, _ -> },
             navigateToEvent = {},
             modifier = Modifier.fillMaxSize().background(Color.LightGray) // showBackground = true
@@ -170,7 +169,7 @@ fun EventCalendarLandscapeScreenPreview() {
         EventCalendarBody(
             events = events,
             // The first event is in the previous month
-            startDate = events[1].startInstant.toLocalDateTime().date,
+            startDate = events[1].startDateTime.date,
             setPeriod = { _, _ -> },
             isHorizontal = true,
             navigateToEvent = {},

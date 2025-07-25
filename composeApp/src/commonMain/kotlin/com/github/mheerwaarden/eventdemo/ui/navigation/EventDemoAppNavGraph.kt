@@ -71,7 +71,7 @@ fun EventDemoAppNavHost(
         composable(
             route = EventDestination.routeWithArgs,
             arguments = listOf(navArgument(EventDestination.eventIdArg) {
-                type = NavType.LongType
+                type = NavType.StringType
             })
         ) {
             EventScreen(
@@ -98,7 +98,7 @@ fun EventDemoAppNavHost(
         composable(
             route = EventEditDestination.routeWithArgs,
             arguments = listOf(navArgument(EventEditDestination.eventIdArg) {
-                type = NavType.LongType
+                type = NavType.StringType
             })
         ) {
             EventEditScreen(

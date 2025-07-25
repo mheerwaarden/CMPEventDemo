@@ -57,7 +57,7 @@ import com.github.mheerwaarden.eventdemo.ui.navigation.MenuNavigator
 import com.github.mheerwaarden.eventdemo.ui.navigation.MenuNavigatorImpl
 import com.github.mheerwaarden.eventdemo.ui.screen.LoadingScreen
 import com.github.mheerwaarden.eventdemo.ui.screen.about.AboutDestination
-import com.github.mheerwaarden.eventdemo.ui.screen.event.AuthViewModel
+import com.github.mheerwaarden.eventdemo.ui.screen.auth.AuthViewModel
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventOverviewDestination
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventsViewModel
 import com.github.mheerwaarden.eventdemo.ui.screen.settings.SettingsViewModel

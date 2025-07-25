@@ -1,8 +1,9 @@
-package com.github.mheerwaarden.eventdemo.ui.screen.event
+package com.github.mheerwaarden.eventdemo.ui.screen.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.mheerwaarden.eventdemo.data.pocketbase.PocketBaseClient
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -17,8 +18,17 @@ class AuthViewModel(private val pocketBase: PocketBaseClient) : ViewModel() {
     private val _error = MutableStateFlow<String?>(null)
     val error = _error.asStateFlow()
 
+    // Define the CoroutineExceptionHandler
+    private val coroutineExceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        // This block will be executed if any exception escapes the viewModelScope.launch blocks
+        // where this handler is used, OR if a child coroutine fails and cancels the scope.
+        println("AuthViewModel: Coroutine Exception Handler Caught: ${throwable.message}")
+        _error.value = "Async error: ${throwable.message ?: "Unknown error"}"
+        _isLoading.value = false // Ensure loading state is reset
+    }
+
     fun login(email: String, password: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(coroutineExceptionHandler) {
             _isLoading.value = true
             pocketBase.login(email, password).fold(
                 onSuccess = {

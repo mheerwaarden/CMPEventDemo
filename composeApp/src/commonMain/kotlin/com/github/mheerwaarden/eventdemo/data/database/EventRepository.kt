@@ -12,21 +12,22 @@ package com.github.mheerwaarden.eventdemo.data.database
 import com.github.mheerwaarden.eventdemo.data.model.Event
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventFilter
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
 
 interface EventRepository {
-    fun getAllEvents(): Flow<Map<Long, Event>>
+    fun getAllEvents(): Flow<Map<String, Event>>
+
     /** Return events from start up to end date */
-    fun getEvents(start: Instant, end: Instant): List<Event>
-    fun getEvent(id: Long): Event?
+    fun getEvents(start: LocalDateTime, end: LocalDateTime): List<Event>
+    fun getEvent(id: String): Event?
     fun getEventsForPeriod(): Flow<List<Event>>
-    fun addEvent(event: Event): Long
+    fun addEvent(event: Event): String
     fun updateEvent(event: Event)
     /** Set period for selected events from start up to end date */
     fun updateEventsForPeriod(
-        start: Instant,
-        end: Instant,
+        start: LocalDateTime,
+        end: LocalDateTime,
         filter: EventFilter
     )
-    fun deleteEvent(id: Long)
+    fun deleteEvent(id: String)
 }

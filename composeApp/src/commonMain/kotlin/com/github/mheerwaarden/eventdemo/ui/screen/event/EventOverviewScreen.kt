@@ -9,7 +9,6 @@
 
 package com.github.mheerwaarden.eventdemo.ui.screen.event
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -54,17 +53,12 @@ import com.github.mheerwaarden.eventdemo.ui.screen.EditItemButtons
 import com.github.mheerwaarden.eventdemo.ui.theme.EventDemoAppTheme
 import com.github.mheerwaarden.eventdemo.ui.util.DISABLED_ICON_OPACITY
 import com.github.mheerwaarden.eventdemo.util.now
-import com.github.mheerwaarden.eventdemo.util.toInstant
-import com.github.mheerwaarden.eventdemo.util.toLocalDateTime
+import com.github.mheerwaarden.eventdemo.util.plus
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.plus
-import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlin.math.max
-import kotlin.time.Duration.Companion.minutes
 
 object EventOverviewDestination : NavigationDestination {
     override val route = "event_overview"
@@ -74,9 +68,9 @@ object EventOverviewDestination : NavigationDestination {
 @Composable
 fun EventOverviewScreen(
     onUpdateTopAppBar: (String, (() -> Unit)?, @Composable (RowScope.() -> Unit)) -> Unit,
-    navigateToEvent: (Long) -> Unit,
+    navigateToEvent: (String) -> Unit,
     navigateToAddEvent: (LocalDate) -> Unit,
-    navigateToEditEvent: (Long) -> Unit,
+    navigateToEditEvent: (String) -> Unit,
     navigateToEventCalendar: () -> Unit,
     modifier: Modifier = Modifier,
     eventViewModel: EventViewModel = viewModel(factory = AppViewModelProvider.Factory),
@@ -128,18 +122,16 @@ private class OverviewConfig(colorScheme: ColorScheme) {
     val dateColor = colorScheme.surface
     val evenColor = colorScheme.surfaceContainer
     val oddColor = colorScheme.surfaceVariant
-    val timeZone = TimeZone.currentSystemDefault()
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun EventOverviewBody(
     eventList: List<Event>,
     isReadOnly: Boolean,
-    deleteEvent: (Long) -> Unit,
-    navigateToEvent: (Long) -> Unit,
+    deleteEvent: (String) -> Unit,
+    navigateToEvent: (String) -> Unit,
     navigateToAddEvent: (LocalDate) -> Unit,
-    navigateToEditEvent: (Long) -> Unit,
+    navigateToEditEvent: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     // Return early if the event list is empty
@@ -150,13 +142,13 @@ private fun EventOverviewBody(
     // While grouping events by date, determine start index of overview
     var currentIndex = 0
     var startIndex = -1
-    val today = now().date
+    val now = now()
     val groupedEvents: Map<LocalDate, List<Event>> = buildMap {
         eventList.forEach { event ->
-            val startDate = event.startInstant.toLocalDateTime().date
-            val endDate = event.endInstant.toLocalDateTime().date
+            val startDate = event.startDateTime
+            val endDate = event.endDateTime
 
-            if (startDate == today && startIndex == -1) {
+            if (startDate <= now && startIndex == -1) {
                 // Start the overview at the number of events plus the number of headers
                 startIndex = currentIndex + size
             }
@@ -165,22 +157,22 @@ private fun EventOverviewBody(
             // Iterate through each date from start to end, adding the event for each date
             var currentDate = startDate
             while (currentDate <= endDate) {
-                val currentStartInstant =
-                    if (currentDate == startDate) event.startInstant else currentDate.toInstant()
-                val currentEndInstant =
-                    if (currentDate == endDate) event.endInstant else currentDate.plus(
+                val currentStart =
+                    if (currentDate == startDate) event.startDateTime else currentDate
+                val currentEnd =
+                    if (currentDate == endDate) event.endDateTime else currentDate.plus(
                         1, DateTimeUnit.DAY
-                    ).toInstant().minus(1.minutes)
+                    )
 
                 // Add the event to the list for this date, creating the list if it doesn't exist
-                val currentEvents = getOrElse(currentDate) { emptyList() }.toMutableList()
+                val currentEvents = getOrElse(currentDate.date) { emptyList() }.toMutableList()
                 currentEvents.add(
                     event.copy(
-                        startInstant = currentStartInstant,
-                        endInstant = currentEndInstant
+                        startDateTime = currentStart,
+                        endDateTime = currentEnd
                     )
                 )
-                put(currentDate, currentEvents)
+                put(currentDate.date, currentEvents)
 
                 // Move to the next day
                 currentDate = currentDate.plus(1, DateTimeUnit.DAY)
@@ -243,9 +235,9 @@ private fun EventRow(
     event: Event,
     isReadOnly: Boolean,
     overviewConfig: OverviewConfig,
-    navigateToEvent: (Long) -> Unit,
-    deleteEvent: (Long) -> Unit,
-    navigateToEditEvent: (Long) -> Unit,
+    navigateToEvent: (String) -> Unit,
+    deleteEvent: (String) -> Unit,
+    navigateToEditEvent: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -257,12 +249,12 @@ private fun EventRow(
             .clickable { navigateToEvent(event.id) }
     ) {
         Text(
-            text = event.startInstant.toLocalDateTime(overviewConfig.timeZone).time.toLocalizedString(),
+            text = event.startDateTime.time.toLocalizedString(),
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(overviewConfig.columnTimeWeight)
         )
         Text(
-            text = event.endInstant.toLocalDateTime(overviewConfig.timeZone).time.toLocalizedString(),
+            text = event.endDateTime.time.toLocalizedString(),
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(overviewConfig.columnTimeWeight)
         )

@@ -27,7 +27,6 @@ fun main() = application {
                 println("Startup - Desktop/Kotlin")
             }
         }
-
     })
 
     val windowState = rememberWindowState(

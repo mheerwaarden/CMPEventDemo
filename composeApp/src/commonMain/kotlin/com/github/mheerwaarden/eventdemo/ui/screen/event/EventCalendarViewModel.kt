@@ -19,11 +19,12 @@ import com.github.mheerwaarden.eventdemo.data.database.EventRepository
 import com.github.mheerwaarden.eventdemo.data.model.Event
 import com.github.mheerwaarden.eventdemo.util.endOfMonth
 import com.github.mheerwaarden.eventdemo.util.startOfMonth
-import com.github.mheerwaarden.eventdemo.util.toInstant
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 
 class EventCalendarViewModel(
     private val eventRepository: EventRepository,
@@ -45,8 +46,8 @@ class EventCalendarViewModel(
         if (calendarUiState.start != start || calendarUiState.end != end) {
             calendarUiState = calendarUiState.copy(start = start, end = end)
             eventRepository.updateEventsForPeriod(
-                start = start.toInstant(),
-                end = end.toInstant(),
+                start = LocalDateTime(start, LocalTime(0, 0)),
+                end = LocalDateTime(end, LocalTime(0, 0)),
                 filter = calendarUiState.eventFilter
             )
         }
@@ -56,8 +57,8 @@ class EventCalendarViewModel(
         if (calendarUiState.eventFilter != filter) {
             calendarUiState = calendarUiState.copy(eventFilter = filter)
             eventRepository.updateEventsForPeriod(
-                start = calendarUiState.start.toInstant(),
-                end = calendarUiState.end.toInstant(),
+                start = LocalDateTime(calendarUiState.start, LocalTime(0, 0)),
+                end = LocalDateTime(calendarUiState.end, LocalTime(0, 0)),
                 filter = filter
             )
         }

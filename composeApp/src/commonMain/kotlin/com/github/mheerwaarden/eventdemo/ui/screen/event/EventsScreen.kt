@@ -38,10 +38,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.github.mheerwaarden.eventdemo.data.model.Event
 import com.github.mheerwaarden.eventdemo.localization.toLocalizedString
-import com.github.mheerwaarden.eventdemo.util.DEFAULT_DATE_FORMAT
-import com.github.mheerwaarden.eventdemo.util.toLocalDateTime
-import kotlinx.datetime.Instant
-import kotlinx.datetime.format.DateTimeComponents
+import com.github.mheerwaarden.eventdemo.util.DEFAULT_DATE_ONLY_FORMAT
+import kotlinx.datetime.LocalDateTime
 
 @Composable
 fun EventsScreen(eventsViewModel: EventsViewModel, modifier: Modifier = Modifier) {
@@ -180,7 +178,7 @@ fun EventCard(
             }
 
             Text(
-                text = "${event.startInstant.toLocalDateTime().toLocalizedString()} - ${event.endInstant.toLocalDateTime().toLocalizedString()}",
+                text = "${event.startDateTime.toLocalizedString()} - ${event.endDateTime.toLocalizedString()}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp)
@@ -201,7 +199,7 @@ fun EventCard(
 @Composable
 fun CreateEventDialog(
     onDismiss: () -> Unit,
-    onCreate: (String, String, Instant, Instant) -> Unit
+    onCreate: (String, String, LocalDateTime, LocalDateTime) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -250,12 +248,12 @@ fun CreateEventDialog(
             }
         },
         confirmButton = {
-            val startInstant = Instant.parse(startDate, DateTimeComponents.Format {
-                date(DEFAULT_DATE_FORMAT) })
-            val endInstant = Instant.parse(startDate, DateTimeComponents.Format {
-                date(DEFAULT_DATE_FORMAT) })
             TextButton(
-                onClick = { onCreate(title, description, startInstant, endInstant) },
+                onClick = {
+                    val startDateTime = LocalDateTime.parse(startDate, DEFAULT_DATE_ONLY_FORMAT)
+                    val endDateTime = LocalDateTime.parse(endDate, DEFAULT_DATE_ONLY_FORMAT)
+                    onCreate(title, description, startDateTime, endDateTime)
+                },
                 enabled = title.isNotBlank() && startDate.isNotBlank() && endDate.isNotBlank()
             ) {
                 Text("Create")

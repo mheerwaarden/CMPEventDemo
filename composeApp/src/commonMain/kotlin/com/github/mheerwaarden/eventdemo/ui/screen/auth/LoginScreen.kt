@@ -24,10 +24,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.github.mheerwaarden.eventdemo.ui.screen.event.AuthViewModel
 
 @Composable
 fun LoginScreen(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
+    println("LoginScreen")
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }

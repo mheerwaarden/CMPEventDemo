@@ -7,7 +7,7 @@ import com.github.mheerwaarden.eventdemo.data.pocketbase.PocketBaseClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
 
 class EventsViewModel(private val pocketBase: PocketBaseClient) : ViewModel() {
     private val _events = MutableStateFlow<List<Event>>(emptyList())
@@ -54,14 +54,14 @@ class EventsViewModel(private val pocketBase: PocketBaseClient) : ViewModel() {
         }
     }
 
-    fun createEvent(title: String, description: String, startDate: Instant, endDate: Instant) {
+    fun createEvent(title: String, description: String, startDate: LocalDateTime, endDate: LocalDateTime) {
         viewModelScope.launch {
             val newEvent = Event(
                 title = title,
                 description = description,
-                startInstant = startDate,
-                endInstant = endDate,
-                owner = 0 // Will be set by PocketBase client
+                startDateTime = startDate,
+                endDateTime = endDate,
+                owner = "" // Will be set by PocketBase client
             )
 
             pocketBase.createEvent(newEvent).fold(
@@ -80,7 +80,7 @@ class EventsViewModel(private val pocketBase: PocketBaseClient) : ViewModel() {
         }
     }
 
-    fun deleteEvent(eventId: Long) {
+    fun deleteEvent(eventId: String) {
         viewModelScope.launch {
             pocketBase.deleteEvent(eventId).fold(
                 onSuccess = {

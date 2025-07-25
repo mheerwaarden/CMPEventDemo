@@ -94,7 +94,7 @@ fun EventEntryScreen(
         val preferences by settingsViewModel.settingsUiState.collectAsState()
         var isStartTimeAutoUpdated by remember { mutableStateOf(false) }
         LaunchedEffect(Unit) {
-            isStartTimeAutoUpdated = eventViewModel.initialDate < eventUiState.startDateTime.date
+            isStartTimeAutoUpdated = eventViewModel.initialDate < eventUiState.event.startDateTime.date
         }
 
         EventEntryBody(
@@ -188,31 +188,32 @@ fun EventInputForm(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(Dimensions.padding_small)
     ) {
+        val event = eventUiState.event
         if (useCraneCalendar) {
             CraneCalendarField(
-                startDate = eventUiState.startDateTime.date,
-                endDate = eventUiState.endDateTime.date,
+                startDate = event.startDateTime.date,
+                endDate = event.endDateTime.date,
                 onDateChange = onDateChange,
                 modifier = Modifier.fillMaxWidth(),
             )
         } else {
             // Default: Material Design date picker dialog.
             DateField(
-                currentDate = eventUiState.startDateTime.date,
+                currentDate = event.startDateTime.date,
                 onDateChange = { onDateChange(it, null) },
                 modifier = Modifier.fillMaxWidth(),
                 preferences = dateFieldPreferences,
             )
         }
         TimeField(
-            currentTime = eventUiState.startDateTime.time,
+            currentTime = event.startDateTime.time,
             onTimeChange = { localTime -> onStartTimeChange(localTime) },
             modifier = Modifier.fillMaxWidth(),
             preferences = timeFieldPreferences,
             labelId = Res.string.select_start_time
         )
         TimeField(
-            currentTime = eventUiState.endDateTime.time,
+            currentTime = event.endDateTime.time,
             onTimeChange = { localTime -> onEndTimeChange(localTime) },
             modifier = Modifier.fillMaxWidth(),
             preferences = timeFieldPreferences,
@@ -220,58 +221,58 @@ fun EventInputForm(
         )
         InputField(
             labelId = Res.string.description,
-            value = eventUiState.description,
-            onValueChange = { onStateChange(eventUiState.copy(description = it)) },
+            value = event.description,
+            onValueChange = { onStateChange(eventUiState.copy(event = event.copy(description = it))) },
             modifier = Modifier.fillMaxWidth(),
         )
         InputField(
             labelId = Res.string.location,
-            value = eventUiState.location ?: "",
-            onValueChange = { onStateChange(eventUiState.copy(location = it)) },
+            value = event.location ?: "",
+            onValueChange = { onStateChange(eventUiState.copy(event = event.copy(location = it))) },
             modifier = Modifier.fillMaxWidth(),
         )
         BooleanInputField(
             labelId = Res.string.is_online,
-            value = eventUiState.isOnline,
-            onValueChange = { onStateChange(eventUiState.copy(isOnline = it)) },
+            value = event.isOnline,
+            onValueChange = { onStateChange(eventUiState.copy(event = event.copy(isOnline = it))) },
             isSwitch = false,
             modifier = Modifier.fillMaxWidth(),
         )
         InputField(
             labelId = Res.string.contact,
-            value = eventUiState.contact ?: "",
-            onValueChange = { onStateChange(eventUiState.copy(contact = it)) },
+            value = event.contact ?: "",
+            onValueChange = { onStateChange(eventUiState.copy(event = event.copy(contact = it))) },
             modifier = Modifier.fillMaxWidth(),
         )
         InputField(
             labelId = Res.string.notes,
-            value = eventUiState.notes ?: "",
-            onValueChange = { onStateChange(eventUiState.copy(notes = it)) },
+            value = event.notes ?: "",
+            onValueChange = { onStateChange(eventUiState.copy(event = event.copy(notes = it))) },
             modifier = Modifier.fillMaxWidth(),
         )
         SelectionField(
             label = stringResource(Res.string.event_type),
-            currentItem = eventUiState.eventType,
+            currentItem = event.eventType,
             onGetItems = { EventType.entries },
             onGetKey = { it.ordinal },
             onGetDisplayName = { stringResource(it.text) },
-            onChange = { onStateChange(eventUiState.copy(eventType = it)) },
+            onChange = { onStateChange(eventUiState.copy(event = event.copy(eventType = it))) },
             modifier = Modifier.fillMaxWidth(),
             isRequired = false,
         )
         SelectionField(
             label = stringResource(Res.string.event_category),
-            currentItem = eventUiState.eventCategory,
+            currentItem = event.eventCategory,
             onGetItems = { EventCategory.entries },
             onGetKey = { it.ordinal },
             onGetDisplayName = { stringResource(it.text) },
-            onChange = { onStateChange(eventUiState.copy(eventCategory = it)) },
+            onChange = { onStateChange(eventUiState.copy(event = event.copy(eventCategory = it))) },
             modifier = Modifier.fillMaxWidth(),
             isRequired = false,
         )
         SelectionField(
             label = stringResource(Res.string.color),
-            currentItem = eventUiState.htmlColor,
+            currentItem = event.htmlColor,
             onGetItems = { HtmlColors.entries },
             onGetKey = { it.ordinal },
             onGetDisplayName = {
@@ -287,7 +288,7 @@ fun EventInputForm(
                     append(it.text)
                 }
             },
-            onChange = { onStateChange(eventUiState.copy(htmlColor = it)) },
+            onChange = { onStateChange(eventUiState.copy(event = event.copy(htmlColor = it))) },
             modifier = Modifier.fillMaxWidth(),
             isRequired = false,
         )
