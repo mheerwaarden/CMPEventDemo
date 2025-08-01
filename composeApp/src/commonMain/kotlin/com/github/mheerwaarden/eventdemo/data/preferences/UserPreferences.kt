@@ -28,4 +28,6 @@ data class UserPreferences(
     val localeTag: String = DEFAULT_LOCALE_FROM_PLATFORM,
     /** Use PocketBase as backend */
     val usePocketBase: Boolean = false,
+    /** PocketBase backend URL */
+    val pocketBaseUrl: String = "",
 )

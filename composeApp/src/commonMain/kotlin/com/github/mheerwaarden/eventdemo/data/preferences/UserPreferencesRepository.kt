@@ -22,4 +22,5 @@ interface UserPreferencesRepository {
     suspend fun saveUseCraneCalendar(useCraneCalendar: Boolean)
     suspend fun saveLocalePreference(localeTag: String)
     suspend fun saveUsePocketBase(usePocketBase: Boolean)
+    suspend fun savePocketBaseUrl(url: String)
 }

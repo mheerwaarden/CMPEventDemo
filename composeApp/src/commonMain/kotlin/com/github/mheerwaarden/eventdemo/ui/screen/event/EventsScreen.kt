@@ -38,16 +38,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.github.mheerwaarden.eventdemo.data.model.Event
 import com.github.mheerwaarden.eventdemo.localization.toLocalizedString
-import com.github.mheerwaarden.eventdemo.util.DEFAULT_DATE_ONLY_FORMAT
+import com.github.mheerwaarden.eventdemo.util.DEFAULT_DATE_TIME_FORMAT
 import kotlinx.datetime.LocalDateTime
 
 @Composable
 fun EventsScreen(eventsViewModel: EventsViewModel, modifier: Modifier = Modifier) {
     var showCreateDialog by remember { mutableStateOf(false) }
 
-    val events by eventsViewModel.events.collectAsState()
-    val isLoading by eventsViewModel.isLoading.collectAsState()
-    val error by eventsViewModel.error.collectAsState()
+    val uiState by eventsViewModel.uiState.collectAsState()
 
     Column(
         modifier = modifier
@@ -73,13 +71,14 @@ fun EventsScreen(eventsViewModel: EventsViewModel, modifier: Modifier = Modifier
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        val error = uiState.errorMessage
         if (error != null) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
             ) {
                 Text(
-                    text = error!!,
+                    text = error,
                     modifier = Modifier.padding(16.dp),
                     color = MaterialTheme.colorScheme.onErrorContainer
                 )
@@ -87,7 +86,7 @@ fun EventsScreen(eventsViewModel: EventsViewModel, modifier: Modifier = Modifier
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        if (isLoading) {
+        if (uiState.isLoading) {
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -96,7 +95,7 @@ fun EventsScreen(eventsViewModel: EventsViewModel, modifier: Modifier = Modifier
             }
         } else {
             LazyColumn {
-                items(events) { event ->
+                items(uiState.events) { event ->
                     EventCard(
                         event = event,
                         onEdit = { eventsViewModel.updateEvent(it) },
@@ -250,8 +249,9 @@ fun CreateEventDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    val startDateTime = LocalDateTime.parse(startDate, DEFAULT_DATE_ONLY_FORMAT)
-                    val endDateTime = LocalDateTime.parse(endDate, DEFAULT_DATE_ONLY_FORMAT)
+                    val midnight = " 00:00"
+                    val startDateTime = LocalDateTime.parse(startDate + midnight, DEFAULT_DATE_TIME_FORMAT)
+                    val endDateTime = LocalDateTime.parse(endDate + midnight, DEFAULT_DATE_TIME_FORMAT)
                     onCreate(title, description, startDateTime, endDateTime)
                 },
                 enabled = title.isNotBlank() && startDate.isNotBlank() && endDate.isNotBlank()

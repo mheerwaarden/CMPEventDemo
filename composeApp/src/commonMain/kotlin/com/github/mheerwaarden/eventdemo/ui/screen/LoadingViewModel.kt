@@ -38,12 +38,14 @@ abstract class LoadingViewModel : ViewModel() {
         loadingState = LoadingState.Loading
         viewModelScope.launch {
             try {
+                // Run loading in a background thread
                 withContext(Dispatchers.Default) {
                     loadState()
                 }
+                // Keep the update of uiState in the main thread
                 loadingState = LoadingState.Success
             } catch (e: Exception) {
-                println("LoadingViewModel Error: ${e.message}")
+                println("LoadingViewModel ${this::class.simpleName} Error: ${e.message}")
                 loadingState = LoadingState.Failure(e)
             }
         }

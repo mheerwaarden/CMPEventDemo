@@ -135,4 +135,5 @@
     <string name="price">Price</string>
     <string name="user">User</string>
     <string name="use_database">Use database</string>
+    <string name="database_url">Database URL</string>
 </resources>

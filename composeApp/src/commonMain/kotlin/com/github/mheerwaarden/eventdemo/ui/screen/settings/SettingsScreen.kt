@@ -24,9 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.mheerwaarden.eventdemo.Dimensions
-import com.github.mheerwaarden.eventdemo.ui.localization.AppLanguage
-import com.github.mheerwaarden.eventdemo.ui.localization.LocaleViewModel
 import com.github.mheerwaarden.eventdemo.resources.Res
+import com.github.mheerwaarden.eventdemo.resources.database_url
 import com.github.mheerwaarden.eventdemo.resources.language
 import com.github.mheerwaarden.eventdemo.resources.settings
 import com.github.mheerwaarden.eventdemo.resources.use_crane_calendar
@@ -35,7 +34,10 @@ import com.github.mheerwaarden.eventdemo.resources.use_keyboard_for_date_input
 import com.github.mheerwaarden.eventdemo.resources.use_keyboard_for_time_input
 import com.github.mheerwaarden.eventdemo.ui.AppViewModelProvider
 import com.github.mheerwaarden.eventdemo.ui.components.BooleanInputField
+import com.github.mheerwaarden.eventdemo.ui.components.InputField
 import com.github.mheerwaarden.eventdemo.ui.components.SelectionField
+import com.github.mheerwaarden.eventdemo.ui.localization.AppLanguage
+import com.github.mheerwaarden.eventdemo.ui.localization.LocaleViewModel
 import com.github.mheerwaarden.eventdemo.ui.navigation.NavigationDestination
 import com.github.mheerwaarden.eventdemo.ui.screen.LoadingScreen
 import com.github.mheerwaarden.eventdemo.ui.theme.EventDemoAppTheme
@@ -68,6 +70,7 @@ fun SettingsScreen(
             setUseCraneCalendar = settingsViewModel::setUseCraneCalendar,
             setLanguage = localeViewModel::setPreferredAppLocale,
             setUsesPocketBase = settingsViewModel::setUsePocketBase,
+            setPocketBaseUrl = settingsViewModel::setPocketBaseUrl,
             modifier = modifier.padding(Dimensions.padding_small)
         )
     }
@@ -82,6 +85,7 @@ fun SettingsBody(
     setUseCraneCalendar: (Boolean) -> Unit,
     setLanguage: (String) -> Unit,
     setUsesPocketBase: (Boolean) -> Unit,
+    setPocketBaseUrl: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -117,6 +121,12 @@ fun SettingsBody(
             isSwitch = true,
             modifier = Modifier.fillMaxWidth()
         )
+        InputField(
+            labelId = Res.string.database_url,
+            value = settingsUiState.pocketBaseUrl,
+            onValueChange = setPocketBaseUrl,
+            modifier = Modifier.fillMaxWidth(),
+        )
         SelectionField(
             label = stringResource(Res.string.language),
             currentItem = language,
@@ -145,6 +155,7 @@ fun SettingsScreenPreview() {
             setUseCraneCalendar = {},
             setLanguage = {},
             setUsesPocketBase = {},
+            setPocketBaseUrl = {},
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.LightGray) // showBackground = true

@@ -22,6 +22,7 @@ class UserPreferencesSettingsRepository(
         private const val KEY_USE_CRANE_CALENDAR = "use_crane_calendar"
         private const val KEY_LOCALE_TAG = "locale_tag"
         private const val KEY_USE_POCKETBASE = "use_pocketbase"
+        private const val KEY_POCKETBASE_URL = "pocketbase_url"
     }
     //endregion
 
@@ -33,6 +34,7 @@ class UserPreferencesSettingsRepository(
 
     //region Load
     private fun loadPreferences(): UserPreferences {
+        println("UserPreferencesSettingsRepository: loadPreferences")
         return try {
             UserPreferences(
                 isReadOnly = settings.getBoolean(KEY_IS_READ_ONLY, false),
@@ -42,6 +44,7 @@ class UserPreferencesSettingsRepository(
                 useCraneCalendar = settings.getBoolean(KEY_USE_CRANE_CALENDAR, false),
                 localeTag = settings.getString(KEY_LOCALE_TAG, DEFAULT_LOCALE_FROM_PLATFORM),
                 usePocketBase = settings.getBoolean(KEY_USE_POCKETBASE, false),
+                pocketBaseUrl = settings.getString(KEY_POCKETBASE_URL, ""),
             )
 
         } catch (e: Exception) {
@@ -103,7 +106,7 @@ class UserPreferencesSettingsRepository(
             settings[KEY_LOCALE_TAG] = localeTag
             updatePreferences { it.copy(localeTag = localeTag) }
         } catch (e: Exception) {
-            logger.e(throwable = e) { "Error saving Locale preference" }
+            logger.e(throwable = e) { "Error saving locale preference" }
         }
     }
 
@@ -113,6 +116,15 @@ class UserPreferencesSettingsRepository(
             updatePreferences { it.copy(usePocketBase = usePocketBase) }
         } catch (e: Exception) {
             logger.e(throwable = e) { "Error saving usePocketBase preference" }
+        }
+    }
+
+    override suspend fun savePocketBaseUrl(url: String) {
+        try {
+            settings[KEY_POCKETBASE_URL] = url
+            updatePreferences { it.copy(pocketBaseUrl = url) }
+        } catch (e: Exception) {
+            logger.e(throwable = e) { "Error saving pocketBaseUrl preference" }
         }
     }
 

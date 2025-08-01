@@ -13,26 +13,22 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.github.mheerwaarden.eventdemo.EventDemoApplication
-import com.github.mheerwaarden.eventdemo.data.preferences.UserPreferencesRepository
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventCalendarViewModel
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventEditViewModel
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventEntryViewModel
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventViewModel
 import com.github.mheerwaarden.eventdemo.ui.screen.settings.SettingsViewModel
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
+import org.koin.core.component.get
 
 object AppViewModelProvider : KoinComponent {
-    private val userPreferencesRepository: UserPreferencesRepository by inject<UserPreferencesRepository>()
-
     val Factory = viewModelFactory {
-
         /* region Event ViewModels */
         val appContainer = EventDemoApplication.container
         initializer {
             EventViewModel(
                 appContainer.eventRepository,
-                userPreferencesRepository
+                get()
             )
         }
         initializer {
@@ -56,7 +52,7 @@ object AppViewModelProvider : KoinComponent {
 
         /* region Settings ViewModel */
         initializer {
-            SettingsViewModel(userPreferencesRepository)
+            SettingsViewModel(get())
         }
         // endregion
     }

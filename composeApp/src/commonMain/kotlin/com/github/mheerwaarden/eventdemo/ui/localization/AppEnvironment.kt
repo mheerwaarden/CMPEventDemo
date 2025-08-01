@@ -23,9 +23,10 @@ val LocalAppLocale = staticCompositionLocalOf { DEFAULT_LOCALE }
 @Composable
 fun AppEnvironment(
     modifier: Modifier = Modifier,
-    localeViewModel: LocaleViewModel = koinInject(),
+    localeViewModel: LocaleViewModel,
     content: @Composable () -> Unit
 ) {
+    println("Starting AppEnvironment")
     LoadingScreen(loadingViewModel = localeViewModel, modifier = modifier) {
 
         // Collect the effective locale tag (e.g., "en-US") from the ViewModel's StateFlow.

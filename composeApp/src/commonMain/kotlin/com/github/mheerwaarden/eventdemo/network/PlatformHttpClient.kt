@@ -33,9 +33,9 @@ fun createPlatformHttpClient(): HttpClient = createHttpClientWithEngine().config
     }
     install(Auth)
     install(HttpTimeout) {
-        requestTimeoutMillis = 10000
-        connectTimeoutMillis = 5000
-        socketTimeoutMillis = 15000
+        requestTimeoutMillis = 30_000
+        connectTimeoutMillis = 15_000
+        socketTimeoutMillis = 15_000 // Disable socket timeout for SSE in httpClient.prepareGet
     }
     install(Logging) {
         level = LogLevel.INFO

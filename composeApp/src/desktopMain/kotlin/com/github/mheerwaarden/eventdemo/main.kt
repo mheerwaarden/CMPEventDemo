@@ -23,9 +23,7 @@ fun main() = application {
             )
         }
         single {
-            {
-                println("Startup - Desktop/Kotlin")
-            }
+            { println("Startup - Desktop/Kotlin") }
         }
     })
 

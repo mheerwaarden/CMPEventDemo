@@ -135,4 +135,5 @@
     <string name="price">Prijs</string>
     <string name="user">Gebruiker</string>"
     <string name="use_database">Gebruik database</string>
+    <string name="database_url">Database URL</string>
 </resources>

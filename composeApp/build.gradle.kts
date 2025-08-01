@@ -350,6 +350,9 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    dependencies {
+        debugImplementation(libs.leakcanary.android)
+    }
     buildTypes {
         release {
             // Enable ProGuard/R8:

@@ -25,6 +25,10 @@ import org.koin.core.component.inject
 class LocaleViewModel(
     private val userPreferencesRepository: UserPreferencesRepository,
 ) : LoadingViewModel(), KoinComponent {
+    init {
+        println("LocaleViewModel init, preferences = ${userPreferencesRepository.preferences}")
+    }
+
     private val platformLocaleManager: PlatformLocaleManager by inject()
 
     /**
@@ -40,14 +44,29 @@ class LocaleViewModel(
      */
     var preferredLocaleState: StateFlow<String> = MutableStateFlow(DEFAULT_LOCALE)
 
+    /* TODO MH: Resolve NPE, this is what the emulator is complaining about on startup
+    LocaleViewModel: Exception in loadState: NullPointerException - Attempt to invoke interface method 'kotlinx.coroutines.flow.Flow com.github.mheerwaarden.eventdemo.data.preferences.UserPreferencesRepository.getPreferences()' on a null object reference
+2025-07-25 17:39:11.461 11968-11990 System.out              com.github.mheerwaarden.eventdemo    I  LocaleViewModel: Stack trace for developer:
+2025-07-25 17:39:11.461 11968-11990 System.out              com.github.mheerwaarden.eventdemo    I  java.lang.NullPointerException: Attempt to invoke interface method 'kotlinx.coroutines.flow.Flow com.github.mheerwaarden.eventdemo.data.preferences.UserPreferencesRepository.getPreferences()' on a null object reference
+2025-07-25 17:39:11.461 11968-11990 System.out              com.github.mheerwaarden.eventdemo    I  	at com.github.mheerwaarden.eventdemo.ui.localization.LocaleViewModel.loadState(LocaleViewModel.kt:46)
+2025-07-25 17:39:11.461 11968-11990 System.out              com.github.mheerwaarden.eventdemo    I  	at com.github.mheerwaarden.eventdemo.ui.screen.LoadingViewModel$load$1$1.invokeSuspend(LoadingViewModel.kt:42)
+2025-07-25 17:39:11.461 11968-11990 System.out              com.github.mheerwaarden.eventdemo    I  	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+2025-07-25 17:39:11.461 11968-11990 System.out              com.github.mheerwaarden.eventdemo    I  	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+2025-07-25 17:39:11.461 11968-11990 System.out              com.github.mheerwaarden.eventdemo    I  	at kotlinx.coroutines.scheduling.CoroutineScheduler.runSafely(CoroutineScheduler.kt:586)
+2025-07-25 17:39:11.461 11968-11990 System.out              com.github.mheerwaarden.eventdemo    I  	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.executeTask(CoroutineScheduler.kt:829)
+2025-07-25 17:39:11.461 11968-11990 System.out              com.github.mheerwaarden.eventdemo    I  	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.runWorker(CoroutineScheduler.kt:717)
+2025-07-25 17:39:11.461 11968-11990 System.out              com.github.mheerwaarden.eventdemo    I  	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.run(CoroutineScheduler.kt:704)
+     */
     override suspend fun loadState() {
+        println("LocaleViewModel loadState, repository = $userPreferencesRepository")
+        println("LocaleViewModel loadState, preferences = ${userPreferencesRepository.preferences}")
         try {
             // 1. Suspend while fetching the first preference value to ensure initial state is correct.
             val initialPreferences = userPreferencesRepository.preferences.first()
 
             // 2. Change the platform locale to the user's preferred locale.
             val initialLocale = getEffectiveLocale(initialPreferences)
-            setPreferredAppLocale(initialLocale) //(getInitialLocale())
+            setPreferredAppLocale(initialLocale)
 
             // 3. Set up the ongoing StateFlow to listen for subsequent changes
             preferredLocaleState = userPreferencesRepository.preferences

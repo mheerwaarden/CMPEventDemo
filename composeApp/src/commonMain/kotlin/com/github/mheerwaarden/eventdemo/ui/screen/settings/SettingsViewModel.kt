@@ -12,6 +12,7 @@ package com.github.mheerwaarden.eventdemo.ui.screen.settings
 import androidx.lifecycle.viewModelScope
 import com.github.mheerwaarden.eventdemo.data.preferences.DEFAULT_LOCALE
 import com.github.mheerwaarden.eventdemo.data.preferences.UserPreferencesRepository
+import com.github.mheerwaarden.eventdemo.ui.AppViewModelProvider
 import com.github.mheerwaarden.eventdemo.ui.screen.LoadingViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,10 +30,16 @@ import kotlinx.coroutines.launch
 class SettingsViewModel(
     private val userPreferencesRepository: UserPreferencesRepository,
 ) : LoadingViewModel() {
+    init {
+        println("SettingsViewModel init, preferences = ${userPreferencesRepository.preferences}")
+    }
+
     var settingsUiState: StateFlow<SettingsUiState> = MutableStateFlow(SettingsUiState())
 
     override suspend fun loadState() {
-        // Suspend while fetch the first value to ensure initial state is correct.
+        println("SettingsViewModel loadState, preferences = ${userPreferencesRepository.preferences}")
+
+        // Suspend while fetching the first value to ensure the initial state is correct.
         val initialPreferences = userPreferencesRepository.preferences.first()
 
         settingsUiState = userPreferencesRepository.preferences.map { preferences ->
@@ -44,6 +51,7 @@ class SettingsViewModel(
                 useCraneCalendar = preferences.useCraneCalendar,
                 localeTag = preferences.localeTag,
                 usePocketBase = preferences.usePocketBase,
+                pocketBaseUrl = preferences.pocketBaseUrl,
             )
         }.stateIn(
             scope = viewModelScope,
@@ -56,6 +64,7 @@ class SettingsViewModel(
                 useCraneCalendar = initialPreferences.useCraneCalendar,
                 localeTag = initialPreferences.localeTag,
                 usePocketBase = initialPreferences.usePocketBase,
+                pocketBaseUrl = initialPreferences.pocketBaseUrl,
             )
         )
     }
@@ -97,6 +106,14 @@ class SettingsViewModel(
             userPreferencesRepository.saveUsePocketBase(usePocketBase)
         }
     }
+
+    fun setPocketBaseUrl(pocketBaseUrl: String) {
+        println("setPocketBaseUrl: $pocketBaseUrl")
+        updatePreferenceJob?.cancel()
+        updatePreferenceJob = viewModelScope.launch {
+            userPreferencesRepository.savePocketBaseUrl(pocketBaseUrl)
+        }
+    }
 }
 
 /**
@@ -112,4 +129,5 @@ data class SettingsUiState(
     val useDarkTheme: Boolean = false,
     val localeTag: String = DEFAULT_LOCALE,
     val usePocketBase: Boolean = false,
+    val pocketBaseUrl: String = "",
 )

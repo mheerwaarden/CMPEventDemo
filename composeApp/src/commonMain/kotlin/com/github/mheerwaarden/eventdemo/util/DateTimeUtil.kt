@@ -84,28 +84,29 @@ fun LocalDate.toInstant(): Instant = atStartOfDayIn(TimeZone.currentSystemDefaul
 
 // region Custom formatting
 private val regex = """(yyyy|yy|MM|dd|HH|mm|ss)|(.)""".toRegex()
-private fun getDateTimeFormat(pattern: String): DateTimeFormat<LocalDateTime> = LocalDateTime.Format {
-    regex.findAll(pattern).forEach { matchResult ->
-        val token = matchResult.groupValues[1]
-        val literal = matchResult.groupValues[2]
+private fun getDateTimeFormat(pattern: String): DateTimeFormat<LocalDateTime> =
+    LocalDateTime.Format {
+        regex.findAll(pattern).forEach { matchResult ->
+            val token = matchResult.groupValues[1]
+            val literal = matchResult.groupValues[2]
 
-        when (token) {
-            "yyyy" -> year()
-            "yy" -> yearTwoDigits(2020)
-            "MM" -> monthNumber()
-            "dd" -> dayOfMonth()
-            "HH" -> hour()
-            "mm" -> minute()
-            "ss" -> second()
-            else -> {
-                // This means it's a literal character
-                if (literal.isNotEmpty()) {
-                    char(literal.first())
+            when (token) {
+                "yyyy" -> year()
+                "yy" -> yearTwoDigits(2020)
+                "MM" -> monthNumber()
+                "dd" -> dayOfMonth()
+                "HH" -> hour()
+                "mm" -> minute()
+                "ss" -> second()
+                else -> {
+                    // This means it's a literal character
+                    if (literal.isNotEmpty()) {
+                        char(literal.first())
+                    }
                 }
             }
         }
     }
-}
 
 private fun getDateFormat(pattern: String): DateTimeFormat<LocalDate> = LocalDate.Format {
     regex.findAll(pattern).forEach { matchResult ->
@@ -158,8 +159,12 @@ val DEFAULT_DATE_FORMAT by lazy {
     LocalDate.Format { year(); char('-'); monthNumber(); char('-'); dayOfMonth() }
 }
 
-val DEFAULT_DATE_ONLY_FORMAT by lazy {
-    LocalDateTime.Format { year(); char('-'); monthNumber(); char('-'); dayOfMonth() }
+val DEFAULT_DATE_TIME_FORMAT by lazy {
+    LocalDateTime.Format {
+        year(); char('-'); monthNumber(); char('-'); dayOfMonth()
+        char(' ')
+        hour(); char(':'); minute()
+    }
 }
 
 val DEFAULT_TIME_FORMAT by lazy { LocalTime.Format { hour(); char(':'); minute() } }

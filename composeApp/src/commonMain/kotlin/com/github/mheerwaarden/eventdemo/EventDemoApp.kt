@@ -43,7 +43,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.github.mheerwaarden.eventdemo.data.pocketbase.PocketBaseClient
-import com.github.mheerwaarden.eventdemo.ui.localization.AppEnvironment
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.about
 import com.github.mheerwaarden.eventdemo.resources.app_name
@@ -52,20 +51,22 @@ import com.github.mheerwaarden.eventdemo.resources.close
 import com.github.mheerwaarden.eventdemo.resources.more
 import com.github.mheerwaarden.eventdemo.resources.preferences
 import com.github.mheerwaarden.eventdemo.ui.AppViewModelProvider
+import com.github.mheerwaarden.eventdemo.ui.localization.AppEnvironment
 import com.github.mheerwaarden.eventdemo.ui.navigation.EventDemoAppNavHost
 import com.github.mheerwaarden.eventdemo.ui.navigation.MenuNavigator
 import com.github.mheerwaarden.eventdemo.ui.navigation.MenuNavigatorImpl
 import com.github.mheerwaarden.eventdemo.ui.screen.LoadingScreen
 import com.github.mheerwaarden.eventdemo.ui.screen.about.AboutDestination
 import com.github.mheerwaarden.eventdemo.ui.screen.auth.AuthViewModel
+import com.github.mheerwaarden.eventdemo.ui.screen.auth.LoginScreen
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventOverviewDestination
+import com.github.mheerwaarden.eventdemo.ui.screen.event.EventsScreen
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventsViewModel
 import com.github.mheerwaarden.eventdemo.ui.screen.settings.SettingsViewModel
 import com.github.mheerwaarden.eventdemo.ui.theme.EventDemoAppTheme
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import com.github.mheerwaarden.eventdemo.ui.screen.event.EventsScreen
-import com.github.mheerwaarden.eventdemo.ui.screen.auth.LoginScreen
+import org.koin.compose.koinInject
 
 @Composable
 fun EventDemoApp(
@@ -74,7 +75,8 @@ fun EventDemoApp(
     isHorizontalLayout: Boolean = false,
 ) {
     EventDemoAppTheme {
-        AppEnvironment {
+        AppEnvironment(localeViewModel = koinInject()) {
+            println("Starting DemoChooser")
             DemoChooser(startDestination, isHorizontalLayout, modifier)
         }
     }
@@ -87,19 +89,24 @@ fun DemoChooser(
     modifier: Modifier = Modifier,
     settingsViewModel: SettingsViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
+    println("DemoChooser started")
     LoadingScreen(loadingViewModel = settingsViewModel, modifier = modifier) {
         val preferences by settingsViewModel.settingsUiState.collectAsState()
         if (preferences.usePocketBase) {
-            PocketBaseEvents(modifier)
+            PocketBaseEvents(pocketBaseUrl = preferences.pocketBaseUrl, modifier = modifier)
         } else {
-            ThemedLocalizedApp(startDestination, isHorizontalLayout, modifier)
+            ThemedLocalizedApp(
+                startDestination = startDestination,
+                isHorizontalLayout = isHorizontalLayout,
+                modifier = modifier
+            )
         }
     }
 }
 
 @Composable
-fun PocketBaseEvents(modifier: Modifier = Modifier) {
-    val pocketBase = remember { PocketBaseClient() }
+fun PocketBaseEvents(pocketBaseUrl: String, modifier: Modifier = Modifier) {
+    val pocketBase = remember { PocketBaseClient(pocketBaseUrl) }
     val authViewModel = remember { AuthViewModel(pocketBase) }
     val eventsViewModel = remember { EventsViewModel(pocketBase) }
 
@@ -170,9 +177,6 @@ private fun ThemedLocalizedApp(
     }
 }
 
-/**
- * App bar to display title and conditionally display the back navigation.
- */
 /**
  * App bar to display title and conditionally display the back navigation.
  */

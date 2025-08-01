@@ -18,7 +18,9 @@ import com.github.mheerwaarden.eventdemo.util.ofEpochMilli
 import com.github.mheerwaarden.eventdemo.util.toEpochMilli
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.plus
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class EventData(
     // Event fields
     val id: String = "",
