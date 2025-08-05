@@ -50,11 +50,6 @@ object AppViewModelProvider : KoinComponent {
         }
         // endregion
 
-        /* region Settings ViewModel */
-        initializer {
-            SettingsViewModel(get())
-        }
-        // endregion
     }
 }
 

@@ -78,7 +78,7 @@ fun EventScreen(
     navigateBack: () -> Unit,
     modifier: Modifier = Modifier,
     eventViewModel: EventEditViewModel = viewModel(factory = AppViewModelProvider.Factory),
-    settingsViewModel: SettingsViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    settingsViewModel: SettingsViewModel //= viewModel(factory = AppViewModelProvider.Factory),
 ) {
     onUpdateTopAppBar(stringResource(EventDestination.titleRes), null) {
         val foregroundColor = MaterialTheme.colorScheme.primary

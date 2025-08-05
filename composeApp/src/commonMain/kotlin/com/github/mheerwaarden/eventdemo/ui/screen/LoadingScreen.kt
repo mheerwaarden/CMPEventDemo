@@ -41,18 +41,21 @@ fun LoadingScreen(
     successContent: @Composable () -> Unit,
 ) {
     val name = loadingViewModel::class.simpleName ?: ""
+    println("LoadingScreen started with $name")
     when (val result = loadingViewModel.loadingState) {
         is LoadingState.Loading -> {
             /* Show progress indicator */
+            println("LoadingScreen: Loading...")
             ProgressScreen(action = Res.string.loading, name = name, modifier = modifier)
         }
 
         is LoadingState.Success -> {
             /* UiState is updated successfully, display data */
+            println("LoadingScreen: Loading succeeded, show success")
             successContent()
         }
 
-        is LoadingState.Failure -> {
+        is LoadingState.Error -> {
             /* Handle error */
             val message = result.error.message ?: stringResource(Res.string.unknown_error)
             println("LoadingScreen for $name Error: $message")
@@ -79,11 +82,11 @@ fun LoadingScreen(
             name = "one or more items",
             modifier = modifier
         )
-    } else if (loadingViewModels.any { it.loadingState is LoadingState.Failure }) {
+    } else if (loadingViewModels.any { it.loadingState is LoadingState.Error }) {
         val failures = mutableListOf<LoadingViewModel>()
         val messageBuilder = StringBuilder()
-        loadingViewModels.filter { vm -> vm.loadingState is LoadingState.Failure }.map { vm ->
-            val state = vm.loadingState as LoadingState.Failure
+        loadingViewModels.filter { vm -> vm.loadingState is LoadingState.Error }.map { vm ->
+            val state = vm.loadingState as LoadingState.Error
             val errorMessage = state.error.message ?: stringResource(Res.string.unknown_error)
             messageBuilder.append("Error for ${vm::class.simpleName}: $errorMessage\n")
             failures.add(vm)

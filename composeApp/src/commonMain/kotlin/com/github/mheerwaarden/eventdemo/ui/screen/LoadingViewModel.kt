@@ -21,7 +21,7 @@ import kotlinx.coroutines.withContext
 sealed interface LoadingState {
     data object Loading : LoadingState
     data object Success : LoadingState
-    data class Failure(val error: Throwable) : LoadingState
+    data class Error(val error: Throwable) : LoadingState
 }
 
 abstract class LoadingViewModel : ViewModel() {
@@ -36,17 +36,20 @@ abstract class LoadingViewModel : ViewModel() {
      */
     fun load() {
         loadingState = LoadingState.Loading
+        val currentViewModelName = this::class.simpleName
         viewModelScope.launch {
             try {
+                println("LoadingViewModel $currentViewModelName Loading...")
                 // Run loading in a background thread
                 withContext(Dispatchers.Default) {
                     loadState()
                 }
                 // Keep the update of uiState in the main thread
+                println("LoadingViewModel $currentViewModelName Success")
                 loadingState = LoadingState.Success
             } catch (e: Exception) {
-                println("LoadingViewModel ${this::class.simpleName} Error: ${e.message}")
-                loadingState = LoadingState.Failure(e)
+                println("LoadingViewModel $currentViewModelName Error: ${e.message}")
+                loadingState = LoadingState.Error(e)
             }
         }
     }

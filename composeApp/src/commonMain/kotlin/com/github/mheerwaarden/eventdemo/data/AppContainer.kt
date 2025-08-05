@@ -14,6 +14,7 @@ import com.github.mheerwaarden.eventdemo.data.database.EventRepository
 
 /**
  * App container for Dependency injection.
+ * TODO: Move to Koin
  */
 interface AppContainer {
     val eventRepository: EventRepository
@@ -23,6 +24,10 @@ interface AppContainer {
  * [AppContainer] implementation that provides instances of the repositories of the model objects
  */
 class AppDataContainer : AppContainer {
+    init {
+        println("AppDataContainer: init")
+    }
+
     override val eventRepository: EventRepository by lazy {
         DummyEventRepository()
     }

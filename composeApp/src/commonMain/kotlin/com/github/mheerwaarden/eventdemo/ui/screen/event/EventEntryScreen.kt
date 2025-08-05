@@ -85,7 +85,7 @@ fun EventEntryScreen(
     navigateBack: () -> Unit,
     modifier: Modifier = Modifier,
     eventViewModel: EventEntryViewModel = viewModel(factory = AppViewModelProvider.Factory),
-    settingsViewModel: SettingsViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    settingsViewModel: SettingsViewModel //= viewModel(factory = AppViewModelProvider.Factory),
 ) {
     onUpdateTopAppBar(stringResource(EventEntryDestination.titleRes), null) {}
 

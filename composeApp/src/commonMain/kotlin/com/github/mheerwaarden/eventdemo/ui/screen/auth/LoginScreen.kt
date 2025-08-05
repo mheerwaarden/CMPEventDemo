@@ -38,6 +38,7 @@ import com.github.mheerwaarden.eventdemo.resources.back
 import com.github.mheerwaarden.eventdemo.resources.more
 import com.github.mheerwaarden.eventdemo.ui.screen.settings.SettingsScreen
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 
 @Composable
 fun LoginScreen(authViewModel: AuthViewModel, modifier: Modifier = Modifier) {
@@ -183,6 +184,7 @@ private fun SettingsBody(modifier: Modifier = Modifier, hideSettings: () -> Unit
         SettingsScreen(
             onUpdateTopAppBar = { _, _, _ -> },
             modifier = Modifier.fillMaxSize(),
+            settingsViewModel = koinInject()
         )
     }
 }

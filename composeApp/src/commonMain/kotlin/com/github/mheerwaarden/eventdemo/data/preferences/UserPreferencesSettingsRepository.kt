@@ -1,17 +1,22 @@
 package com.github.mheerwaarden.eventdemo.data.preferences
 
 import co.touchlab.kermit.Logger
+import com.github.mheerwaarden.eventdemo.ui.screen.LoadingState
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.set
-
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.update
 
 class UserPreferencesSettingsRepository(
     private val settings: Settings,
     private val logger: Logger,
+    defaultDispatcher: CoroutineDispatcher = Dispatchers.Default
 ) : UserPreferencesRepository {
     //region Keys
     companion object {
@@ -27,31 +32,105 @@ class UserPreferencesSettingsRepository(
     //endregion
 
     //region Flow
-    private val _preferences: MutableStateFlow<UserPreferences> =
-            MutableStateFlow(loadPreferences())
-    override val preferences: Flow<UserPreferences> = _preferences.asStateFlow()
+    override val preferences: StateFlow<UserPreferences> =
+        MutableStateFlow(UserPreferences.DEFAULTS)
+    private val _preferences
+        get() = preferences as MutableStateFlow<UserPreferences>
+
+    override val loadingState: Flow<LoadingState> = flow {
+        try {
+            emit(LoadingState.Loading)
+            loadInitialPreferences()
+            emit(LoadingState.Success)
+        } catch (e: Exception) {
+            emit(LoadingState.Error(e))
+        }
+    }.flowOn(defaultDispatcher)
+
     //endregion
 
     //region Load
-    private fun loadPreferences(): UserPreferences {
-        println("UserPreferencesSettingsRepository: loadPreferences")
-        return try {
-            UserPreferences(
-                isReadOnly = settings.getBoolean(KEY_IS_READ_ONLY, false),
-                datePickerUsesKeyboard = settings.getBoolean(KEY_DATE_PICKER_USES_KEYBOARD, false),
-                timePickerUsesKeyboard = settings.getBoolean(KEY_TIME_PICKER_USES_KEYBOARD, false),
-                isCalendarExpanded = settings.getBoolean(KEY_CALENDAR_EXPANDED, true),
-                useCraneCalendar = settings.getBoolean(KEY_USE_CRANE_CALENDAR, false),
-                localeTag = settings.getString(KEY_LOCALE_TAG, DEFAULT_LOCALE_FROM_PLATFORM),
-                usePocketBase = settings.getBoolean(KEY_USE_POCKETBASE, false),
-                pocketBaseUrl = settings.getString(KEY_POCKETBASE_URL, ""),
-            )
+    private fun loadInitialPreferences() {
+        val loadedPreferences = UserPreferences(
+            isReadOnly = settings.getBoolean(
+                KEY_IS_READ_ONLY, UserPreferences.DEFAULTS.isReadOnly
+            ),
+            datePickerUsesKeyboard = settings.getBoolean(
+                KEY_DATE_PICKER_USES_KEYBOARD, UserPreferences.DEFAULTS.datePickerUsesKeyboard
+            ),
+            timePickerUsesKeyboard = settings.getBoolean(
+                KEY_TIME_PICKER_USES_KEYBOARD, UserPreferences.DEFAULTS.timePickerUsesKeyboard
+            ),
+            isCalendarExpanded = settings.getBoolean(
+                KEY_CALENDAR_EXPANDED, UserPreferences.DEFAULTS.isCalendarExpanded
+            ),
+            useCraneCalendar = settings.getBoolean(
+                KEY_USE_CRANE_CALENDAR, UserPreferences.DEFAULTS.useCraneCalendar
+            ),
+            localeTag = settings.getString(
+                KEY_LOCALE_TAG, UserPreferences.DEFAULTS.localeTag
+            ),
+            usePocketBase = settings.getBoolean(
+                KEY_USE_POCKETBASE, UserPreferences.DEFAULTS.usePocketBase
+            ),
+            pocketBaseUrl = settings.getString(
+                KEY_POCKETBASE_URL, UserPreferences.DEFAULTS.pocketBaseUrl
+            ),
+        )
+        _preferences.value = loadedPreferences
+    }
 
-        } catch (e: Exception) {
-            logger.e(throwable = e) { "Error loading user preferences" }
-            // Return default preferences in case of error
-            UserPreferences()
+    private var isLoaded = false
+    override fun loadPreferences() {
+        if (isLoaded) {
+            println("UserPreferencesSettingsRepository: loadPreferences: already loaded")
+            return
         }
+        println("UserPreferencesSettingsRepository: loadPreferences")
+
+        updatePreferences {
+            try {
+                UserPreferences(
+                    isReadOnly = settings.getBoolean(
+                        KEY_IS_READ_ONLY,
+                        UserPreferences.DEFAULTS.isReadOnly
+                    ),
+                    datePickerUsesKeyboard = settings.getBoolean(
+                        KEY_DATE_PICKER_USES_KEYBOARD,
+                        UserPreferences.DEFAULTS.datePickerUsesKeyboard
+                    ),
+                    timePickerUsesKeyboard = settings.getBoolean(
+                        KEY_TIME_PICKER_USES_KEYBOARD,
+                        UserPreferences.DEFAULTS.timePickerUsesKeyboard
+                    ),
+                    isCalendarExpanded = settings.getBoolean(
+                        KEY_CALENDAR_EXPANDED,
+                        UserPreferences.DEFAULTS.isCalendarExpanded
+                    ),
+                    useCraneCalendar = settings.getBoolean(
+                        KEY_USE_CRANE_CALENDAR,
+                        UserPreferences.DEFAULTS.useCraneCalendar
+                    ),
+                    localeTag = settings.getString(
+                        KEY_LOCALE_TAG,
+                        UserPreferences.DEFAULTS.localeTag
+                    ),
+                    usePocketBase = settings.getBoolean(
+                        KEY_USE_POCKETBASE,
+                        UserPreferences.DEFAULTS.usePocketBase
+                    ),
+                    pocketBaseUrl = settings.getString(
+                        KEY_POCKETBASE_URL,
+                        UserPreferences.DEFAULTS.pocketBaseUrl
+                    ),
+                )
+            } catch (e: Exception) {
+                logger.e(throwable = e) { "Error loading user preferences" }
+                // Return default preferences in case of error
+                UserPreferences()
+            }
+        }
+        isLoaded = true
     }
     //endregion
 

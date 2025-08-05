@@ -33,6 +33,7 @@ import com.github.mheerwaarden.eventdemo.ui.screen.event.EventScreen
 import com.github.mheerwaarden.eventdemo.ui.screen.settings.SettingsDestination
 import com.github.mheerwaarden.eventdemo.ui.screen.settings.SettingsScreen
 import com.github.mheerwaarden.eventdemo.util.format
+import org.koin.compose.koinInject
 
 /**
  * Provides Navigation graph for the application.
@@ -65,7 +66,8 @@ fun EventDemoAppNavHost(
                 navigateToEvent = { id -> navController.navigate("${EventDestination.route}/${id}") },
                 navigateToEventOverview = { navController.navigate(EventOverviewDestination.route) },
                 isHorizontal = isHorizontalLayout,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                settingsViewModel = koinInject()
             )
         }
         composable(
@@ -79,7 +81,8 @@ fun EventDemoAppNavHost(
                 navigateToEventOverview = { navController.navigate(EventOverviewDestination.route) },
                 navigateToEditEvent = { id -> navController.navigate("${EventEditDestination.route}/${id}") },
                 navigateBack = { navController.popBackStack() },
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                settingsViewModel = koinInject()
             )
         }
         composable(
@@ -92,7 +95,8 @@ fun EventDemoAppNavHost(
                 onUpdateTopAppBar = onUpdateTopAppBar,
                 isHorizontalLayout = isHorizontalLayout,
                 navigateBack = { navController.popBackStack() },
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                settingsViewModel = koinInject()
             )
         }
         composable(
@@ -105,7 +109,8 @@ fun EventDemoAppNavHost(
                 onUpdateTopAppBar = onUpdateTopAppBar,
                 isHorizontalLayout = isHorizontalLayout,
                 navigateBack = { navController.popBackStack() },
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                settingsViewModel = koinInject()
             )
         }
 
@@ -113,7 +118,8 @@ fun EventDemoAppNavHost(
         composable(route = SettingsDestination.route) {
             SettingsScreen(
                 onUpdateTopAppBar = onUpdateTopAppBar,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                settingsViewModel = koinInject()
             )
         }
         composable(route = AboutDestination.route) {

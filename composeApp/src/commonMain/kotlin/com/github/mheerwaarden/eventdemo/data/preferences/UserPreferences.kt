@@ -30,4 +30,8 @@ data class UserPreferences(
     val usePocketBase: Boolean = false,
     /** PocketBase backend URL */
     val pocketBaseUrl: String = "",
-)
+) {
+    companion object {
+        val DEFAULTS = UserPreferences()
+    }
+}

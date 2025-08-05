@@ -54,7 +54,7 @@ fun EventCalendarScreen(
     modifier: Modifier = Modifier,
     isHorizontal: Boolean = false,
     eventViewModel: EventCalendarViewModel = viewModel(factory = AppViewModelProvider.Factory),
-    settingsViewModel: SettingsViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    settingsViewModel: SettingsViewModel
 ) {
     val eventUiState by eventViewModel.eventUiState.collectAsState()
     LoadingScreen(loadingViewModel = settingsViewModel) {

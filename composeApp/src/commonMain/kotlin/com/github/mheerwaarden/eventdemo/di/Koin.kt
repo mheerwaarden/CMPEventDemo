@@ -9,6 +9,7 @@ import com.github.mheerwaarden.eventdemo.localization.DateTimeFormatter
 import com.github.mheerwaarden.eventdemo.localization.NumberFormatter
 import com.github.mheerwaarden.eventdemo.localization.PlatformLocaleManager
 import com.github.mheerwaarden.eventdemo.localization.PlatformLocaleProvider
+import com.github.mheerwaarden.eventdemo.ui.screen.settings.SettingsViewModel
 import com.russhwolf.settings.Settings
 import kotlinx.datetime.Clock
 import org.koin.core.KoinApplication
@@ -21,6 +22,7 @@ import org.koin.core.scope.Scope
 import org.koin.dsl.module
 
 fun initKoin(platformModule: Module): KoinApplication {
+    println("Starting Koin...")
     val koinApplication = startKoin {
         modules(
             // Platform info
@@ -44,6 +46,7 @@ fun initKoin(platformModule: Module): KoinApplication {
     val doOnStartup = koin.get<() -> Unit>()
     doOnStartup.invoke()
 
+    println("Koin initialized")
     return koinApplication
 }
 
@@ -64,6 +67,7 @@ private val coreModule = module {
 
     single<UserPreferencesRepository> { UserPreferencesSettingsRepository(get(), initLogger()) }
     single { LocaleViewModel(userPreferencesRepository = get()) }
+    single { SettingsViewModel(userPreferencesRepository = get()) }
 
     single<Clock> { Clock.System }
 }

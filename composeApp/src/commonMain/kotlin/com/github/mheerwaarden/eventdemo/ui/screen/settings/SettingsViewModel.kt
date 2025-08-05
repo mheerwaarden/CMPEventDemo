@@ -11,17 +11,17 @@ package com.github.mheerwaarden.eventdemo.ui.screen.settings
 
 import androidx.lifecycle.viewModelScope
 import com.github.mheerwaarden.eventdemo.data.preferences.DEFAULT_LOCALE
+import com.github.mheerwaarden.eventdemo.data.preferences.DEFAULT_LOCALE_FROM_PLATFORM
+import com.github.mheerwaarden.eventdemo.data.preferences.UserPreferences
 import com.github.mheerwaarden.eventdemo.data.preferences.UserPreferencesRepository
-import com.github.mheerwaarden.eventdemo.ui.AppViewModelProvider
-import com.github.mheerwaarden.eventdemo.ui.screen.LoadingViewModel
+import com.github.mheerwaarden.eventdemo.ui.screen.LoadingPreferencesViewModel
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
 
 /**
  * ViewModel for managing the settings screen in the app.
@@ -29,20 +29,13 @@ import kotlinx.coroutines.launch
  */
 class SettingsViewModel(
     private val userPreferencesRepository: UserPreferencesRepository,
-) : LoadingViewModel() {
+) : LoadingPreferencesViewModel(userPreferencesRepository), KoinComponent {
     init {
-        println("SettingsViewModel init, preferences = ${userPreferencesRepository.preferences}")
+        println("SettingsViewModel init, repository: $userPreferencesRepository")
     }
 
-    var settingsUiState: StateFlow<SettingsUiState> = MutableStateFlow(SettingsUiState())
-
-    override suspend fun loadState() {
-        println("SettingsViewModel loadState, preferences = ${userPreferencesRepository.preferences}")
-
-        // Suspend while fetching the first value to ensure the initial state is correct.
-        val initialPreferences = userPreferencesRepository.preferences.first()
-
-        settingsUiState = userPreferencesRepository.preferences.map { preferences ->
+    var settingsUiState: StateFlow<SettingsUiState> =
+        userPreferencesRepository.preferences.map { preferences ->
             SettingsUiState(
                 isReadOnly = preferences.isReadOnly,
                 datePickerUsesKeyboard = preferences.datePickerUsesKeyboard,
@@ -57,17 +50,16 @@ class SettingsViewModel(
             scope = viewModelScope,
             started = WhileSubscribed(TIMEOUT_MILLIS),
             initialValue = SettingsUiState(
-                isReadOnly = initialPreferences.isReadOnly,
-                datePickerUsesKeyboard = initialPreferences.datePickerUsesKeyboard,
-                timePickerUsesKeyboard = initialPreferences.timePickerUsesKeyboard,
-                isCalendarExpanded = initialPreferences.isCalendarExpanded,
-                useCraneCalendar = initialPreferences.useCraneCalendar,
-                localeTag = initialPreferences.localeTag,
-                usePocketBase = initialPreferences.usePocketBase,
-                pocketBaseUrl = initialPreferences.pocketBaseUrl,
+                isReadOnly = UserPreferences.DEFAULTS.isReadOnly,
+                datePickerUsesKeyboard = UserPreferences.DEFAULTS.datePickerUsesKeyboard,
+                timePickerUsesKeyboard = UserPreferences.DEFAULTS.timePickerUsesKeyboard,
+                isCalendarExpanded = UserPreferences.DEFAULTS.isCalendarExpanded,
+                useCraneCalendar = UserPreferences.DEFAULTS.useCraneCalendar,
+                localeTag = UserPreferences.DEFAULTS.localeTag,
+                usePocketBase = UserPreferences.DEFAULTS.usePocketBase,
+                pocketBaseUrl = UserPreferences.DEFAULTS.pocketBaseUrl,
             )
         )
-    }
 
     // Prevent interference with an already running preference update
     private var updatePreferenceJob: Job? = null
@@ -114,6 +106,16 @@ class SettingsViewModel(
             userPreferencesRepository.savePocketBaseUrl(pocketBaseUrl)
         }
     }
+
+    fun setLocale(localeTag: String?) {
+        updatePreferenceJob?.cancel()
+        updatePreferenceJob = viewModelScope.launch {
+            userPreferencesRepository.saveLocalePreference(
+                if (localeTag.isNullOrBlank()) DEFAULT_LOCALE_FROM_PLATFORM else localeTag
+            )
+        }
+    }
+
 }
 
 /**

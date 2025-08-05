@@ -77,7 +77,12 @@ fun EventDemoApp(
     EventDemoAppTheme {
         AppEnvironment(localeViewModel = koinInject()) {
             println("Starting DemoChooser")
-            DemoChooser(startDestination, isHorizontalLayout, modifier)
+            DemoChooser(
+                startDestination = startDestination,
+                isHorizontalLayout = isHorizontalLayout,
+                modifier = modifier,
+                settingsViewModel = koinInject()
+            )
         }
     }
 }
@@ -87,12 +92,12 @@ fun DemoChooser(
     startDestination: String,
     isHorizontalLayout: Boolean,
     modifier: Modifier = Modifier,
-    settingsViewModel: SettingsViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    settingsViewModel: SettingsViewModel
 ) {
     println("DemoChooser started")
     LoadingScreen(loadingViewModel = settingsViewModel, modifier = modifier) {
         val preferences by settingsViewModel.settingsUiState.collectAsState()
-        if (preferences.usePocketBase) {
+        if (/*preferences.usePocketBase*/ false) {
             PocketBaseEvents(pocketBaseUrl = preferences.pocketBaseUrl, modifier = modifier)
         } else {
             ThemedLocalizedApp(
