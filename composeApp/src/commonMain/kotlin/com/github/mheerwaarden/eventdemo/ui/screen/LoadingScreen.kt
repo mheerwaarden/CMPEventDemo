@@ -9,29 +9,17 @@
 
 package com.github.mheerwaarden.eventdemo.ui.screen
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BrokenImage
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.github.mheerwaarden.eventdemo.Dimensions
+import com.github.mheerwaarden.eventdemo.data.DataLoadingState
 import com.github.mheerwaarden.eventdemo.resources.Res
-import com.github.mheerwaarden.eventdemo.resources.error
 import com.github.mheerwaarden.eventdemo.resources.loading
-import com.github.mheerwaarden.eventdemo.resources.retry
 import com.github.mheerwaarden.eventdemo.resources.unknown_error
-import com.github.mheerwaarden.eventdemo.ui.components.ProgressIndicator
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -42,26 +30,27 @@ fun LoadingScreen(
 ) {
     val name = loadingViewModel::class.simpleName ?: ""
     println("LoadingScreen started with $name")
-    when (val result = loadingViewModel.loadingState) {
-        is LoadingState.Loading -> {
+    val currentLoadingState by loadingViewModel.loadingState.collectAsState()
+    when (currentLoadingState) {
+        is DataLoadingState.Loading -> {
             /* Show progress indicator */
             println("LoadingScreen: Loading...")
             ProgressScreen(action = Res.string.loading, name = name, modifier = modifier)
         }
 
-        is LoadingState.Success -> {
+        is DataLoadingState.Success -> {
             /* UiState is updated successfully, display data */
             println("LoadingScreen: Loading succeeded, show success")
             successContent()
         }
 
-        is LoadingState.Error -> {
+        is DataLoadingState.Error -> {
             /* Handle error */
-            val message = result.error.message ?: stringResource(Res.string.unknown_error)
+            val message = (currentLoadingState as DataLoadingState.Error).exception.message ?: stringResource(Res.string.unknown_error)
             println("LoadingScreen for $name Error: $message")
             ErrorScreen(
                 message = message,
-                retryAction = { loadingViewModel.load() },
+                retryAction = { loadingViewModel.reload() },
                 modifier = modifier
                     .fillMaxSize()
                     .wrapContentSize(Alignment.Center)
@@ -76,26 +65,27 @@ fun LoadingScreen(
     modifier: Modifier = Modifier,
     successContent: @Composable () -> Unit,
 ) {
-    if (loadingViewModels.any { it.loadingState is LoadingState.Loading }) {
+    val loadingStatesMap = loadingViewModels.map { vm -> vm to vm.loadingState.collectAsState() }
+    if (loadingStatesMap.any { entry -> entry.second.value is DataLoadingState.Loading }) {
         ProgressScreen(
             action = Res.string.loading,
             name = "one or more items",
             modifier = modifier
         )
-    } else if (loadingViewModels.any { it.loadingState is LoadingState.Error }) {
+    } else if (loadingStatesMap.any { entry -> entry.second.value is DataLoadingState.Error }) {
         val failures = mutableListOf<LoadingViewModel>()
         val messageBuilder = StringBuilder()
-        loadingViewModels.filter { vm -> vm.loadingState is LoadingState.Error }.map { vm ->
-            val state = vm.loadingState as LoadingState.Error
-            val errorMessage = state.error.message ?: stringResource(Res.string.unknown_error)
-            messageBuilder.append("Error for ${vm::class.simpleName}: $errorMessage\n")
-            failures.add(vm)
+        loadingStatesMap.filter { entry -> entry.second.value is DataLoadingState.Error }.forEach { entry ->
+            val errorState = entry.second.value as DataLoadingState.Error
+            val errorMessage = errorState.exception.message ?: stringResource(Res.string.unknown_error)
+            messageBuilder.append("Error for ${errorState::class.simpleName}: $errorMessage\n")
+            failures.add(entry.first)
         }
         val message = messageBuilder.toString().trim()
         println("LoadingScreen errors:\n$message")
         ErrorScreen(
             message = message,
-            retryAction = { failures.forEach { it.load() } },
+            retryAction = { failures.forEach { vm -> vm.reload() } },
             modifier = Modifier
                 .fillMaxSize()
                 .wrapContentSize(Alignment.Center)
@@ -105,29 +95,3 @@ fun LoadingScreen(
     }
 }
 
-@Composable
-fun ProgressScreen(action: StringResource, modifier: Modifier = Modifier, name: String) {
-    ProgressIndicator(
-        modifier.fillMaxSize().wrapContentSize(Alignment.Center),
-        action, name
-    )
-}
-
-@Composable
-fun ErrorScreen(message: String, retryAction: () -> Unit, modifier: Modifier = Modifier) {
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
-    ) {
-        Icon(
-            imageVector = Icons.Filled.BrokenImage,
-            contentDescription = stringResource(Res.string.error),
-            modifier = Modifier.size(Dimensions.error_image_size)
-        )
-        Text(text = message, modifier = Modifier.padding(16.dp))
-        Button(onClick = retryAction) {
-            Text(stringResource(Res.string.retry))
-        }
-    }
-}

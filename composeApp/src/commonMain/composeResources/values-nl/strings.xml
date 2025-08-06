@@ -16,7 +16,7 @@
     <string name="location">Locatie</string>
     <string name="is_online">Is online</string>
     <string name="contact">Contact</string>
-    <string name="notes">Aantekeringen</string>
+    <string name="notes">Aantekeningen</string>
     <string name="event_type">Event type</string>
     <string name="event_category">Event categorie</string>
     <string name="color">Kleur</string>
@@ -71,7 +71,7 @@
     <string name="about">Over</string>
     <string name="more">Meer</string>
     <string name="busy">Bezig</string>
-    <string name="loading">Laden</string>
+    <string name="loading">Laden %1$s</string>
     <string name="error">Fout</string>
     <string name="retry">Opnieuw</string>
     <string name="unknown_error">Onbekende fout</string>
@@ -136,4 +136,5 @@
     <string name="user">Gebruiker</string>"
     <string name="use_database">Gebruik database</string>
     <string name="database_url">Database URL</string>
+    <string name="event_not_found">Event niet gevonden"</string>
 </resources>

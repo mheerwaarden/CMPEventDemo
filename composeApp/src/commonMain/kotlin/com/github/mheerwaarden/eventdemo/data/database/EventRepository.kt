@@ -9,17 +9,19 @@
 
 package com.github.mheerwaarden.eventdemo.data.database
 
+import com.github.mheerwaarden.eventdemo.data.DataLoadingRepository
 import com.github.mheerwaarden.eventdemo.data.model.Event
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventFilter
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDateTime
 
-interface EventRepository {
+interface EventRepository: DataLoadingRepository {
     fun getAllEvents(): Flow<Map<String, Event>>
 
     /** Return events from start up to end date */
     fun getEvents(start: LocalDateTime, end: LocalDateTime): List<Event>
     fun getEvent(id: String): Event?
+    fun getEventStream(eventId: String): Flow<Event?>
     fun getEventsForPeriod(): Flow<List<Event>>
     fun addEvent(event: Event): String
     fun updateEvent(event: Event)

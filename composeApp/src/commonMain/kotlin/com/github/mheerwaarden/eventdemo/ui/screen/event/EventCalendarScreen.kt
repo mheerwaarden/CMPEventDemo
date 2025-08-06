@@ -57,7 +57,7 @@ fun EventCalendarScreen(
     settingsViewModel: SettingsViewModel
 ) {
     val eventUiState by eventViewModel.eventUiState.collectAsState()
-    LoadingScreen(loadingViewModel = settingsViewModel) {
+    LoadingScreen(loadingViewModels = listOf(eventViewModel, settingsViewModel)) {
         val preferences by settingsViewModel.settingsUiState.collectAsState()
 
         val title = stringResource(EventCalendarDestination.titleRes)

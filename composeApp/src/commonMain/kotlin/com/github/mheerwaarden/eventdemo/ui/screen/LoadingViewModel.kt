@@ -9,59 +9,63 @@
 
 package com.github.mheerwaarden.eventdemo.ui.screen
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.github.mheerwaarden.eventdemo.data.DataLoadingRepository
+import com.github.mheerwaarden.eventdemo.data.DataLoadingState
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 
-sealed interface LoadingState {
-    data object Loading : LoadingState
-    data object Success : LoadingState
-    data class Error(val error: Throwable) : LoadingState
-}
+@OptIn(ExperimentalCoroutinesApi::class)
+open class LoadingViewModel(
+    private val dataLoadingRepository: DataLoadingRepository
+) : ViewModel() {
 
-abstract class LoadingViewModel : ViewModel() {
-    var loadingState: LoadingState by mutableStateOf(LoadingState.Loading)
+    // A trigger to initiate/retry loading. Emitting to this will trigger a new load.
+    // Using replay = 0 means it doesn't replay past values.
+    // Using BufferOverflow.DROP_OLDEST to ensure only the latest reload signal is processed
+    // if multiple reload calls happen quickly.
+    private val reloadTrigger = MutableSharedFlow<Unit>(
+        replay = 0,
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
 
-    init {
-        load()
-    }
-
-    /**
-     * Initial data load in the uiState with progress indication and error handling.
-     */
-    fun load() {
-        loadingState = LoadingState.Loading
-        val currentViewModelName = this::class.simpleName
-        viewModelScope.launch {
-            try {
-                println("LoadingViewModel $currentViewModelName Loading...")
-                // Run loading in a background thread
-                withContext(Dispatchers.Default) {
-                    loadState()
-                }
-                // Keep the update of uiState in the main thread
-                println("LoadingViewModel $currentViewModelName Success")
-                loadingState = LoadingState.Success
-            } catch (e: Exception) {
-                println("LoadingViewModel $currentViewModelName Error: ${e.message}")
-                loadingState = LoadingState.Error(e)
-            }
+    /** The current state of loading the data */
+    val loadingState: StateFlow<DataLoadingState> = reloadTrigger
+        .onStart { emit(Unit) } // Emit an initial Unit to trigger the first load
+        .flatMapLatest {
+            // When reloadTrigger emits, flatMapLatest cancels the previous
+            // collection of preferencesRepository.loadingState and starts a new one.
+            dataLoadingRepository.loadingState.catch { emit(DataLoadingState.Error(it)) }
         }
-    }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
+            initialValue = DataLoadingState.Loading
+        )
 
     /**
-     * Override to load the uiState in the view model. The loadingState is updated by default.
-     * The LoadingScreen handles the progress indicator and allows a retry on error messages.
+     * Try reloading in case of an error
+     * Try to emit to the trigger. If the buffer is full (e.g., if a load is already
+     * in progress and another reload is called immediately), tryEmit might fail,
+     * which is often fine as a load is already happening or queued.
+     *
+     * @return true if the reload was successful, false if not
      */
-    protected abstract suspend fun loadState()
+    fun reload(): Boolean {
+        dataLoadingRepository.prepareReload()
+        return reloadTrigger.tryEmit(Unit)
+    }
 
     companion object {
         const val TIMEOUT_MILLIS = 5_000L
     }
-
 }

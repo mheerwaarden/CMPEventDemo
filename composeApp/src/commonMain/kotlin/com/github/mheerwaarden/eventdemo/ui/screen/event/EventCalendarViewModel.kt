@@ -12,11 +12,10 @@ package com.github.mheerwaarden.eventdemo.ui.screen.event
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.mheerwaarden.eventdemo.EventDemoApplication.TIMEOUT_MILLIS
 import com.github.mheerwaarden.eventdemo.data.database.EventRepository
 import com.github.mheerwaarden.eventdemo.data.model.Event
+import com.github.mheerwaarden.eventdemo.ui.screen.LoadingViewModel
 import com.github.mheerwaarden.eventdemo.util.endOfMonth
 import com.github.mheerwaarden.eventdemo.util.startOfMonth
 import kotlinx.coroutines.flow.SharingStarted
@@ -28,7 +27,7 @@ import kotlinx.datetime.LocalTime
 
 class EventCalendarViewModel(
     private val eventRepository: EventRepository,
-) : ViewModel() {
+) : LoadingViewModel(eventRepository) {
 
     var calendarUiState by mutableStateOf(CalendarState())
         private set

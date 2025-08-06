@@ -50,6 +50,8 @@ import com.github.mheerwaarden.eventdemo.ui.AppViewModelProvider
 import com.github.mheerwaarden.eventdemo.ui.navigation.NavigationDestination
 import com.github.mheerwaarden.eventdemo.ui.screen.AddItemButton
 import com.github.mheerwaarden.eventdemo.ui.screen.EditItemButtons
+import com.github.mheerwaarden.eventdemo.ui.screen.LoadingScreen
+import com.github.mheerwaarden.eventdemo.ui.screen.settings.SettingsViewModel
 import com.github.mheerwaarden.eventdemo.ui.theme.EventDemoAppTheme
 import com.github.mheerwaarden.eventdemo.ui.util.DISABLED_ICON_OPACITY
 import com.github.mheerwaarden.eventdemo.util.now
@@ -73,39 +75,42 @@ fun EventOverviewScreen(
     navigateToEditEvent: (String) -> Unit,
     navigateToEventCalendar: () -> Unit,
     modifier: Modifier = Modifier,
-    eventViewModel: EventViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    eventOverviewViewModel: EventOverviewViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    settingsViewModel: SettingsViewModel
 ) {
-    val eventUiState by eventViewModel.eventUiState.collectAsState()
-    val preferencesState by eventViewModel.preferencesState.collectAsState()
+    LoadingScreen(loadingViewModels = listOf(eventOverviewViewModel, settingsViewModel)) {
+        val eventUiState by eventOverviewViewModel.eventUiState.collectAsState()
+        val preferencesState by settingsViewModel.settingsUiState.collectAsState()
 
-    val title = stringResource(EventOverviewDestination.titleRes)
-    onUpdateTopAppBar(title, null) {
-        val foregroundColor = MaterialTheme.colorScheme.primary
-        IconButton(
-            onClick = navigateToEventCalendar,
-            colors = IconButtonColors(
-                containerColor = Color.Transparent,
-                contentColor = foregroundColor,
-                disabledContainerColor = Color.Transparent,
-                disabledContentColor = foregroundColor.copy(alpha = DISABLED_ICON_OPACITY)
-            ),
-        ) {
-            Icon(
-                imageVector = Icons.Filled.CalendarMonth,
-                contentDescription = stringResource(Res.string.event_calendar),
-            )
+        val title = stringResource(EventOverviewDestination.titleRes)
+        onUpdateTopAppBar(title, null) {
+            val foregroundColor = MaterialTheme.colorScheme.primary
+            IconButton(
+                onClick = navigateToEventCalendar,
+                colors = IconButtonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = foregroundColor,
+                    disabledContainerColor = Color.Transparent,
+                    disabledContentColor = foregroundColor.copy(alpha = DISABLED_ICON_OPACITY)
+                ),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.CalendarMonth,
+                    contentDescription = stringResource(Res.string.event_calendar),
+                )
+            }
         }
-    }
 
-    EventOverviewBody(
-        eventList = eventUiState,
-        isReadOnly = preferencesState.isReadOnly,
-        deleteEvent = eventViewModel::deleteEvent,
-        navigateToEvent = navigateToEvent,
-        navigateToAddEvent = navigateToAddEvent,
-        navigateToEditEvent = navigateToEditEvent,
-        modifier = modifier,
-    )
+        EventOverviewBody(
+            eventList = eventUiState,
+            isReadOnly = preferencesState.isReadOnly,
+            deleteEvent = eventOverviewViewModel::deleteEvent,
+            navigateToEvent = navigateToEvent,
+            navigateToAddEvent = navigateToAddEvent,
+            navigateToEditEvent = navigateToEditEvent,
+            modifier = modifier,
+        )
+    }
 }
 
 private class OverviewConfig(colorScheme: ColorScheme) {

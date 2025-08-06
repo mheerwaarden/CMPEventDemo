@@ -1,7 +1,7 @@
 package com.github.mheerwaarden.eventdemo.data.preferences
 
 import co.touchlab.kermit.Logger
-import com.github.mheerwaarden.eventdemo.ui.screen.LoadingState
+import com.github.mheerwaarden.eventdemo.data.DataLoadingState
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.set
 import kotlinx.coroutines.CoroutineDispatcher
@@ -29,25 +29,32 @@ class UserPreferencesSettingsRepository(
         private const val KEY_USE_POCKETBASE = "use_pocketbase"
         private const val KEY_POCKETBASE_URL = "pocketbase_url"
     }
-    //endregion
+    //endregion Keys
 
     //region Flow
-    override val preferences: StateFlow<UserPreferences> =
-        MutableStateFlow(UserPreferences.DEFAULTS)
-    private val _preferences
-        get() = preferences as MutableStateFlow<UserPreferences>
+    private val _preferences = MutableStateFlow(UserPreferences.DEFAULTS)
+    override val preferences = _preferences as StateFlow<UserPreferences>
 
-    override val loadingState: Flow<LoadingState> = flow {
+    override val loadingState: Flow<DataLoadingState> = flow {
         try {
-            emit(LoadingState.Loading)
+            println("Settings loadingState: Emit loading...")
+            emit(DataLoadingState.Loading)
+            println("Settings loadingState: Loading initial preferences...")
             loadInitialPreferences()
-            emit(LoadingState.Success)
+            println("Settings loadingState: Emit success...")
+            emit(DataLoadingState.Success)
+            println("Settings loadingState: Done emitting")
         } catch (e: Exception) {
-            emit(LoadingState.Error(e))
+            println("Settings loadingState: Emit error")
+            emit(DataLoadingState.Error(e))
         }
     }.flowOn(defaultDispatcher)
 
-    //endregion
+    override fun prepareReload() {
+        // Nothing to do, collecting the flow again will return the latest values
+    }
+
+    //endregion Flow
 
     //region Load
     private fun loadInitialPreferences() {
@@ -80,59 +87,7 @@ class UserPreferencesSettingsRepository(
         _preferences.value = loadedPreferences
     }
 
-    private var isLoaded = false
-    override fun loadPreferences() {
-        if (isLoaded) {
-            println("UserPreferencesSettingsRepository: loadPreferences: already loaded")
-            return
-        }
-        println("UserPreferencesSettingsRepository: loadPreferences")
-
-        updatePreferences {
-            try {
-                UserPreferences(
-                    isReadOnly = settings.getBoolean(
-                        KEY_IS_READ_ONLY,
-                        UserPreferences.DEFAULTS.isReadOnly
-                    ),
-                    datePickerUsesKeyboard = settings.getBoolean(
-                        KEY_DATE_PICKER_USES_KEYBOARD,
-                        UserPreferences.DEFAULTS.datePickerUsesKeyboard
-                    ),
-                    timePickerUsesKeyboard = settings.getBoolean(
-                        KEY_TIME_PICKER_USES_KEYBOARD,
-                        UserPreferences.DEFAULTS.timePickerUsesKeyboard
-                    ),
-                    isCalendarExpanded = settings.getBoolean(
-                        KEY_CALENDAR_EXPANDED,
-                        UserPreferences.DEFAULTS.isCalendarExpanded
-                    ),
-                    useCraneCalendar = settings.getBoolean(
-                        KEY_USE_CRANE_CALENDAR,
-                        UserPreferences.DEFAULTS.useCraneCalendar
-                    ),
-                    localeTag = settings.getString(
-                        KEY_LOCALE_TAG,
-                        UserPreferences.DEFAULTS.localeTag
-                    ),
-                    usePocketBase = settings.getBoolean(
-                        KEY_USE_POCKETBASE,
-                        UserPreferences.DEFAULTS.usePocketBase
-                    ),
-                    pocketBaseUrl = settings.getString(
-                        KEY_POCKETBASE_URL,
-                        UserPreferences.DEFAULTS.pocketBaseUrl
-                    ),
-                )
-            } catch (e: Exception) {
-                logger.e(throwable = e) { "Error loading user preferences" }
-                // Return default preferences in case of error
-                UserPreferences()
-            }
-        }
-        isLoaded = true
-    }
-    //endregion
+    //endregion Load
 
     //region Save
     override suspend fun saveReadOnlyPreference(isReadOnly: Boolean) {
@@ -207,11 +162,11 @@ class UserPreferencesSettingsRepository(
         }
     }
 
-    //endregion
+    //endregion Save
 
     //region Update
     private fun updatePreferences(transform: (UserPreferences) -> UserPreferences) {
         _preferences.update(transform)
     }
-    //endregion
+    //endregion Update
 }

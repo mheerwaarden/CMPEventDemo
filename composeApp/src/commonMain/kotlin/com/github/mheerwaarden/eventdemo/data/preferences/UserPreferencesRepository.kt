@@ -9,17 +9,13 @@
 
 package com.github.mheerwaarden.eventdemo.data.preferences
 
-import com.github.mheerwaarden.eventdemo.ui.screen.LoadingState
+import com.github.mheerwaarden.eventdemo.data.DataLoadingRepository
 import kotlinx.coroutines.flow.Flow
 
-interface UserPreferencesRepository {
+interface UserPreferencesRepository: DataLoadingRepository {
     /** Return a flow that keeps the actual values of settings in the UserPreference object */
     val preferences: Flow<UserPreferences>
-    /** Return a flow that keeps the loading state of the settings */
-    val loadingState: Flow<LoadingState>
 
-    fun loadPreferences()
-    
     suspend fun saveReadOnlyPreference(isReadOnly: Boolean)
     suspend fun saveDatePickerUsesKeyboard(useKeyboard: Boolean)
     suspend fun saveTimePickerUsesKeyboard(useKeyboard: Boolean)

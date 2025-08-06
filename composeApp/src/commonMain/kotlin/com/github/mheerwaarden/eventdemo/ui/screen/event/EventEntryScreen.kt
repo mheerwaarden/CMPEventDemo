@@ -85,12 +85,12 @@ fun EventEntryScreen(
     navigateBack: () -> Unit,
     modifier: Modifier = Modifier,
     eventViewModel: EventEntryViewModel = viewModel(factory = AppViewModelProvider.Factory),
-    settingsViewModel: SettingsViewModel //= viewModel(factory = AppViewModelProvider.Factory),
+    settingsViewModel: SettingsViewModel
 ) {
     onUpdateTopAppBar(stringResource(EventEntryDestination.titleRes), null) {}
 
     val eventUiState = eventViewModel.eventUiState
-    LoadingScreen(loadingViewModel = settingsViewModel) {
+    LoadingScreen(loadingViewModels = listOf(eventViewModel, settingsViewModel)) {
         val preferences by settingsViewModel.settingsUiState.collectAsState()
         var isStartTimeAutoUpdated by remember { mutableStateOf(false) }
         LaunchedEffect(Unit) {
@@ -128,12 +128,12 @@ fun EventEntryScreen(
 
 @Composable
 fun EventEntryBody(
-    eventUiState: EventUiState,
+    eventUiState: UiState.EventState,
     isStartTimeAutoUpdated: Boolean,
     onDateChange: (LocalDate?, LocalDate?) -> Unit,
     onStartTimeChange: (LocalTime) -> Unit,
     onEndTimeChange: (LocalTime) -> Unit,
-    onStateChange: (EventUiState) -> Unit,
+    onStateChange: (UiState.EventState) -> Unit,
     onSaveClick: () -> Unit,
     dateFieldPreferences: DateFieldPreferences,
     timeFieldPreferences: TimeFieldPreferences,
@@ -174,11 +174,11 @@ fun EventEntryBody(
 
 @Composable
 fun EventInputForm(
-    eventUiState: EventUiState,
+    eventUiState: UiState.EventState,
     onDateChange: (LocalDate?, LocalDate?) -> Unit,
     onStartTimeChange: (LocalTime) -> Unit,
     onEndTimeChange: (LocalTime) -> Unit,
-    onStateChange: (EventUiState) -> Unit,
+    onStateChange: (UiState.EventState) -> Unit,
     dateFieldPreferences: DateFieldPreferences,
     timeFieldPreferences: TimeFieldPreferences,
     useCraneCalendar: Boolean,

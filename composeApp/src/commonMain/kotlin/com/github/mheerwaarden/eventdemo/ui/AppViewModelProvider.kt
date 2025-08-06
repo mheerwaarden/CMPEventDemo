@@ -16,19 +16,17 @@ import com.github.mheerwaarden.eventdemo.EventDemoApplication
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventCalendarViewModel
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventEditViewModel
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventEntryViewModel
+import com.github.mheerwaarden.eventdemo.ui.screen.event.EventOverviewViewModel
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventViewModel
-import com.github.mheerwaarden.eventdemo.ui.screen.settings.SettingsViewModel
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.get
 
 object AppViewModelProvider : KoinComponent {
     val Factory = viewModelFactory {
         /* region Event ViewModels */
         val appContainer = EventDemoApplication.container
         initializer {
-            EventViewModel(
-                appContainer.eventRepository,
-                get()
+            EventOverviewViewModel(
+                appContainer.eventRepository
             )
         }
         initializer {
@@ -44,6 +42,13 @@ object AppViewModelProvider : KoinComponent {
         }
         initializer {
             EventEditViewModel(
+                this.createSavedStateHandle(),
+                appContainer.eventRepository,
+            )
+        }
+
+        initializer {
+            EventViewModel(
                 this.createSavedStateHandle(),
                 appContainer.eventRepository,
             )

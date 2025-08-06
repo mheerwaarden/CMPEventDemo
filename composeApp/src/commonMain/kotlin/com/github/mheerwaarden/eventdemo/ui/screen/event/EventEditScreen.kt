@@ -41,11 +41,11 @@ fun EventEditScreen(
     navigateBack: () -> Unit,
     modifier: Modifier = Modifier,
     eventViewModel: EventEditViewModel = viewModel(factory = AppViewModelProvider.Factory),
-    settingsViewModel: SettingsViewModel //= viewModel(factory = AppViewModelProvider.Factory),
+    settingsViewModel: SettingsViewModel
 ) {
     onUpdateTopAppBar(stringResource(EventEditDestination.titleRes), null) {}
 
-    LoadingScreen(loadingViewModel = settingsViewModel) {
+    LoadingScreen(loadingViewModels = listOf(eventViewModel, settingsViewModel)) {
         val preferences by settingsViewModel.settingsUiState.collectAsState()
 
         EventEntryBody(

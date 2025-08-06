@@ -9,6 +9,7 @@
 
 package com.github.mheerwaarden.eventdemo.data.database
 
+import com.github.mheerwaarden.eventdemo.data.DataLoadingState
 import com.github.mheerwaarden.eventdemo.data.model.Event
 import com.github.mheerwaarden.eventdemo.data.model.EventCategory
 import com.github.mheerwaarden.eventdemo.data.model.EventType
@@ -18,25 +19,61 @@ import com.github.mheerwaarden.eventdemo.util.endOfMonth
 import com.github.mheerwaarden.eventdemo.util.now
 import com.github.mheerwaarden.eventdemo.util.plus
 import com.github.mheerwaarden.eventdemo.util.startOfMonth
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 
-class DummyEventRepository : EventRepository {
+class DummyEventRepository(defaultDispatcher: CoroutineDispatcher = Dispatchers.Default) : EventRepository {
     private var key = 0L
 
-    private val defaultEvents = initDefaultEvents()
-    private val _events = MutableStateFlow<Map<String, Event>>(defaultEvents)
-    private val events: Flow<Map<String, Event>> = _events
+    private val _events = MutableStateFlow(mapOf("0" to Event()))
+    private val events: StateFlow<Map<String, Event>> = _events
 
     private var storedStart: LocalDateTime = LocalDateTime(startOfMonth(), LocalTime(0, 0))
     private var storedEnd: LocalDateTime = LocalDateTime(endOfMonth(), LocalTime(0, 0))
     private var storedFilter: EventFilter = EventFilter.GENERAL
 
-    private val _eventForPeriod = MutableStateFlow(getEvents(storedStart, storedEnd))
+    private val _eventForPeriod = MutableStateFlow(listOf<Event>())
     private val eventForPeriod: Flow<List<Event>> = _eventForPeriod
+
+    private val defaultEvents by lazy { initDefaultEvents() }
+
+    private var isLoaded = false
+    override val loadingState: Flow<DataLoadingState> = flow {
+        try {
+            // Once the data is loaded, it should not be reloaded unless explicitly requested.
+            if (isLoaded) {
+                println("Event loadingState: Already loaded. Emit Success")
+                emit(DataLoadingState.Success)
+                return@flow
+            }
+            println("Event loadingState: Emit Loading...")
+            emit(DataLoadingState.Loading)
+            println("Event loadingState: Loading initial events...")
+            _events.value = initDefaultEvents()
+            println("Event loadingState: Loading initial events for period...")
+            _eventForPeriod.value = getEvents(storedStart, storedEnd)
+            println("Event loadingState: Emit Success")
+            emit(DataLoadingState.Success)
+            println("Event loadingState: Done emitting")
+            isLoaded = true
+        } catch (e: Exception) {
+            println("Event loadingState: Emit Error")
+            emit(DataLoadingState.Error(e))
+        }
+    }.flowOn(defaultDispatcher)
+
+    override fun prepareReload() {
+        isLoaded = false
+    }
 
     override fun getEventsForPeriod(): Flow<List<Event>> {
         return eventForPeriod
@@ -52,7 +89,27 @@ class DummyEventRepository : EventRepository {
         }
     }
 
-    override fun getEvent(id: String): Event? = _events.value[id]
+    override fun getEvent(id: String): Event? {
+        val event = _events.value[id]
+        if (event == null) {
+            println("Get: Event $id not found")
+        } else {
+            println("Get event ${event.id}")
+        }
+        return event
+    }
+
+    override fun getEventStream(eventId: String): Flow<Event?> {
+        return events.map { eventsMap ->
+            val event = eventsMap[eventId]
+            if (event == null) {
+                println("GetStream: Event $eventId not found in map")
+            } else {
+                println("GetStream: Event ${event.id}")
+            }
+            event
+        }
+    }
 
     override fun updateEventsForPeriod(
         start: LocalDateTime,
@@ -87,12 +144,24 @@ class DummyEventRepository : EventRepository {
     }
 
     override fun updateEvent(event: Event) {
+        println("Updating event ${event.id} online: ${event.isOnline}")
         _events.value = ((_events.value - event.id) + (event.id to event))
             .toList().sortedBy { it.second.startDateTime }.toMap()
+        if (_events.value[event.id] != event) {
+            println("Event ${event.id} not updated in _events.value")
+        } else {
+            val e = _events.value[event.id]
+            if (e == null) {
+                println("Updated: Event ${event.id} not found")
+            } else {
+                println("Updated event ${e.id} online: ${e.isOnline}")
+            }
+        }
         if (inPeriod(event)) {
             _eventForPeriod.value -= _eventForPeriod.value.first { it.id == event.id }
             _eventForPeriod.value += event
         }
+
     }
 
     override fun deleteEvent(id: String) {

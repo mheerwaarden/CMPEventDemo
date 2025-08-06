@@ -57,7 +57,8 @@ fun EventDemoAppNavHost(
                 navigateToAddEvent = { date -> navController.navigate("${EventEntryDestination.route}/${date.format()}") },
                 navigateToEditEvent = { id -> navController.navigate("${EventEditDestination.route}/${id}") },
                 navigateToEventCalendar = { navController.navigate(EventCalendarDestination.route) },
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                settingsViewModel = koinInject()
             )
         }
         composable(route = EventCalendarDestination.route) {
@@ -81,8 +82,7 @@ fun EventDemoAppNavHost(
                 navigateToEventOverview = { navController.navigate(EventOverviewDestination.route) },
                 navigateToEditEvent = { id -> navController.navigate("${EventEditDestination.route}/${id}") },
                 navigateBack = { navController.popBackStack() },
-                modifier = Modifier.fillMaxSize(),
-                settingsViewModel = koinInject()
+                modifier = Modifier.fillMaxSize()
             )
         }
         composable(

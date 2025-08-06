@@ -13,9 +13,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.mheerwaarden.eventdemo.data.database.EventRepository
+import com.github.mheerwaarden.eventdemo.ui.screen.LoadingViewModel
 import com.github.mheerwaarden.eventdemo.util.now
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
@@ -25,10 +25,10 @@ import kotlinx.datetime.LocalTime
 class EventEditViewModel(
     savedStateHandle: SavedStateHandle,
     private val eventRepository: EventRepository,
-) : ViewModel() {
+) : LoadingViewModel(eventRepository) {
     private val eventId: String = checkNotNull(savedStateHandle[EventEditDestination.eventIdArg])
 
-    var eventUiState by mutableStateOf(EventUiState())
+    var eventUiState by mutableStateOf(UiState.EventState())
         private set
 
     // Just get the event. Do not create a flow, no dynamic updates during edit. When Room creates
@@ -48,7 +48,7 @@ class EventEditViewModel(
     }
 
     /** Independent fields can be updated in the [newEventUiState] and a call to this function. This method also triggers validation */
-    fun updateState(newEventUiState: EventUiState) {
+    fun updateState(newEventUiState: UiState.EventState) {
         eventUiState =
             newEventUiState.copy(isEntryValid = validateInput(newDescription = newEventUiState.event.description))
     }
@@ -111,3 +111,4 @@ class EventEditViewModel(
     }
 
 }
+

@@ -13,8 +13,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
 import com.github.mheerwaarden.eventdemo.data.database.EventRepository
+import com.github.mheerwaarden.eventdemo.ui.screen.LoadingViewModel
 import com.github.mheerwaarden.eventdemo.util.now
 import com.github.mheerwaarden.eventdemo.util.parseDate
 import kotlinx.datetime.LocalDate
@@ -24,12 +24,12 @@ import kotlinx.datetime.LocalTime
 class EventEntryViewModel(
     savedStateHandle: SavedStateHandle,
     private val eventRepository: EventRepository,
-) : ViewModel() {
+) : LoadingViewModel(eventRepository) {
     private val initialDateString: String =
         checkNotNull(savedStateHandle[EventEntryDestination.startDateArg])
     val initialDate = initialDateString.parseDate()
 
-    var eventUiState: EventUiState by mutableStateOf(EventUiState())
+    var eventUiState: UiState.EventState by mutableStateOf(UiState.EventState())
         private set
 
     init {
@@ -46,7 +46,7 @@ class EventEntryViewModel(
     }
 
     /** Independent fields can be updated in the [newEventUiState] and a call to this function. This method also triggers validation */
-    fun updateState(newEventUiState: EventUiState) {
+    fun updateState(newEventUiState: UiState.EventState) {
         eventUiState =
             newEventUiState.copy(isEntryValid = validateInput(newDescription = newEventUiState.event.description))
     }

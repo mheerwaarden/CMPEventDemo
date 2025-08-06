@@ -6,7 +6,7 @@ import com.github.mheerwaarden.eventdemo.data.preferences.DEFAULT_LOCALE_FROM_PL
 import com.github.mheerwaarden.eventdemo.data.preferences.UserPreferences
 import com.github.mheerwaarden.eventdemo.data.preferences.UserPreferencesRepository
 import com.github.mheerwaarden.eventdemo.localization.PlatformLocaleManager
-import com.github.mheerwaarden.eventdemo.ui.screen.LoadingPreferencesViewModel
+import com.github.mheerwaarden.eventdemo.ui.screen.LoadingViewModel
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -22,11 +22,8 @@ import org.koin.core.component.inject
  * It interacts with the UserPreferencesRepository and platform-specific functions.
  */
 class LocaleViewModel(
-    private val userPreferencesRepository: UserPreferencesRepository,
-) : LoadingPreferencesViewModel(userPreferencesRepository), KoinComponent {
-    init {
-        println("LocaleViewModel init, repository = $userPreferencesRepository")
-    }
+    userPreferencesRepository: UserPreferencesRepository,
+) : LoadingViewModel(userPreferencesRepository), KoinComponent {
 
     private val platformLocaleManager: PlatformLocaleManager by inject()
 
@@ -41,7 +38,7 @@ class LocaleViewModel(
      * observing it, causing resources like stringResource and
      * painterResource to be resolved for the new locale.
      */
-    var preferredLocaleState: StateFlow<String> = // MutableStateFlow(DEFAULT_LOCALE)
+    var preferredLocaleState: StateFlow<String> =
         userPreferencesRepository.preferences
             .map { preferences -> getEffectiveLocale(preferences) }
             .distinctUntilChanged()

@@ -11,15 +11,21 @@ package com.github.mheerwaarden.eventdemo.ui.screen.event
 
 import com.github.mheerwaarden.eventdemo.data.model.Event
 
-data class EventUiState(
-    val event: Event = Event(),
-    // UI fields
-    val isEntryValid: Boolean = false,
-) {
-    fun toEvent(): Event = event
+sealed interface UiState {
+    data class EventState(
+        val event: Event = Event(),
+        // UI fields
+        val isEntryValid: Boolean = false,
+    ) : UiState {
+        fun toEvent(): Event = event
+    }
+
+    data object Loading : UiState
+    data object NotFound : UiState
 }
 
-fun Event.toEventUiState(isEntryValid: Boolean = false): EventUiState = EventUiState(
-    event = this,
-    isEntryValid = isEntryValid,
-)
+fun Event.toEventUiState(isEntryValid: Boolean = false): UiState.EventState =
+    UiState.EventState(
+        event = this,
+        isEntryValid = isEntryValid,
+    )

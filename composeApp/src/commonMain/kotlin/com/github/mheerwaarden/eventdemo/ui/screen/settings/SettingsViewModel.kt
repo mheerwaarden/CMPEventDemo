@@ -14,7 +14,7 @@ import com.github.mheerwaarden.eventdemo.data.preferences.DEFAULT_LOCALE
 import com.github.mheerwaarden.eventdemo.data.preferences.DEFAULT_LOCALE_FROM_PLATFORM
 import com.github.mheerwaarden.eventdemo.data.preferences.UserPreferences
 import com.github.mheerwaarden.eventdemo.data.preferences.UserPreferencesRepository
-import com.github.mheerwaarden.eventdemo.ui.screen.LoadingPreferencesViewModel
+import com.github.mheerwaarden.eventdemo.ui.screen.LoadingViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
@@ -29,10 +29,7 @@ import org.koin.core.component.KoinComponent
  */
 class SettingsViewModel(
     private val userPreferencesRepository: UserPreferencesRepository,
-) : LoadingPreferencesViewModel(userPreferencesRepository), KoinComponent {
-    init {
-        println("SettingsViewModel init, repository: $userPreferencesRepository")
-    }
+) : LoadingViewModel(userPreferencesRepository), KoinComponent {
 
     var settingsUiState: StateFlow<SettingsUiState> =
         userPreferencesRepository.preferences.map { preferences ->

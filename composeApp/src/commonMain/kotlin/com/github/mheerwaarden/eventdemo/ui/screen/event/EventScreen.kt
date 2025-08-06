@@ -20,6 +20,7 @@ import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,6 +43,7 @@ import com.github.mheerwaarden.eventdemo.resources.contact
 import com.github.mheerwaarden.eventdemo.resources.delete
 import com.github.mheerwaarden.eventdemo.resources.description
 import com.github.mheerwaarden.eventdemo.resources.edit
+import com.github.mheerwaarden.eventdemo.resources.event
 import com.github.mheerwaarden.eventdemo.resources.event_category
 import com.github.mheerwaarden.eventdemo.resources.event_overview
 import com.github.mheerwaarden.eventdemo.resources.event_title
@@ -50,12 +52,15 @@ import com.github.mheerwaarden.eventdemo.resources.is_online
 import com.github.mheerwaarden.eventdemo.resources.location
 import com.github.mheerwaarden.eventdemo.resources.notes
 import com.github.mheerwaarden.eventdemo.resources.price
+import com.github.mheerwaarden.eventdemo.resources.event_not_found
+import com.github.mheerwaarden.eventdemo.resources.loading
 import com.github.mheerwaarden.eventdemo.ui.AppViewModelProvider
 import com.github.mheerwaarden.eventdemo.ui.navigation.NavigationDestination
 import com.github.mheerwaarden.eventdemo.ui.screen.DeleteEventHeaderButton
+import com.github.mheerwaarden.eventdemo.ui.screen.ErrorScreen
 import com.github.mheerwaarden.eventdemo.ui.screen.HeaderButton
 import com.github.mheerwaarden.eventdemo.ui.screen.LoadingScreen
-import com.github.mheerwaarden.eventdemo.ui.screen.settings.SettingsViewModel
+import com.github.mheerwaarden.eventdemo.ui.screen.ProgressScreen
 import com.github.mheerwaarden.eventdemo.ui.theme.EventDemoAppTheme
 import com.github.mheerwaarden.eventdemo.ui.util.DISABLED_ICON_OPACITY
 import kotlinx.datetime.LocalDateTime
@@ -72,13 +77,12 @@ object EventDestination : NavigationDestination {
 
 @Composable
 fun EventScreen(
-    onUpdateTopAppBar: (String, (() -> Unit)?, @Composable (RowScope.() -> Unit)) -> Unit,
+    onUpdateTopAppBar: (String, (() -> Unit)?, @Composable() (RowScope.() -> Unit)) -> Unit,
     navigateToEventOverview: () -> Unit,
     navigateToEditEvent: (String) -> Unit,
     navigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    eventViewModel: EventEditViewModel = viewModel(factory = AppViewModelProvider.Factory),
-    settingsViewModel: SettingsViewModel //= viewModel(factory = AppViewModelProvider.Factory),
+    eventViewModel: EventViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     onUpdateTopAppBar(stringResource(EventDestination.titleRes), null) {
         val foregroundColor = MaterialTheme.colorScheme.primary
@@ -98,23 +102,43 @@ fun EventScreen(
         }
     }
 
-    LoadingScreen(loadingViewModel = settingsViewModel) {
-        val eventUiState = eventViewModel.eventUiState
-        EventScreen(
-            eventUiState = eventUiState,
-            deleteEvent = {
-                eventViewModel.deleteEvent(eventUiState.event.id)
-                navigateBack()
-            },
-            navigateToEditEvent = { navigateToEditEvent(eventUiState.event.id) },
-            modifier = modifier.fillMaxSize()
-        )
+    LoadingScreen(loadingViewModel = eventViewModel) {
+        val eventUiState = eventViewModel.eventUiState.collectAsState()
+        when (val currentUiState = eventUiState.value) {
+            is UiState.EventState -> {
+                EventScreen(
+                    eventUiState = currentUiState,
+                    deleteEvent = {
+                        eventViewModel.deleteEvent(currentUiState.event.id)
+                        navigateBack()
+                    },
+                    navigateToEditEvent = { navigateToEditEvent(currentUiState.event.id) },
+                    modifier = modifier.fillMaxSize()
+                )
+            }
+
+            is UiState.Loading -> {
+                ProgressScreen(
+                    action = Res.string.loading,
+                    name = stringResource(Res.string.event),
+                    modifier = modifier.fillMaxSize()
+                )
+            }
+
+            is UiState.NotFound -> {
+                ErrorScreen(
+                    stringResource(Res.string.event_not_found),
+                    navigateBack,
+                    modifier = modifier.fillMaxSize()
+                )
+            }
+        }
     }
 }
 
 @Composable
 private fun EventScreen(
-    eventUiState: EventUiState,
+    eventUiState: UiState.EventState,
     deleteEvent: () -> Unit,
     navigateToEditEvent: () -> Unit,
     modifier: Modifier = Modifier,
@@ -184,7 +208,7 @@ private fun EventHeader(
 }
 
 @Composable
-fun EventBody(eventUiState: EventUiState, modifier: Modifier) {
+fun EventBody(eventUiState: UiState.EventState, modifier: Modifier) {
     Column(
         verticalArrangement = Arrangement.spacedBy(Dimensions.padding_small),
         horizontalAlignment = Alignment.Start,
@@ -270,7 +294,11 @@ private fun EventDetailRow(
     labelResId: StringResource, detail: Double?, modifier: Modifier = Modifier,
 ) {
     if (detail == null) return
-    EventDetailRow(labelResId = labelResId, detail = AnnotatedString(detail.toLocalizedDecimalString(minFractionDigits = 1)), modifier = modifier)
+    EventDetailRow(
+        labelResId = labelResId,
+        detail = AnnotatedString(detail.toLocalizedDecimalString(minFractionDigits = 1)),
+        modifier = modifier
+    )
 }
 
 @Composable
@@ -278,7 +306,11 @@ private fun EventCurrencyDetailRow(
     labelResId: StringResource, detail: Double?, modifier: Modifier = Modifier,
 ) {
     if (detail == null) return
-    EventDetailRow(labelResId = labelResId, detail = AnnotatedString(detail.toLocalizedCurrencyString(minFractionDigits = 1)), modifier = modifier)
+    EventDetailRow(
+        labelResId = labelResId,
+        detail = AnnotatedString(detail.toLocalizedCurrencyString(minFractionDigits = 1)),
+        modifier = modifier
+    )
 }
 
 @Composable
