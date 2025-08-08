@@ -3,8 +3,8 @@ package com.github.mheerwaarden.eventdemo.data.pocketbase
 import com.github.mheerwaarden.eventdemo.data.model.Event
 import com.github.mheerwaarden.eventdemo.data.model.User
 import com.github.mheerwaarden.eventdemo.network.createHttpClientWithEngine
-import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.HttpTimeoutConfig
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
@@ -35,7 +35,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -361,11 +360,11 @@ class PocketBaseClient(
             // Use the proper PocketBase logout endpoint
             settingsRepository.getAuthToken()?.let { _ ->
                 httpClient.post("$baseUrl/api/collections/users/auth-logout")
-                println("Server-side logout successful")
+                println("PocketBaseClient: Server-side logout successful")
             }
         } catch (e: Exception) {
             // Log the error but continue with local cleanup
-            println("Server logout failed (continuing with local cleanup): ${e.message}")
+            println("PocketBaseClient: Server logout failed (continuing with local cleanup): ${e.message}")
         }
 
         // Always clear local authentication state
@@ -424,7 +423,7 @@ class PocketBaseClient(
 
         Result.success(response.toEvent())
     } catch (e: Exception) {
-        println("Error during event update: ${e.message}")
+        println("PocketBaseClient: Error during event update: ${e.message}")
         Result.failure(e)
     }
 
@@ -436,21 +435,46 @@ class PocketBaseClient(
     }
 
     suspend fun register(email: String, password: String, name: String): Result<User> = try {
-        val response: User = httpClient.post("$baseUrl/api/collections/users/records") {
+        println("PocketBaseClient: Registering user: $email")
+        val registrationUrl = "$baseUrl/api/collections/users/records"
+        val response: User = httpClient.post(registrationUrl) {
             contentType(ContentType.Application.Json)
             setBody(
                 mapOf(
                     "email" to email,
                     "password" to password,
                     "passwordConfirm" to password,
-                    "name" to name
+                    "name" to name,
+                    "username" to email,
+                    "emailVisibility" to "false"
                 )
             )
         }.body()
 
+        println("PocketBaseClient: Registration successful: ${response.email}")
         Result.success(response)
+    } catch (e: ClientRequestException) {
+        // This exception is thrown for 4xx and 5xx responses
+        val errorResponseText = e.response.body<String>() // Get the raw error response body
+        println("PocketBaseClient: ClientRequestException during registration: ${e.message}\nResponse: $errorResponseText")
+        try {
+            // Attempt to deserialize it into our PocketBaseErrorResponse structure
+            val pocketBaseError = Json {
+                ignoreUnknownKeys = true // Important if PocketBase adds new fields
+            }.decodeFromString<PocketBaseErrorResponse>(errorResponseText)
+
+            // Construct a more informative error message
+            var detailedErrorMessage = "PocketBase registration failed: ${pocketBaseError.message}\n"
+            pocketBaseError.data.forEach { (field, detail) ->
+                detailedErrorMessage += "  - Field '$field': ${detail.message} (code: ${detail.code})\n"
+            }
+            Result.failure(Exception(detailedErrorMessage.trim(), e)) // Wrap original exception
+        } catch (jsonException: Exception) {
+            // If deserializing the error fails, fall back to the raw response
+            Result.failure(Exception("Registration failed with status ${e.response.status}. Response: $errorResponseText", e))
+        }
     } catch (e: Exception) {
-        println("Error during registration: ${e.message}")
+        println("PocketBaseClient: Error during registration: ${e.message}")
         Result.failure(e)
     }
 }
@@ -511,3 +535,17 @@ class InMemorySettingsRepository : SettingsRepository {
         this.userId = null
     }
 }
+
+// Data class for PocketBase's detailed validation error response
+@Serializable
+data class PocketBaseErrorDetail(
+    val code: String,
+    val message: String
+)
+
+@Serializable
+data class PocketBaseErrorResponse(
+    val code: Int,
+    val message: String,
+    val data: Map<String, PocketBaseErrorDetail> // This will hold field-specific errors
+)

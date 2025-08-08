@@ -7,10 +7,11 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class User(
     override val id: String = "",
-    val email: String,
+    // Email is not returned after registration
+    val email: String? = null,
     val username: String = "",
     val name: String = "",
-    val avatar: String = ""
+    val avatar: String? = null
 ) : ModelItem() {
     companion object {
         val typeNameResId = Res.string.user
