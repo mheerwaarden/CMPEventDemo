@@ -112,6 +112,7 @@ fun CalendarWithEvents(
     // UI Layout
     val scrollScope = rememberCoroutineScope()
     val pagerState = rememberPagerState(initialPage = INITIAL_PAGE, pageCount = { PAGE_COUNT })
+    println("CalendarWithEvents: current page: ${pagerState.currentPage}, start date: $startDate")
     HorizontalPager(
         modifier = modifier.fillMaxSize(),
         state = pagerState,
@@ -304,6 +305,7 @@ fun CalendarGrid(
             DAY_OUTSIDE_MONTH
         }
     val allDays = paddingDaysBefore + days + paddingDaysAfter
+    println("CalendarGrid: call setPeriod with $firstDayOfMonth, $lastDayOfMonth")
     setPeriod(firstDayOfMonth, lastDayOfMonth.plus(1, DateTimeUnit.DAY))
 
     val weekdays = listOf(

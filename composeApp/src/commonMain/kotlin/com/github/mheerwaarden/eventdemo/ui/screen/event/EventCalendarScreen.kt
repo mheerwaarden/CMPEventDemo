@@ -53,11 +53,10 @@ fun EventCalendarScreen(
     navigateToEvent: (String) -> Unit,
     modifier: Modifier = Modifier,
     isHorizontal: Boolean = false,
-    eventViewModel: EventCalendarViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    eventCalendarViewModel: EventCalendarViewModel = viewModel(factory = AppViewModelProvider.Factory),
     settingsViewModel: SettingsViewModel
 ) {
-    val eventUiState by eventViewModel.eventUiState.collectAsState()
-    LoadingScreen(loadingViewModels = listOf(eventViewModel, settingsViewModel)) {
+    LoadingScreen(loadingViewModels = listOf(eventCalendarViewModel, settingsViewModel)) {
         val preferences by settingsViewModel.settingsUiState.collectAsState()
 
         val title = stringResource(EventCalendarDestination.titleRes)
@@ -79,17 +78,45 @@ fun EventCalendarScreen(
             }
         }
 
-        EventCalendarBody(
-            events = eventUiState,
-            setPeriod = eventViewModel::setPeriod,
-            currentFilter = eventViewModel.calendarUiState.eventFilter,
-            setFilter = eventViewModel::setFilter,
-            isHorizontal = isHorizontal,
-            navigateToEvent = navigateToEvent,
-            isExpanded = preferences.isCalendarExpanded,
-            onExpand = settingsViewModel::setCalendarExpanded,
-            modifier = modifier,
-        )
+        val uiState by eventCalendarViewModel.uiState.collectAsState()
+        val currentSelectionCriteria = uiState.eventsInPeriodState.currentSelectionCriteria
+        when (uiState) {
+            is EventCalendarScreenUiState.LoadingFilters -> {
+                EventCalendarBody(
+                    events = emptyList(),
+                    startDate = currentSelectionCriteria.start.date,
+                    setPeriod = eventCalendarViewModel::setMonth,
+                    currentFilter = EventFilter.GENERAL,
+                    isFiltering = true,
+                    setFilter = eventCalendarViewModel::setFilter,
+                    isHorizontal = isHorizontal,
+                    navigateToEvent = navigateToEvent,
+                    isExpanded = preferences.isCalendarExpanded,
+                    onExpand = settingsViewModel::setCalendarExpanded,
+                    modifier = modifier,
+                )
+            }
+
+            is EventCalendarScreenUiState.Success -> {
+                EventCalendarBody(
+                    events = uiState.eventsInPeriodState.eventsForPeriod,
+                    startDate = currentSelectionCriteria.start.date,
+                    setPeriod = eventCalendarViewModel::setMonth,
+                    currentFilter = currentSelectionCriteria.filter,
+                    isFiltering = false,
+                    setFilter = eventCalendarViewModel::setFilter,
+                    isHorizontal = isHorizontal,
+                    navigateToEvent = navigateToEvent,
+                    isExpanded = preferences.isCalendarExpanded,
+                    onExpand = settingsViewModel::setCalendarExpanded,
+                    modifier = modifier,
+                )
+            }
+
+            is EventCalendarScreenUiState.ErrorLoading -> {
+                Text("Error: ${uiState.eventsInPeriodState.errorMessage}")
+            }
+        }
     }
 }
 
@@ -101,6 +128,7 @@ fun EventCalendarBody(
     modifier: Modifier = Modifier,
     startDate: LocalDate = now().date,
     currentFilter: EventFilter = EventFilter.GENERAL,
+    isFiltering: Boolean = false,
     setFilter: (EventFilter) -> Unit = {},
     isHorizontal: Boolean = false,
     isExpanded: Boolean = true,
@@ -110,7 +138,13 @@ fun EventCalendarBody(
         events = events,
         startDate = startDate,
         setPeriod = setPeriod,
-        actions = { FilterButtons(currentFilter = currentFilter, setFilter = setFilter) },
+        actions = {
+            FilterButtons(
+                currentFilter = currentFilter,
+                enabled = !isFiltering,
+                setFilter = setFilter
+            )
+        },
         isHorizontal = isHorizontal,
         navigateToEvent = navigateToEvent,
         isExpanded = isExpanded,
@@ -120,12 +154,13 @@ fun EventCalendarBody(
 }
 
 @Composable
-fun FilterButtons(currentFilter: EventFilter, setFilter: (EventFilter) -> Unit) {
+fun FilterButtons(currentFilter: EventFilter, enabled: Boolean, setFilter: (EventFilter) -> Unit) {
     // Preserve vertical screen estate
     Row(horizontalArrangement = Arrangement.spacedBy(Dimensions.padding_small)) {
         EventFilter.entries.forEach { entry ->
             FilterChip(
                 selected = currentFilter == entry,
+                enabled = enabled,
                 onClick = { setFilter(entry) },
                 label = { Text(stringResource(entry.text)) },
                 leadingIcon = if (currentFilter == entry) {

@@ -23,7 +23,8 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -31,20 +32,22 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 
-class DummyEventRepository(defaultDispatcher: CoroutineDispatcher = Dispatchers.Default) : EventRepository {
+class DummyEventRepository(defaultDispatcher: CoroutineDispatcher = Dispatchers.Default) :
+    EventRepository {
     private var key = 0L
 
-    private val _events = MutableStateFlow(mapOf("0" to Event()))
-    private val events: StateFlow<Map<String, Event>> = _events
-
-    private var storedStart: LocalDateTime = LocalDateTime(startOfMonth(), LocalTime(0, 0))
-    private var storedEnd: LocalDateTime = LocalDateTime(endOfMonth(), LocalTime(0, 0))
-    private var storedFilter: EventFilter = EventFilter.GENERAL
-
-    private val _eventForPeriod = MutableStateFlow(listOf<Event>())
-    private val eventForPeriod: Flow<List<Event>> = _eventForPeriod
+    private val events = MutableStateFlow(mapOf("0" to Event()))
 
     private val defaultEvents by lazy { initDefaultEvents() }
+
+    private val currentSelectionCriteria = MutableStateFlow(
+        EventSelectionCriteria(
+            LocalDateTime(startOfMonth(), LocalTime(0, 0)),
+            LocalDateTime(endOfMonth(), LocalTime(0, 0)),
+            EventFilter.GENERAL
+        )
+    )
+    override fun getCurrentSelectionCriteria() = currentSelectionCriteria.asStateFlow()
 
     private var isLoaded = false
     override val loadingState: Flow<DataLoadingState> = flow {
@@ -58,9 +61,7 @@ class DummyEventRepository(defaultDispatcher: CoroutineDispatcher = Dispatchers.
             println("Event loadingState: Emit Loading...")
             emit(DataLoadingState.Loading)
             println("Event loadingState: Loading initial events...")
-            _events.value = initDefaultEvents()
-            println("Event loadingState: Loading initial events for period...")
-            _eventForPeriod.value = getEvents(storedStart, storedEnd)
+            events.value = initDefaultEvents()
             println("Event loadingState: Emit Success")
             emit(DataLoadingState.Success)
             println("Event loadingState: Done emitting")
@@ -75,22 +76,25 @@ class DummyEventRepository(defaultDispatcher: CoroutineDispatcher = Dispatchers.
         isLoaded = false
     }
 
-    override fun getEventsForPeriod(): Flow<List<Event>> {
-        return eventForPeriod
-    }
+    private val selectedEvents: Flow<List<Event>> = combine(
+        events, // Flow 1: The base data
+        currentSelectionCriteria // Flow 2: Combined criteria for period and filter
+    ) { eventsMap, periodAndFilter ->
+        // This transformation block is called whenever ANY of the combined flows emit a new value
+        println("DummyEventRepository: Combining events for period. Start: ${periodAndFilter.start}, End: ${periodAndFilter.end}, Filter: ${periodAndFilter.filter}, EventCount: ${eventsMap.size}")
+        eventsMap.values.filter { event ->
+            val inPeriod = event.startDateTime >= periodAndFilter.start && event.endDateTime < periodAndFilter.end
+            val matchesFilter = (periodAndFilter.filter == EventFilter.GENERAL || event.eventCategory.text == periodAndFilter.filter.text)
+            inPeriod && matchesFilter
+        }.sortedBy { it.startDateTime } // Optional: sort here if needed by consumers
+    }.flowOn(defaultDispatcher)
+    override fun getSelectedEvents(): Flow<List<Event>> = selectedEvents
 
-    override fun getAllEvents(): Flow<Map<String, Event>> {
-        return events
-    }
 
-    override fun getEvents(start: LocalDateTime, end: LocalDateTime): List<Event> {
-        return _events.value.values.filter { event ->
-            event.startDateTime >= start && event.endDateTime < end
-        }
-    }
+    override fun getAllEvents(): Flow<Map<String, Event>> = events
 
     override fun getEvent(id: String): Event? {
-        val event = _events.value[id]
+        val event = events.value[id]
         if (event == null) {
             println("Get: Event $id not found")
         } else {
@@ -99,79 +103,44 @@ class DummyEventRepository(defaultDispatcher: CoroutineDispatcher = Dispatchers.
         return event
     }
 
-    override fun getEventStream(eventId: String): Flow<Event?> {
-        return events.map { eventsMap ->
-            val event = eventsMap[eventId]
-            if (event == null) {
-                println("GetStream: Event $eventId not found in map")
-            } else {
-                println("GetStream: Event ${event.id}")
-            }
-            event
-        }
-    }
-
-    override fun updateEventsForPeriod(
-        start: LocalDateTime,
-        end: LocalDateTime,
-        filter: EventFilter,
-    ) {
-        storedStart = start
-        storedEnd = end
-        storedFilter = filter
-        _eventForPeriod.value = if (filter == EventFilter.GENERAL) {
-            getEvents(start, end)
+    override fun getEventStream(eventId: String): Flow<Event?> = events.map { eventsMap ->
+        val event = eventsMap[eventId]
+        if (event == null) {
+            println("GetStream: Event $eventId not found in map")
         } else {
-            getEvents(start, end).filter { event ->
-                event.eventCategory.text == filter.text
-            }
+            println("GetStream: Event ${event.id}")
         }
+        event
     }
 
-    private fun inPeriod(event: Event): Boolean {
-        return event.startDateTime >= storedStart && event.endDateTime < storedEnd &&
-                (storedFilter == EventFilter.GENERAL || event.eventCategory.text == storedFilter.text)
+    override fun updateSelectionCriteria(newSelectionCriteria: EventSelectionCriteria) {
+        println("DummyEventRepository: Updating period/filter. " +
+                "New Start: ${newSelectionCriteria.start}, " +
+                "New End: ${newSelectionCriteria.end}, " +
+                "New Filter: ${newSelectionCriteria.filter}")
+        // Update the StateFlow, which will trigger the combine operator in getEventsForPeriodStream
+        currentSelectionCriteria.value = newSelectionCriteria
     }
 
     override fun addEvent(event: Event): String {
         val newEvent = event.copy(id = (++key).toString())
-        _events.value = (_events.value + (key.toString() to newEvent))
+        events.value = (events.value + (key.toString() to newEvent))
             .toList().sortedBy { it.second.startDateTime }.toMap()
-        if (inPeriod(newEvent)) {
-            _eventForPeriod.value += newEvent
-        }
-        return key.toString()
+        return newEvent.id
     }
 
     override fun updateEvent(event: Event) {
-        println("Updating event ${event.id} online: ${event.isOnline}")
-        _events.value = ((_events.value - event.id) + (event.id to event))
-            .toList().sortedBy { it.second.startDateTime }.toMap()
-        if (_events.value[event.id] != event) {
-            println("Event ${event.id} not updated in _events.value")
+        if (events.value.containsKey(event.id)) {
+            println("Updating event ${event.id}")
+            events.value = (events.value + (event.id to event))
+                .toList().sortedBy { it.second.startDateTime }.toMap()
         } else {
-            val e = _events.value[event.id]
-            if (e == null) {
-                println("Updated: Event ${event.id} not found")
-            } else {
-                println("Updated event ${e.id} online: ${e.isOnline}")
-            }
+            println("Event ${event.id} not found")
         }
-        if (inPeriod(event)) {
-            _eventForPeriod.value -= _eventForPeriod.value.first { it.id == event.id }
-            _eventForPeriod.value += event
-        }
-
     }
 
     override fun deleteEvent(id: String) {
-        val event = getEvent(id)
-        if (event != null) {
-            _events.value -= id
-            if (inPeriod(event)) {
-                _eventForPeriod.value -= event
-            }
-        }
+        events.value -= id
     }
 
     fun getDefaultEvents(count: Int): List<Event> = defaultEvents.values.take(count)
@@ -196,18 +165,26 @@ class DummyEventRepository(defaultDispatcher: CoroutineDispatcher = Dispatchers.
         // One event on the last day of the previous month
         var type = EventType.entries[0]
         val previousMonth = now.plus(-1, DateTimeUnit.MONTH)
-        val previousDay = LocalDateTime(previousMonth.year, previousMonth.month, previousMonth.daysInMonth(), 13, 0)
-        result[(++key).toString()] = createDummyEvent(type, previousDay, corporateTypes.contains(type))
+        val previousDay =
+            LocalDateTime(
+                previousMonth.year,
+                previousMonth.month,
+                previousMonth.daysInMonth(),
+                13,
+                0
+            )
+        result[(++key).toString()] =
+            createDummyEvent(type, previousDay, corporateTypes.contains(type))
 
         // Four events on the first day of this month
-        for (i in 0..< 3) {
+        for (i in 0..<3) {
             type = EventType.entries[i % EventType.entries.size]
             val at = LocalDateTime(now.year, now.month, 1, i, 0)
             result[(++key).toString()] = createDummyEvent(type, at, corporateTypes.contains(type))
         }
 
         // One event on every other day of the month
-        for (i in 0..< now.daysInMonth()) {
+        for (i in 0..<now.daysInMonth()) {
             type = EventType.entries[i % EventType.entries.size]
             val at = firstDayOfMonth.plus(i, DateTimeUnit.DAY)
             result[(++key).toString()] = createDummyEvent(type, at, corporateTypes.contains(type))

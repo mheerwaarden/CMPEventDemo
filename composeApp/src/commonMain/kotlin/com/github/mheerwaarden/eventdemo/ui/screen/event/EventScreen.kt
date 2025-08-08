@@ -77,7 +77,7 @@ object EventDestination : NavigationDestination {
 
 @Composable
 fun EventScreen(
-    onUpdateTopAppBar: (String, (() -> Unit)?, @Composable() (RowScope.() -> Unit)) -> Unit,
+    onUpdateTopAppBar: (String, (() -> Unit)?, @Composable (RowScope.() -> Unit)) -> Unit,
     navigateToEventOverview: () -> Unit,
     navigateToEditEvent: (String) -> Unit,
     navigateBack: () -> Unit,

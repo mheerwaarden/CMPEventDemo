@@ -11,25 +11,32 @@ package com.github.mheerwaarden.eventdemo.data.database
 
 import com.github.mheerwaarden.eventdemo.data.DataLoadingRepository
 import com.github.mheerwaarden.eventdemo.data.model.Event
-import com.github.mheerwaarden.eventdemo.ui.screen.event.EventFilter
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.LocalDateTime
+import kotlinx.coroutines.flow.StateFlow
 
-interface EventRepository: DataLoadingRepository {
+interface EventRepository : DataLoadingRepository {
+    /** Get all events as a flow */
     fun getAllEvents(): Flow<Map<String, Event>>
 
-    /** Return events from start up to end date */
-    fun getEvents(start: LocalDateTime, end: LocalDateTime): List<Event>
+    /** Get the selected event by id */
     fun getEvent(id: String): Event?
+    /** Get the selected event by id as a flow */
     fun getEventStream(eventId: String): Flow<Event?>
-    fun getEventsForPeriod(): Flow<List<Event>>
-    fun addEvent(event: Event): String
-    fun updateEvent(event: Event)
-    /** Set period for selected events from start up to end date */
-    fun updateEventsForPeriod(
-        start: LocalDateTime,
-        end: LocalDateTime,
-        filter: EventFilter
+
+    /** Get the current period and filter for selected events */
+    fun getCurrentSelectionCriteria(): StateFlow<EventSelectionCriteria>
+    /** Set period and filter for selected events from start up to end date */
+    fun updateSelectionCriteria(
+        newSelectionCriteria: EventSelectionCriteria
     )
+    /** Get the events according to the current selection criteria */
+    fun getSelectedEvents(): Flow<List<Event>>
+
+    /** Add a new event */
+    fun addEvent(event: Event): String
+    /** Update an existing event */
+    fun updateEvent(event: Event)
+    /** Delete an existing event by id*/
     fun deleteEvent(id: String)
+
 }
