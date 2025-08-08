@@ -43,7 +43,7 @@ open class LoadingViewModel(
         .onStart { emit(Unit) } // Emit an initial Unit to trigger the first load
         .flatMapLatest {
             // When reloadTrigger emits, flatMapLatest cancels the previous
-            // collection of preferencesRepository.loadingState and starts a new one.
+            // collection of loadingState and starts a new one.
             dataLoadingRepository.loadingState.catch { emit(DataLoadingState.Error(it)) }
         }
         .stateIn(

@@ -27,8 +27,9 @@ class MainActivity : ComponentActivity(), KoinComponent {
         StrictMode.setVmPolicy(
             StrictMode.VmPolicy.Builder(StrictMode.getVmPolicy())
                 .detectLeakedClosableObjects()
-                .penaltyLog() // Keep logging
-                .penaltyDeath() // Crash on violation -- not recommended, debugging only
+                .penaltyLog() // Keep logging -- debug only
+                // Note that OutlineTextField causes a LeakedClosableViolation
+//                .penaltyDeath() // Crash on violation -- not recommended, debugging only
                 .build()
         )
 

@@ -215,7 +215,6 @@ class EventsViewModel(private val pocketBase: PocketBaseClient) : ViewModel() {
     }
 }
 
-// Ensure your EventsUiState is defined
 data class EventsUiState(
     val isAuthenticated: Boolean = true, // Manage this based on login state
     val errorMessage: String? = null,

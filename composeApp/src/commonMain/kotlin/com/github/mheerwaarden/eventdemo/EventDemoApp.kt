@@ -39,7 +39,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.github.mheerwaarden.eventdemo.data.pocketbase.PocketBaseClient
@@ -50,7 +49,6 @@ import com.github.mheerwaarden.eventdemo.resources.back_button
 import com.github.mheerwaarden.eventdemo.resources.close
 import com.github.mheerwaarden.eventdemo.resources.more
 import com.github.mheerwaarden.eventdemo.resources.preferences
-import com.github.mheerwaarden.eventdemo.ui.AppViewModelProvider
 import com.github.mheerwaarden.eventdemo.ui.localization.AppEnvironment
 import com.github.mheerwaarden.eventdemo.ui.navigation.EventDemoAppNavHost
 import com.github.mheerwaarden.eventdemo.ui.navigation.MenuNavigator
@@ -97,7 +95,7 @@ fun DemoChooser(
     println("DemoChooser started")
     LoadingScreen(loadingViewModel = settingsViewModel, modifier = modifier) {
         val preferences by settingsViewModel.settingsUiState.collectAsState()
-        if (/*preferences.usePocketBase*/ false) {
+        if (preferences.usePocketBase) {
             PocketBaseEvents(pocketBaseUrl = preferences.pocketBaseUrl, modifier = modifier)
         } else {
             ThemedLocalizedApp(
@@ -118,6 +116,7 @@ fun PocketBaseEvents(pocketBaseUrl: String, modifier: Modifier = Modifier) {
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
 
     if (isAuthenticated) {
+        eventsViewModel.initializeAfterLogin()
         EventsScreen(eventsViewModel, modifier)
     } else {
         LoginScreen(authViewModel, modifier)
