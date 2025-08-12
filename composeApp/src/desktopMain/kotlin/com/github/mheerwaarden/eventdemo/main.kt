@@ -39,7 +39,6 @@ fun main() = application {
     ) {
         EventDemoApp(
             modifier = Modifier.fillMaxSize(),
-            isHorizontalLayout = windowState.size.width > Dimensions.max_compact_width
         )
     }
 

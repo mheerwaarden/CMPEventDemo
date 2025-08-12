@@ -65,13 +65,20 @@ import com.github.mheerwaarden.eventdemo.ui.theme.EventDemoAppTheme
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.koinInject
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun EventDemoApp(
     modifier: Modifier = Modifier,
     startDestination: String = EventOverviewDestination.route,
-    isHorizontalLayout: Boolean = false,
 ) {
+    val windowClass = calculateWindowSizeClass()
+    val isHorizontalLayout = windowClass.widthSizeClass != WindowWidthSizeClass.Compact
+
     EventDemoAppTheme {
         AppEnvironment(localeViewModel = koinInject()) {
             println("Starting DemoChooser")
@@ -252,10 +259,10 @@ fun EventDemoAppBar(
 fun EventDemoAppScreenPreview() {
     EventDemoAppTheme {
         EventDemoApp(
-            startDestination = AboutDestination.route,
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.LightGray) // showBackground = true
+                .background(Color.LightGray),
+            startDestination = AboutDestination.route // showBackground = true
         )
     }
 }

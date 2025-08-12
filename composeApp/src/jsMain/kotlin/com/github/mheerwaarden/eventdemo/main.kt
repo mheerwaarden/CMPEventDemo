@@ -35,7 +35,7 @@ fun main() {
                 println("Koin is initialised")
 
                 CanvasBasedWindow(canvasElementId = "appTarget" /*title = document.title.ifBlank { "Event Demo App" } */) {
-                    EventDemoApp(/*modifier = Modifier.fillMaxSize()*/)
+                    EventDemoApp()
                 }
 
             } catch (e: Throwable) {

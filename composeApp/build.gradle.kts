@@ -152,6 +152,9 @@ kotlin {
                 implementation(libs.androidx.lifecycle.viewmodel)
                 implementation(libs.androidx.lifecycle.runtime.compose)
 
+                // Window size calculation
+                implementation(libs.screen.size)
+
                 // Extended icons set
                 implementation(compose.materialIconsExtended)
 
@@ -161,6 +164,10 @@ kotlin {
                 implementation(libs.koin.compose)
                 implementation(libs.koin.compose.viewmodel)
                 implementation(libs.koin.compose.viewmodel.navigation)
+                // Direct JSON support
+                implementation(libs.kotlinx.serialization.bom)
+                implementation(libs.kotlinx.serialization.core)
+                implementation(libs.kotlinx.serialization.json)
                 // Networking & Serialization
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.content.negotiation)
@@ -176,9 +183,6 @@ kotlin {
                 implementation(libs.multiplatform.settings)
                 // DateTime
                 implementation(libs.kotlinx.dateTime)
-                // Direct JSON support
-                implementation(libs.kotlinx.serialization.core)
-                implementation(libs.kotlinx.serialization.json)
                 // Logging
                 api(libs.touchlab.kermit)
             }
@@ -205,8 +209,6 @@ kotlin {
                 // Preferences
                 implementation(libs.androidx.datastore.preferences)
                 implementation(libs.androidx.preference.ktx)
-                // Window size calculation
-                implementation(libs.androidx.material3.window.size.clazz)
             }
         }
         val androidUnitTest by getting {
@@ -222,8 +224,6 @@ kotlin {
                 implementation(libs.androidx.preference.ktx)
                 // ViewModel
                 implementation(libs.androidx.lifecycle.viewmodel)
-                // Window size calculation
-                implementation(libs.androidx.material3.window.size.clazz)
             }
         }
         val androidInstrumentedTest by getting {
@@ -241,8 +241,6 @@ kotlin {
                 implementation(libs.androidx.preference.ktx)
                 // ViewModel
                 implementation(libs.androidx.lifecycle.viewmodel)
-                // Window size calculation
-                implementation(libs.androidx.material3.window.size.clazz)
             }
         }
         val iosX64Main by getting
@@ -328,10 +326,11 @@ kotlin {
 }
 
 
-// Accessing properties from gradle.properties
-val appId: String by project
-val versionName: String by project
-val versionCode: String by project
+// App configuration
+val appId: String = "com.github.mheerwaarden.eventdemo"
+// App version from libs.versions.toml
+val versionCode: Int = libs.versions.appVersionCode.get().toInt()
+val versionName: String = libs.versions.appVersionName.get()
 
 android {
     namespace = "com.github.mheerwaarden.eventdemo"
