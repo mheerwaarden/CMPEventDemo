@@ -1,4 +1,4 @@
-package com.github.mheerwaarden.eventdemo.ui.screen.auth
+package com.github.mheerwaarden.eventdemo.ui.pocketbaseservice.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

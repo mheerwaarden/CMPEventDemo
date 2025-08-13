@@ -1,4 +1,4 @@
-package com.github.mheerwaarden.eventdemo.ui.screen.event
+package com.github.mheerwaarden.eventdemo.ui.pocketbaseservice.eventscreen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

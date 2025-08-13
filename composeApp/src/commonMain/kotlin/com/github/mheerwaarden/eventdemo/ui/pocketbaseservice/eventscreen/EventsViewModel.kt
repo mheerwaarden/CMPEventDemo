@@ -1,11 +1,11 @@
-package com.github.mheerwaarden.eventdemo.ui.screen.event
+package com.github.mheerwaarden.eventdemo.ui.pocketbaseservice.eventscreen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.mheerwaarden.eventdemo.data.model.Event
-import com.github.mheerwaarden.eventdemo.data.pocketbase.PocketBaseClient
-import com.github.mheerwaarden.eventdemo.data.pocketbase.SubscriptionAction
-import com.github.mheerwaarden.eventdemo.data.pocketbase.SubscriptionState
+import com.github.mheerwaarden.eventdemo.data.pocketbaseservice.PocketBaseService
+import com.github.mheerwaarden.eventdemo.data.pocketbaseservice.SubscriptionAction
+import com.github.mheerwaarden.eventdemo.data.pocketbaseservice.SubscriptionState
 import com.github.mheerwaarden.eventdemo.util.nowMillis
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
 
-class EventsViewModel(private val pocketBase: PocketBaseClient) : ViewModel() {
+class EventsViewModel(private val pocketBase: PocketBaseService) : ViewModel() {
      init {
          println("EventsViewModel: init")
      }
@@ -140,7 +140,7 @@ class EventsViewModel(private val pocketBase: PocketBaseClient) : ViewModel() {
         pocketBase.stopListeningToEvents() // Tell the client to tear down its SSE connection
     }
 
-    // --- Other ViewModel methods (create, update, delete through PocketBaseClient) ---
+    // --- Other ViewModel methods (create, update, delete through PocketBaseService) ---
     fun createEvent(
         title: String,
         description: String,
@@ -193,7 +193,7 @@ class EventsViewModel(private val pocketBase: PocketBaseClient) : ViewModel() {
         viewModelScope.launch {
             // Optimistically remove from UI or wait for SSE
             // For now, let SSE handle it as per your original code for delete
-            pocketBase.deleteEvent(eventId).fold( // Assuming deleteEvent exists in PocketBaseClient
+            pocketBase.deleteEvent(eventId).fold( // Assuming deleteEvent exists in PocketBaseService
                 onSuccess = {
                     println("EventsViewModel: Event delete request successful for $eventId (SSE will update list)")
                     // SSE should handle UI update

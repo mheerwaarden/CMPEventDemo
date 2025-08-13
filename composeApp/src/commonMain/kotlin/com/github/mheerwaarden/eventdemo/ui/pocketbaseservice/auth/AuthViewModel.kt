@@ -1,14 +1,14 @@
-package com.github.mheerwaarden.eventdemo.ui.screen.auth
+package com.github.mheerwaarden.eventdemo.ui.pocketbaseservice.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.mheerwaarden.eventdemo.data.pocketbase.PocketBaseClient
+import com.github.mheerwaarden.eventdemo.data.pocketbaseservice.PocketBaseService
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class AuthViewModel(private val pocketBase: PocketBaseClient) : ViewModel() {
+class AuthViewModel(private val pocketBase: PocketBaseService) : ViewModel() {
     private val _isAuthenticated = MutableStateFlow(false)
     val isAuthenticated = _isAuthenticated.asStateFlow()
 

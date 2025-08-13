@@ -7,7 +7,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  */
 
-package com.github.mheerwaarden.eventdemo.data.pocketbase
+package com.github.mheerwaarden.eventdemo.data.pocketbaseservice
 
 import com.github.mheerwaarden.eventdemo.data.model.Event
 import com.github.mheerwaarden.eventdemo.data.model.EventCategory

@@ -1,4 +1,4 @@
-package com.github.mheerwaarden.eventdemo.data.pocketbase
+package com.github.mheerwaarden.eventdemo.data.pocketbaseservice
 
 import com.github.mheerwaarden.eventdemo.data.model.Event
 import com.github.mheerwaarden.eventdemo.data.model.User
@@ -98,7 +98,7 @@ data class SubscriptionState<T>(
 // Use only for debug/dev builds.
 private const val NGROK_SKIP_BROWSER_WARNING = "ngrok-skip-browser-warning"
 
-class PocketBaseClient(
+class PocketBaseService(
     private val baseUrl: String,
     private val onAuthFailure: () -> Unit = {},
     private val settingsRepository: SettingsRepository = InMemorySettingsRepository() // For auth token
@@ -131,7 +131,7 @@ class PocketBaseClient(
                     }
                 }
                 refreshTokens {
-                    println("PocketBaseClient: Auth: Attempting to refresh token")
+                    println("PocketBaseService: Auth: Attempting to refresh token")
                     try {
                         // This POST request itself will use the Auth plugin, sending the
                         // 'oldTokens.accessToken'.
@@ -141,14 +141,14 @@ class PocketBaseClient(
                             }.body()
 
                         val newToken = response.token
-                        println("PocketBaseClient: Auth: Token refreshed successfully. New token: $newToken")
+                        println("PocketBaseService: Auth: Token refreshed successfully. New token: $newToken")
                         settingsRepository.saveAuthToken(newToken)
                         if (response.record.id.isNotBlank()) {
                             settingsRepository.saveUserId(response.record.id)
                         }
                         BearerTokens(newToken, newToken) // Return new tokens
                     } catch (e: Exception) {
-                        println("PocketBaseClient: Auth: Failed to refresh token: ${e.message}")
+                        println("PocketBaseService: Auth: Failed to refresh token: ${e.message}")
                         // Clear tokens and notify about auth failure
                         settingsRepository.clearAuthToken()
                         settingsRepository.clearUserId()
@@ -187,7 +187,7 @@ class PocketBaseClient(
     fun startListeningToEvents(collectionNames: List<String> = listOf("events")) {
         sseJob?.cancel() // Cancel any existing job
         sseJob = realtimeScope.launch {
-            println("PocketBaseClient: Attempting to connect to SSE...")
+            println("PocketBaseService: Attempting to connect to SSE...")
             var attempts = 0
             val maxAttempts = 5 // Max reconnection attempts for certain failures
 
@@ -203,23 +203,23 @@ class PocketBaseClient(
                         // Explicitly disable timeout for this SSE request
                         timeout { requestTimeoutMillis = HttpTimeoutConfig.INFINITE_TIMEOUT_MS }
                     }.execute { response ->
-                        println("PocketBaseClient: SSE connection established, status: ${response.status}")
+                        println("PocketBaseService: SSE connection established, status: ${response.status}")
                         attempts = 0 // Reset attempts on successful connection
 
                         val channel: ByteReadChannel = response.bodyAsChannel()
                         while (isActive && !channel.isClosedForRead) {
                             val event = parseSseEvent(channel)
                             if (event != null) {
-                                println("PocketBaseClient: Received SSE Event: ID=${event.id}, Event=${event.event}, Data=${event.data}")
+                                println("PocketBaseService: Received SSE Event: ID=${event.id}, Event=${event.event}, Data=${event.data}")
                                 if (event.event == "PB_CONNECT") {
                                     try {
                                         val connectData =
                                             json.decodeFromString<PBConnectEventData>(event.data)
                                         sseClientId = connectData.clientId
-                                        println("PocketBaseClient: PB_CONNECT received, clientId: $sseClientId. Subscribing to collections: $collectionNames")
+                                        println("PocketBaseService: PB_CONNECT received, clientId: $sseClientId. Subscribing to collections: $collectionNames")
                                         subscribeToCollections(collectionNames)
                                     } catch (e: Exception) {
-                                        println("PocketBaseClient: Error parsing PB_CONNECT data: ${e.message}")
+                                        println("PocketBaseService: Error parsing PB_CONNECT data: ${e.message}")
                                     }
                                 } else if (collectionNames.contains(event.event)) { // Check if it's one of the collections we care about
                                     try {
@@ -230,7 +230,7 @@ class PocketBaseClient(
                                             "update" -> SubscriptionAction.UPDATE
                                             "delete" -> SubscriptionAction.DELETE
                                             else -> {
-                                                println("PocketBaseClient: Unknown action '${wrapper.action}'")
+                                                println("PocketBaseService: Unknown action '${wrapper.action}'")
                                                 null
                                             }
                                         }
@@ -238,62 +238,62 @@ class PocketBaseClient(
                                             val subscriptionState =
                                                 SubscriptionState(action, wrapper.record)
                                             _eventSubscriptionFlow.emit(subscriptionState)
-                                            println("PocketBaseClient: Emitted SubscriptionState: $subscriptionState")
+                                            println("PocketBaseService: Emitted SubscriptionState: $subscriptionState")
                                         }
                                     } catch (e: Exception) {
-                                        println("PocketBaseClient: Error parsing record data for event '${event.event}': ${e.message}")
-                                        println("PocketBaseClient: Failing data: ${event.data}")
+                                        println("PocketBaseService: Error parsing record data for event '${event.event}': ${e.message}")
+                                        println("PocketBaseService: Failing data: ${event.data}")
                                     }
                                 }
                             }
                         }
                     }
                 } catch (e: Exception) {
-                    println("PocketBaseClient: SSE Error: ${e.message}")
+                    println("PocketBaseService: SSE Error: ${e.message}")
                     e.printStackTrace() // For detailed stack trace
                     sseClientId = null // Reset clientId on disconnection
                     attempts++
                     if (isActive && attempts < maxAttempts) {
                         val delayMillis = calculateBackoffDelay(attempts) // Exponential backoff
-                        println("PocketBaseClient: Retrying SSE connection in ${delayMillis / 1000}s (attempt $attempts/$maxAttempts)")
+                        println("PocketBaseService: Retrying SSE connection in ${delayMillis / 1000}s (attempt $attempts/$maxAttempts)")
                         delay(delayMillis)
                     } else if (isActive) {
-                        println("PocketBaseClient: Max SSE reconnection attempts reached. Stopping.")
+                        println("PocketBaseService: Max SSE reconnection attempts reached. Stopping.")
                         // Optionally emit an error state to the UI
                     }
                 } finally {
                     if (!isActive || attempts >= maxAttempts) {
-                        println("PocketBaseClient: SSE connection loop ending (isActive: $isActive, attempts: $attempts).")
+                        println("PocketBaseService: SSE connection loop ending (isActive: $isActive, attempts: $attempts).")
                     }
                 }
                 if (!isActive) break // Exit while loop if scope is cancelled
             }
         }
-        println("PocketBaseClient: startListeningToEvents launched job: $sseJob")
+        println("PocketBaseService: startListeningToEvents launched job: $sseJob")
     }
 
     private suspend fun subscribeToCollections(collectionNames: List<String>) {
         val currentClientId = sseClientId
         if (currentClientId == null) {
-            println("PocketBaseClient: Cannot subscribe, clientId is null.")
+            println("PocketBaseService: Cannot subscribe, clientId is null.")
             return
         }
         try {
             val requestBody = SubscriptionRequest(currentClientId, collectionNames)
-            println("PocketBaseClient: Sending subscription POST with body: $requestBody")
+            println("PocketBaseService: Sending subscription POST with body: $requestBody")
             val response = httpClient.post("$baseUrl/api/realtime") {
                 contentType(ContentType.Application.Json)
                 setBody(requestBody)
                 // Auth header will be added by the Auth plugin if token exists
             }
-            println("PocketBaseClient: Subscription POST response: ${response.status} - ${response.bodyAsText()}")
+            println("PocketBaseService: Subscription POST response: ${response.status} - ${response.bodyAsText()}")
             if (!response.status.isSuccess()) {
-                println("PocketBaseClient: Failed to subscribe to collections. Status: ${response.status}")
+                println("PocketBaseService: Failed to subscribe to collections. Status: ${response.status}")
             } else {
-                println("PocketBaseClient: Successfully subscribed to collections: $collectionNames")
+                println("PocketBaseService: Successfully subscribed to collections: $collectionNames")
             }
         } catch (e: Exception) {
-            println("PocketBaseClient: Error sending subscription POST: ${e.message}")
+            println("PocketBaseService: Error sending subscription POST: ${e.message}")
             e.printStackTrace()
         }
     }
@@ -323,38 +323,38 @@ class PocketBaseClient(
                 }
 
                 line.startsWith(":") -> { // Comment, ignore
-                    println("PocketBaseClient: SSE Comment: $line")
+                    println("PocketBaseService: SSE Comment: $line")
                 }
 
                 else -> {
-                    println("PocketBaseClient: SSE Unknown line: $line")
+                    println("PocketBaseService: SSE Unknown line: $line")
                 }
             }
         }
     }
 
     fun stopListeningToEvents() {
-        println("PocketBaseClient: stopListeningToEvents called. Cancelling job: $sseJob")
+        println("PocketBaseService: stopListeningToEvents called. Cancelling job: $sseJob")
         sseJob?.cancel()
         sseJob = null
         sseClientId = null
         // Note: _eventSubscriptionFlow is a SharedFlow and doesn't need explicit closing here unless
-        // the PocketBaseClient itself is being destroyed and no longer needed.
-        // If PocketBaseClient is a singleton, this is fine.
+        // the PocketBaseService itself is being destroyed and no longer needed.
+        // If PocketBaseService is a singleton, this is fine.
     }
 
-    // Call when PocketBaseClient is no longer needed (e.g. ViewModel onCleared)
+    // Call when PocketBaseService is no longer needed (e.g. ViewModel onCleared)
     fun cleanup() {
-        println("PocketBaseClient: Cleaning up...")
+        println("PocketBaseService: Cleaning up...")
         stopListeningToEvents()
         if (realtimeScope.isActive) {
-            realtimeScope.cancel("PocketBaseClient cleanup initiated")
+            realtimeScope.cancel("PocketBaseService cleanup initiated")
         }
         if (httpClient.engine.isActive) { // Check before closing
             httpClient.close()
-            println("PocketBaseClient: HttpClient closed.")
+            println("PocketBaseService: HttpClient closed.")
         }
-        // Re-initialize for potential reuse if PocketBaseClient is a long-lived singleton
+        // Re-initialize for potential reuse if PocketBaseService is a long-lived singleton
         // Or ensure this client instance is not used again after cleanup if it's shorter-lived.
         // If it's a true singleton meant to live for the app's lifetime and be reused after "logout/login",
         // then you might need to re-initialize realtimeScope and _eventSubscriptionFlow.
@@ -372,10 +372,10 @@ class PocketBaseClient(
                 }.body()
             settingsRepository.saveAuthToken(response.token)
             settingsRepository.saveUserId(response.record.id) // Assuming record.id is userId
-            println("PocketBaseClient: Login successful. Token: ${response.token}")
+            println("PocketBaseService: Login successful. Token: ${response.token}")
             Result.success(response)
         } catch (e: Exception) {
-            println("PocketBaseClient: Login failed: ${e.message}")
+            println("PocketBaseService: Login failed: ${e.message}")
             Result.failure(e)
         }
 
@@ -384,11 +384,11 @@ class PocketBaseClient(
             // Use the proper PocketBase logout endpoint
             settingsRepository.getAuthToken()?.let { _ ->
                 httpClient.post("$baseUrl/api/collections/users/auth-logout")
-                println("PocketBaseClient: Server-side logout successful")
+                println("PocketBaseService: Server-side logout successful")
             }
         } catch (e: Exception) {
             // Log the error but continue with local cleanup
-            println("PocketBaseClient: Server logout failed (continuing with local cleanup): ${e.message}")
+            println("PocketBaseService: Server logout failed (continuing with local cleanup): ${e.message}")
         }
 
         // Always clear local authentication state
@@ -397,7 +397,7 @@ class PocketBaseClient(
             Result.success(Unit)
         } catch (e: Exception) {
             // Catch if clearAuthState itself throws an unexpected error,
-            println("PocketBaseClient: Critical error during clearAuthState: ${e.message}")
+            println("PocketBaseService: Critical error during clearAuthState: ${e.message}")
             Result.failure(e)
         }
     }
@@ -406,19 +406,19 @@ class PocketBaseClient(
         settingsRepository.clearAuthToken()
         settingsRepository.clearUserId()
         stopListeningToEvents()
-        println("PocketBaseClient: Logged out (cleared local token).")
+        println("PocketBaseService: Logged out (cleared local token).")
     }
 
     suspend fun getEvents(): Result<List<Event>> = try {
         val response: PocketBaseListResponse<Event> =
             httpClient.get("$baseUrl/api/collections/events/records") {
-                println("PocketBaseClient.getEvents")
+                println("PocketBaseService.getEvents")
                 url { parameters.append("sort", "-created") } // sort by newest
                 // Auth header added by plugin
             }.body()
         Result.success(response.items)
     } catch (e: Exception) {
-        println("PocketBaseClient.getEvents: Exception: ${e.message}")
+        println("PocketBaseService.getEvents: Exception: ${e.message}")
         Result.failure(e)
     }
 
@@ -441,7 +441,7 @@ class PocketBaseClient(
 
         Result.success(response.toEvent())
     } catch (e: Exception) {
-        println("PocketBaseClient: Error during event update: ${e.message}")
+        println("PocketBaseService: Error during event update: ${e.message}")
         Result.failure(e)
     }
 
@@ -453,7 +453,7 @@ class PocketBaseClient(
     }
 
     suspend fun register(email: String, password: String, name: String): Result<User> = try {
-        println("PocketBaseClient: Registering user: $email")
+        println("PocketBaseService: Registering user: $email")
         val registrationUrl = "$baseUrl/api/collections/users/records"
         val response: User = httpClient.post(registrationUrl) {
             contentType(ContentType.Application.Json)
@@ -469,13 +469,13 @@ class PocketBaseClient(
             )
         }.body()
 
-        println("PocketBaseClient: Registration successful: ${response.email}")
+        println("PocketBaseService: Registration successful: ${response.email}")
         Result.success(response)
     } catch (e: ClientRequestException) {
         // This exception is thrown for 4xx and 5xx responses
         // Get the raw error response body
         val errorResponseText = e.response.body<String>()
-        println("PocketBaseClient: ClientRequestException during registration: ${e.message}\nResponse: $errorResponseText")
+        println("PocketBaseService: ClientRequestException during registration: ${e.message}\nResponse: $errorResponseText")
         try {
             // Attempt to deserialize it into our PocketBaseErrorResponse structure
             val pocketBaseError = json.decodeFromString<PocketBaseErrorResponse>(errorResponseText)
@@ -497,7 +497,7 @@ class PocketBaseClient(
             )
         }
     } catch (e: Exception) {
-        println("PocketBaseClient: Error during registration: ${e.message}")
+        println("PocketBaseService: Error during registration: ${e.message}")
         Result.failure(e)
     }
 

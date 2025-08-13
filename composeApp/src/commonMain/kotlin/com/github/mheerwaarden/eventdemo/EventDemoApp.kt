@@ -41,7 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.github.mheerwaarden.eventdemo.data.pocketbase.PocketBaseClient
+import com.github.mheerwaarden.eventdemo.data.pocketbaseservice.PocketBaseService
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.about
 import com.github.mheerwaarden.eventdemo.resources.app_name
@@ -55,11 +55,11 @@ import com.github.mheerwaarden.eventdemo.ui.navigation.MenuNavigator
 import com.github.mheerwaarden.eventdemo.ui.navigation.MenuNavigatorImpl
 import com.github.mheerwaarden.eventdemo.ui.screen.LoadingScreen
 import com.github.mheerwaarden.eventdemo.ui.screen.about.AboutDestination
-import com.github.mheerwaarden.eventdemo.ui.screen.auth.AuthViewModel
-import com.github.mheerwaarden.eventdemo.ui.screen.auth.LoginScreen
+import com.github.mheerwaarden.eventdemo.ui.pocketbaseservice.auth.AuthViewModel
+import com.github.mheerwaarden.eventdemo.ui.pocketbaseservice.auth.LoginScreen
 import com.github.mheerwaarden.eventdemo.ui.screen.event.EventOverviewDestination
-import com.github.mheerwaarden.eventdemo.ui.screen.event.EventsScreen
-import com.github.mheerwaarden.eventdemo.ui.screen.event.EventsViewModel
+import com.github.mheerwaarden.eventdemo.ui.pocketbaseservice.eventscreen.EventsScreen
+import com.github.mheerwaarden.eventdemo.ui.pocketbaseservice.eventscreen.EventsViewModel
 import com.github.mheerwaarden.eventdemo.ui.screen.settings.SettingsViewModel
 import com.github.mheerwaarden.eventdemo.ui.theme.EventDemoAppTheme
 import org.jetbrains.compose.resources.stringResource
@@ -116,7 +116,7 @@ fun DemoChooser(
 
 @Composable
 fun PocketBaseEvents(pocketBaseUrl: String, modifier: Modifier = Modifier) {
-    val pocketBase = remember { PocketBaseClient(pocketBaseUrl) }
+    val pocketBase = remember { PocketBaseService(pocketBaseUrl) }
     val authViewModel = remember { AuthViewModel(pocketBase) }
     val eventsViewModel = remember { EventsViewModel(pocketBase) }
 
