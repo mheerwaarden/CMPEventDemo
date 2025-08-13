@@ -1,3 +1,3 @@
 package com.github.mheerwaarden.eventdemo
 
-actual val currentPlatform: Platform = Platform.NATIVE
+actual val currentPlatformInfo: PlatformInfo = PlatformInfo.NATIVE

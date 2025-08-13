@@ -23,7 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import com.github.mheerwaarden.eventdemo.AppInfo
 import com.github.mheerwaarden.eventdemo.Dimensions
 import com.github.mheerwaarden.eventdemo.PlatformAppInfo
-import com.github.mheerwaarden.eventdemo.getPlatform
+import com.github.mheerwaarden.eventdemo.getPlatformInfo
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.about
 import com.github.mheerwaarden.eventdemo.resources.about_event_demo
@@ -59,7 +59,7 @@ fun AboutScreen(
         )
         PlatformDetailRow(Res.string.version, "${appInfo.versionName} (${appInfo.versionCode})")
         PlatformDetailRow(Res.string.app_id, appInfo.appId)
-        PlatformDetailRow(Res.string.platform, getPlatform().name)
+        PlatformDetailRow(Res.string.platform, getPlatformInfo().name)
         Spacer(modifier = Modifier.height(Dimensions.padding_medium))
         Text(
             text = "The event app is a demo project to show how to build an app that runs on different platforms."

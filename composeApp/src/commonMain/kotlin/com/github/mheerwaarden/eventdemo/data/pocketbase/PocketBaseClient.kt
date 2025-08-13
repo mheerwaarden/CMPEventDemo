@@ -2,6 +2,7 @@ package com.github.mheerwaarden.eventdemo.data.pocketbase
 
 import com.github.mheerwaarden.eventdemo.data.model.Event
 import com.github.mheerwaarden.eventdemo.data.model.User
+import com.github.mheerwaarden.eventdemo.getPlatformInfo
 import com.github.mheerwaarden.eventdemo.network.createHttpClientWithEngine
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
@@ -10,12 +11,16 @@ import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.logging.DEFAULT
 import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.timeout
 import io.ktor.client.request.accept
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.headers
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
@@ -36,6 +41,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -45,7 +51,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import io.ktor.client.request.header
 
 // --- Data Models for PocketBase Realtime ---
 
@@ -89,11 +94,16 @@ data class SubscriptionState<T>(
     val rawRecord: JsonObject? = null // Optional: include raw for debugging
 )
 
+// NGROK free tier requires this header for programmatic access without interstitial.
+// Use only for debug/dev builds.
+private const val NGROK_SKIP_BROWSER_WARNING = "ngrok-skip-browser-warning"
 
 class PocketBaseClient(
     private val baseUrl: String,
+    private val onAuthFailure: () -> Unit = {},
     private val settingsRepository: SettingsRepository = InMemorySettingsRepository() // For auth token
 ) {
+
     private val json = Json {
         ignoreUnknownKeys = true
         coerceInputValues = true
@@ -106,12 +116,8 @@ class PocketBaseClient(
             json(json)
         }
         install(Logging) {
+            logger = Logger.DEFAULT
             level = LogLevel.ALL // Max logging for debugging Ktor
-            // logger = object : Logger {
-            //     override fun log(message: String) {
-            //         println("KtorClient: $message")
-            //     }
-            // }
         }
         install(Auth) {
             bearer {
@@ -125,21 +131,46 @@ class PocketBaseClient(
                     }
                 }
                 refreshTokens {
-                    val oldToken = settingsRepository.getAuthToken()
-                    if (oldToken != null) {
-                        println("PocketBaseClient: Auth token needs refresh, but refresh mechanism not implemented. User should re-login.")
-                        settingsRepository.clearAuthToken() // Clear expired token
+                    println("PocketBaseClient: Auth: Attempting to refresh token")
+                    try {
+                        // This POST request itself will use the Auth plugin, sending the
+                        // 'oldTokens.accessToken'.
+                        val response: AuthResponse =
+                            client.post("$baseUrl/api/collections/users/auth-refresh") {
+                                // PocketBase auth-refresh typically doesn't need a body if using the current valid token.
+                            }.body()
+
+                        val newToken = response.token
+                        println("PocketBaseClient: Auth: Token refreshed successfully. New token: $newToken")
+                        settingsRepository.saveAuthToken(newToken)
+                        if (response.record.id.isNotBlank()) {
+                            settingsRepository.saveUserId(response.record.id)
+                        }
+                        BearerTokens(newToken, newToken) // Return new tokens
+                    } catch (e: Exception) {
+                        println("PocketBaseClient: Auth: Failed to refresh token: ${e.message}")
+                        // Clear tokens and notify about auth failure
+                        settingsRepository.clearAuthToken()
+                        settingsRepository.clearUserId()
+                        onAuthFailure()
+                        null // Return null to indicate refresh failure
                     }
-                    // Returning null will effectively mean re-authentication is needed.
-                    null
                 }
                 sendWithoutRequest { request ->
                     // This condition ensures that the Authorization header is only sent
                     // to requests targeting your API domain. This is generally good practice.
                     // For the JS engine, Ktor might be conservative about when to send
                     // the Authorization header. This helps ensure it's sent.
-                    request.url.host == Url(baseUrl).host && request.url.protocol.name == Url(baseUrl).protocol.name
+                    request.url.host == Url(baseUrl).host && request.url.protocol.name == Url(
+                        baseUrl
+                    ).protocol.name
                 }
+            }
+        }
+        // Configure default request headers
+        defaultRequest {
+            if (getPlatformInfo().isDebugBuild) {
+                header(NGROK_SKIP_BROWSER_WARNING, "true")
             }
         }
     }
@@ -147,11 +178,11 @@ class PocketBaseClient(
     private var sseClientId: String? = null
     private val realtimeScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var sseJob: Job? = null
-    private var isAuthenticated = false
 
     // For emitting events from the SSE stream to multiple collectors
     private val _eventSubscriptionFlow = MutableSharedFlow<SubscriptionState<Event>>(replay = 0)
     val eventSubscriptionFlow = _eventSubscriptionFlow.asSharedFlow()
+
 
     fun startListeningToEvents(collectionNames: List<String> = listOf("events")) {
         sseJob?.cancel() // Cancel any existing job
@@ -166,9 +197,8 @@ class PocketBaseClient(
                         method = HttpMethod.Get
                         accept(ContentType.Text.EventStream)
                         headers {
-                            // Auth header will be added by the Auth plugin if token exists
-                            append("ngrok-skip-browser-warning", "true")
                             append(HttpHeaders.CacheControl, "no-cache")
+                            // Auth header will be added by the Auth plugin if token exists
                         }
                         // Explicitly disable timeout for this SSE request
                         timeout { requestTimeoutMillis = HttpTimeoutConfig.INFINITE_TIMEOUT_MS }
@@ -224,7 +254,7 @@ class PocketBaseClient(
                     sseClientId = null // Reset clientId on disconnection
                     attempts++
                     if (isActive && attempts < maxAttempts) {
-                        val delayMillis = attempts * 2000L // Exponential backoff
+                        val delayMillis = calculateBackoffDelay(attempts) // Exponential backoff
                         println("PocketBaseClient: Retrying SSE connection in ${delayMillis / 1000}s (attempt $attempts/$maxAttempts)")
                         delay(delayMillis)
                     } else if (isActive) {
@@ -307,22 +337,23 @@ class PocketBaseClient(
         println("PocketBaseClient: stopListeningToEvents called. Cancelling job: $sseJob")
         sseJob?.cancel()
         sseJob = null
-        sseClientId = null // Reset client ID
+        sseClientId = null
         // Note: _eventSubscriptionFlow is a SharedFlow and doesn't need explicit closing here unless
         // the PocketBaseClient itself is being destroyed and no longer needed.
         // If PocketBaseClient is a singleton, this is fine.
     }
 
-    fun cleanup() { // Call when PocketBaseClient is no longer needed (e.g. ViewModel onCleared)
+    // Call when PocketBaseClient is no longer needed (e.g. ViewModel onCleared)
+    fun cleanup() {
         println("PocketBaseClient: Cleaning up...")
         stopListeningToEvents()
-//        if (realtimeScope.isActive) { // Check if it's active before cancelling
-//            realtimeScope.cancel("PocketBaseClient cleanup initiated")
-//        }
-//        if (httpClient.engine.isActive) { // Check before closing
-//            httpClient.close()
-//            println("PocketBaseClient: HttpClient closed.")
-//        }
+        if (realtimeScope.isActive) {
+            realtimeScope.cancel("PocketBaseClient cleanup initiated")
+        }
+        if (httpClient.engine.isActive) { // Check before closing
+            httpClient.close()
+            println("PocketBaseClient: HttpClient closed.")
+        }
         // Re-initialize for potential reuse if PocketBaseClient is a long-lived singleton
         // Or ensure this client instance is not used again after cleanup if it's shorter-lived.
         // If it's a true singleton meant to live for the app's lifetime and be reused after "logout/login",
@@ -333,8 +364,7 @@ class PocketBaseClient(
 
     // --- Example methods for login/logout and event CRUD to make client complete ---
     // You would adapt these to your actual API calls
-    suspend fun login(user: String, pass: String): Result<AuthResponse> {
-        return try {
+    suspend fun login(user: String, pass: String): Result<AuthResponse> = try {
             val response: AuthResponse =
                 httpClient.post("$baseUrl/api/collections/users/auth-with-password") {
                     contentType(ContentType.Application.Json)
@@ -342,25 +372,12 @@ class PocketBaseClient(
                 }.body()
             settingsRepository.saveAuthToken(response.token)
             settingsRepository.saveUserId(response.record.id) // Assuming record.id is userId
-            isAuthenticated = true
             println("PocketBaseClient: Login successful. Token: ${response.token}")
             Result.success(response)
         } catch (e: Exception) {
             println("PocketBaseClient: Login failed: ${e.message}")
             Result.failure(e)
         }
-    }
-
-//    suspend fun logout() {
-//        // PocketBase doesn't have a server-side logout endpoint that invalidates the token.
-//        // Logout is client-side: clear the token.
-//        settingsRepository.clearAuthToken()
-//        settingsRepository.clearUserId()
-//        sseClientId = null // Clear SSE client ID
-//        println("PocketBaseClient: Logged out (cleared local token).")
-//        // Optionally, could also cancel existing SSE job if desired on logout
-//        // stopListeningToEvents()
-//    }
 
     suspend fun logout(): Result<Unit> {
         try {
@@ -388,44 +405,31 @@ class PocketBaseClient(
     private suspend fun clearAuthState() {
         settingsRepository.clearAuthToken()
         settingsRepository.clearUserId()
-        sseClientId = null // Clear SSE client ID
         stopListeningToEvents()
         println("PocketBaseClient: Logged out (cleared local token).")
     }
 
-    suspend fun getEvents(): Result<List<Event>> {
-        println("PocketBaseClient.getEvents")
-        if (!isAuthenticated) {
-            println("PocketBaseClient.getEvents: Not authenticated")
-            return Result.failure(Exception("User not authenticated. Cannot fetch events."))
-        }
-        return try {
-            val response: PocketBaseListResponse<Event> =
-                httpClient.get("$baseUrl/api/collections/events/records") {
-                    // Auth header added by plugin
-                    header("ngrok-skip-browser-warning", "true")
-                    url { parameters.append("sort", "-created") } // sort by newest
-                }.body()
-            Result.success(response.items)
-        } catch (e: Exception) {
-            println("PocketBaseClient.getEvents: Exception: ${e.message}")
-            Result.failure(e)
-        }
+    suspend fun getEvents(): Result<List<Event>> = try {
+        val response: PocketBaseListResponse<Event> =
+            httpClient.get("$baseUrl/api/collections/events/records") {
+                println("PocketBaseClient.getEvents")
+                url { parameters.append("sort", "-created") } // sort by newest
+                // Auth header added by plugin
+            }.body()
+        Result.success(response.items)
+    } catch (e: Exception) {
+        println("PocketBaseClient.getEvents: Exception: ${e.message}")
+        Result.failure(e)
     }
 
-    // ... other CRUD methods (createEvent, updateEvent, deleteEvent)
-    //  Make sure they use the httpClient and handle authentication correctly.
-    // Example:
-    suspend fun createEvent(event: Event): Result<Event> {
-        return try {
-            val response: EventData = httpClient.post("$baseUrl/api/collections/events/records") {
-                contentType(ContentType.Application.Json)
-                setBody(event.toEventData(owner = settingsRepository.getUserId() ?: ""))
-            }.body()
-            Result.success(response.toEvent())
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    suspend fun createEvent(event: Event): Result<Event> = try {
+        val response: EventData = httpClient.post("$baseUrl/api/collections/events/records") {
+            contentType(ContentType.Application.Json)
+            setBody(event.toEventData(owner = settingsRepository.getUserId() ?: ""))
+        }.body()
+        Result.success(response.toEvent())
+    } catch (e: Exception) {
+        Result.failure(e)
     }
 
     suspend fun updateEvent(event: Event): Result<Event> = try {
@@ -469,28 +473,41 @@ class PocketBaseClient(
         Result.success(response)
     } catch (e: ClientRequestException) {
         // This exception is thrown for 4xx and 5xx responses
-        val errorResponseText = e.response.body<String>() // Get the raw error response body
+        // Get the raw error response body
+        val errorResponseText = e.response.body<String>()
         println("PocketBaseClient: ClientRequestException during registration: ${e.message}\nResponse: $errorResponseText")
         try {
             // Attempt to deserialize it into our PocketBaseErrorResponse structure
-            val pocketBaseError = Json {
-                ignoreUnknownKeys = true // Important if PocketBase adds new fields
-            }.decodeFromString<PocketBaseErrorResponse>(errorResponseText)
+            val pocketBaseError = json.decodeFromString<PocketBaseErrorResponse>(errorResponseText)
 
             // Construct a more informative error message
-            var detailedErrorMessage = "PocketBase registration failed: ${pocketBaseError.message}\n"
+            var detailedErrorMessage =
+                "PocketBase registration failed: ${pocketBaseError.message}\n"
             pocketBaseError.data.forEach { (field, detail) ->
                 detailedErrorMessage += "  - Field '$field': ${detail.message} (code: ${detail.code})\n"
             }
             Result.failure(Exception(detailedErrorMessage.trim(), e)) // Wrap original exception
         } catch (jsonException: Exception) {
             // If deserializing the error fails, fall back to the raw response
-            Result.failure(Exception("Registration failed with status ${e.response.status}. Response: $errorResponseText", e))
+            Result.failure(
+                Exception(
+                    "Registration failed with status ${e.response.status}. Response: $errorResponseText",
+                    e
+                )
+            )
         }
     } catch (e: Exception) {
         println("PocketBaseClient: Error during registration: ${e.message}")
         Result.failure(e)
     }
+
+    private fun calculateBackoffDelay(attempt: Int, baseDelay: Long = 2000): Long {
+        val exponentialDelay = baseDelay * (1 shl (attempt - 1)) // 2s, 4s, 8s, 16s...
+        // Add randomness to prevent multiple clients from reconnecting at exactly the same time
+        val jitter = (0..1000).random()
+        return exponentialDelay + jitter
+    }
+
 }
 
 // --- Helper Data Models for API Responses (Illustrative) ---

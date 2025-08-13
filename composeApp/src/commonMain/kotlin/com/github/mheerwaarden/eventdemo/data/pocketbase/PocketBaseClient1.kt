@@ -8,6 +8,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.HttpRequestTimeoutException
+import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.timeout
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.delete
@@ -39,7 +40,11 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-class PocketBaseClient1(private val baseUrl: String = "https://6f7182262e63.ngrok-free.app") {
+class PocketBaseClient1(
+    private val baseUrl: String = "https://6f7182262e63.ngrok-free.app",
+    private val onAuthFailure: () -> Unit = {},
+    private val settingsRepository: SettingsRepository = InMemorySettingsRepository() // For auth token
+) {
     // Use configured platform-specific client
     private lateinit var client: HttpClient
     private var createPlatformHttpClientException: Exception?
@@ -133,6 +138,58 @@ class PocketBaseClient1(private val baseUrl: String = "https://6f7182262e63.ngro
         // Clear local authentication state
         authToken = null
         currentUser = null
+    }
+
+    private suspend fun refreshTokens(client: HttpClient): BearerTokens? {
+        println("PocketBaseClient: refreshTokens")
+        // Important: The refreshTokens block should ideally not make a call
+        // using the same client instance it's configuring if that call also
+        // requires auth, as it can lead to loops if the refresh itself fails auth.
+        // However, PocketBase token refresh is a specific endpoint.
+
+        // If the oldTokens (BearerTokens) are null or the refreshToken is null,
+        // it means we can't refresh.
+        val oldRefreshToken = settingsRepository.getAuthToken()
+        if (oldRefreshToken == null) {
+            println("Auth: No refresh token available, cannot refresh.")
+            settingsRepository.clearAuthToken() // Clear any potentially stale token
+            onAuthFailure()
+            return null // No tokens to load
+        }
+
+        println("Auth: Attempting to refresh token")
+        try {
+            val response: AuthResponse = client.post("$baseUrl/api/collections/users/auth-refresh") {
+                // No need to set bearerAuth here, PocketBase refresh uses the refresh token
+                // in its body or a specific mechanism.
+                // For PocketBase, the Authorization header with the old token is actually needed
+                // for the refresh endpoint according to their docs for "auth-refresh".
+                // header(HttpHeaders.Authorization, "Bearer ${oldTokens?.accessToken}") // This was incorrect for standard refresh
+                // PocketBase typically refreshes via a POST with no body, and the server uses the existing valid (but expiring) token
+                // OR, if it's a "refresh token grant type", it would be different.
+                // PocketBase's "auth-refresh" seems to re-verify the existing access token and issue a new one.
+                // It might implicitly use the token from the initial Auth setup if the client is the same.
+                // Let's assume the refresh request itself might need the currently loaded (but expiring) token.
+                // If this `client` is the same instance, it might work.
+                // However, PocketBase's `authRefresh()` in its JS SDK seems to indicate it uses the current valid token.
+
+                // The Ktor bearer auth provider will automatically send the current accessToken.
+                // No specific body is usually needed for PocketBase's auth-refresh endpoint.
+            }.body()
+
+            val token = response.token
+            println("Auth: Token refreshed successfully. New token: $token")
+            settingsRepository.saveAuthToken(token)
+            // Assuming refresh doesn't send back a new refresh token
+            return BearerTokens(response.token, oldRefreshToken)
+        } catch (e: Exception) {
+            println("Auth: Failed to refresh token: ${e.message}")
+            settingsRepository.clearAuthToken()
+            // Trigger global auth failure handling
+            onAuthFailure()
+            // Return null if refresh fails
+            return null
+        }
     }
 
     // Events CRUD
