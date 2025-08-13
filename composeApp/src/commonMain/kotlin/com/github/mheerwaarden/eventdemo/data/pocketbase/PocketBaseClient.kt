@@ -26,6 +26,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
+import io.ktor.http.Url
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
@@ -44,6 +45,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import io.ktor.client.request.header
 
 // --- Data Models for PocketBase Realtime ---
 
@@ -123,18 +125,20 @@ class PocketBaseClient(
                     }
                 }
                 refreshTokens {
-                    // If you have token refresh logic, implement it here.
-                    // For PocketBase, usually, you re-login if the token expires.
-                    // Returning null will effectively mean re-authentication is needed.
                     val oldToken = settingsRepository.getAuthToken()
                     if (oldToken != null) {
-                        // Attempt to refresh (pseudo-code, PocketBase doesn't have a direct refresh endpoint like this)
-                        // val refreshed = refreshTokenApiCall(oldToken)
-                        // if (refreshed != null) BearerTokens(refreshed.accessToken, refreshed.refreshToken) else null
                         println("PocketBaseClient: Auth token needs refresh, but refresh mechanism not implemented. User should re-login.")
                         settingsRepository.clearAuthToken() // Clear expired token
                     }
+                    // Returning null will effectively mean re-authentication is needed.
                     null
+                }
+                sendWithoutRequest { request ->
+                    // This condition ensures that the Authorization header is only sent
+                    // to requests targeting your API domain. This is generally good practice.
+                    // For the JS engine, Ktor might be conservative about when to send
+                    // the Authorization header. This helps ensure it's sent.
+                    request.url.host == Url(baseUrl).host && request.url.protocol.name == Url(baseUrl).protocol.name
                 }
             }
         }
@@ -143,6 +147,7 @@ class PocketBaseClient(
     private var sseClientId: String? = null
     private val realtimeScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private var sseJob: Job? = null
+    private var isAuthenticated = false
 
     // For emitting events from the SSE stream to multiple collectors
     private val _eventSubscriptionFlow = MutableSharedFlow<SubscriptionState<Event>>(replay = 0)
@@ -162,6 +167,7 @@ class PocketBaseClient(
                         accept(ContentType.Text.EventStream)
                         headers {
                             // Auth header will be added by the Auth plugin if token exists
+                            append("ngrok-skip-browser-warning", "true")
                             append(HttpHeaders.CacheControl, "no-cache")
                         }
                         // Explicitly disable timeout for this SSE request
@@ -336,6 +342,7 @@ class PocketBaseClient(
                 }.body()
             settingsRepository.saveAuthToken(response.token)
             settingsRepository.saveUserId(response.record.id) // Assuming record.id is userId
+            isAuthenticated = true
             println("PocketBaseClient: Login successful. Token: ${response.token}")
             Result.success(response)
         } catch (e: Exception) {
@@ -387,14 +394,21 @@ class PocketBaseClient(
     }
 
     suspend fun getEvents(): Result<List<Event>> {
+        println("PocketBaseClient.getEvents")
+        if (!isAuthenticated) {
+            println("PocketBaseClient.getEvents: Not authenticated")
+            return Result.failure(Exception("User not authenticated. Cannot fetch events."))
+        }
         return try {
             val response: PocketBaseListResponse<Event> =
                 httpClient.get("$baseUrl/api/collections/events/records") {
                     // Auth header added by plugin
-                    url { parameters.append("sort", "-created") } // Example: sort by newest
+                    header("ngrok-skip-browser-warning", "true")
+                    url { parameters.append("sort", "-created") } // sort by newest
                 }.body()
             Result.success(response.items)
         } catch (e: Exception) {
+            println("PocketBaseClient.getEvents: Exception: ${e.message}")
             Result.failure(e)
         }
     }
