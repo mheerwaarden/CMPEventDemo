@@ -8,7 +8,6 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import com.github.mheerwaarden.eventdemo.data.preferences.DEFAULT_LOCALE
 import com.github.mheerwaarden.eventdemo.ui.screen.LoadingScreen
-import org.koin.compose.koinInject
 
 /**
  * CompositionLocal to provide the current effective BCP 47 locale tag (e.g., "en-US")

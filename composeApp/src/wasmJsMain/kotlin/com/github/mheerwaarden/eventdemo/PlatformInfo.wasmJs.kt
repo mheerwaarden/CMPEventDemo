@@ -7,6 +7,7 @@ import kotlinx.browser.window
  */
 class WasmPlatformInfo: PlatformInfo {
     override val name: String = "Web with Kotlin/Wasm"
+    override val platformType: PlatformType = PlatformType.WASM
 
     /*
      * For WasmJs (browser environments), the logic is similar to jsMain.

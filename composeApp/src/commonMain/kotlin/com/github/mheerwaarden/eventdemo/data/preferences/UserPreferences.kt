@@ -30,6 +30,8 @@ data class UserPreferences(
     val usePocketBase: Boolean = false,
     /** PocketBase backend URL */
     val pocketBaseUrl: String = "",
+    /** PocketBase client implementation */
+    val pocketBaseClientType: PocketBaseClientType = PocketBaseClientType.KTOR_ONLY,
 ) {
     companion object {
         val DEFAULTS = UserPreferences()

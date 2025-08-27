@@ -16,12 +16,15 @@ import kotlinx.browser.window
  */
 class WasmJsPlatformLocaleManager : PlatformLocaleManager {
 
+    private var mustLogCurrentLocale = true
+
     // Set window.__customLocale that effectively controls the navigator.languages property
     override fun setPlatformLocale(localeTag: String?) {
         val currentLocale = getPlatformLocaleTag()
         if (currentLocale != localeTag) {
             println("Web: Setting platform locale from '$currentLocale' to '$localeTag'")
             setPlatformLocaleJs(localeTag)
+            mustLogCurrentLocale = true
         }
     }
 
@@ -30,13 +33,15 @@ class WasmJsPlatformLocaleManager : PlatformLocaleManager {
     override fun getPlatformLocaleTag(): String? {
         // Retrieve window.__customLocale using the custom handler installed in index.html
         val languages = window.navigator.languages
-        // Testing languages against null includes testing against undefined
-        if (languages != null && languages.length > 0) {
+        if (languages.length > 0 && languages[0] != null && languages[0].toString().isNotBlank()) {
             // languages[0] here is a JsString because languages is JsArray<JsString>
             // Calling toString() on JsString converts it to Kotlin String
             // Standardize for browsers that might return an underscore as separator
             val language = languages[0].toString().replace('_', '-')
-            println("Web: Current platform locale: $language")
+            if (mustLogCurrentLocale) {
+                println("Web: Current platform locale: $language")
+                mustLogCurrentLocale = false
+            }
             return language
         }
         println("Web: No current platform language, returning null")

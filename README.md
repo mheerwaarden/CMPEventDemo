@@ -1,6 +1,13 @@
 # Event-prototype
 
 This is a demo of a Compose Multiplatform app. The project is created by the [Kotlin Multiplatform Wizard](https://kmp.jetbrains.com/) and targeting Android, iOS, Web and Desktop (Windows, MacOS, Linux).
+There is an option to use PocketBase instead of the in-memory dummy data.
+
+## Installing PocketBase
+* Follow the instructions in /pocketbase/README.md
+Android does not allow connections to http because they are not secure. For a test, you can work around this using ngrok. 
+* Download ngrok from https://ngrok.com/downloads/ and follow the installation instructions for your platform.
+* Run the command: `ngrok http 8090`
 
 ## Installing the released versions
 * Android (app): Download the .apk-file on your device, allow install and trust the developer.

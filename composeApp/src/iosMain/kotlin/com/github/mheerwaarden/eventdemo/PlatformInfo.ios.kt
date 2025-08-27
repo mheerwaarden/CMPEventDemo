@@ -8,6 +8,7 @@ import kotlin.experimental.ExperimentalNativeApi
  */
 class IOSPlatformInfo: PlatformInfo {
     override val name: String = UIDevice.currentDevice.systemName() + " " + UIDevice.currentDevice.systemVersion
+    override val platformType: PlatformType = PlatformType.NATIVE
 
     /* For iOS, `isDebugBuild` checks if the binary was compiled in debug mode. */
     @OptIn(ExperimentalNativeApi::class)

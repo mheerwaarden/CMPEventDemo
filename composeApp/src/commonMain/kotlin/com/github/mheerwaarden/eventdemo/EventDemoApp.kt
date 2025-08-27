@@ -41,7 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.github.mheerwaarden.eventdemo.data.pocketbaseservice.PocketBaseService
+import com.github.mheerwaarden.eventdemo.data.pocketbaseservice.PocketBaseKtorService
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.about
 import com.github.mheerwaarden.eventdemo.resources.app_name
@@ -116,7 +116,7 @@ fun DemoChooser(
 
 @Composable
 fun PocketBaseEvents(pocketBaseUrl: String, modifier: Modifier = Modifier) {
-    val pocketBase = remember { PocketBaseService(pocketBaseUrl) }
+    val pocketBase = remember { PocketBaseKtorService(pocketBaseUrl) }
     val authViewModel = remember { AuthViewModel(pocketBase) }
     val eventsViewModel = remember { EventsViewModel(pocketBase) }
 

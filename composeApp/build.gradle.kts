@@ -1,5 +1,6 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -18,10 +19,13 @@ ksp {
 }
 
 kotlin {
-    jvmToolchain(17)
+    // Select the JDK to run the Kotlin compiler
+    jvmToolchain(21)
 
     androidTarget {
         compilerOptions {
+            // Bytecode version for Android
+            jvmTarget.set(JvmTarget.JVM_18)
             freeCompilerArgs.addAll(
                 listOf(
                     // Generate metadata classes for enabling certain recomposition optimizations
@@ -56,6 +60,8 @@ kotlin {
 
     jvm("desktop") {
         compilerOptions {
+            // Bytecode version for desktop - PocketBase-kotlin lib needs Java 18
+            jvmTarget.set(JvmTarget.JVM_18)
             freeCompilerArgs.addAll(
                 listOf(
                     // Generate metadata classes for enabling certain recomposition optimizations
@@ -112,7 +118,7 @@ kotlin {
         browser {
             val rootDirPath = project.rootDir.path
             val projectDirPath = project.projectDir.path
-            commonWebpackConfig {
+             commonWebpackConfig {
                 outputFileName = "composeApp.js"
                 devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
                     static = (static ?: mutableListOf()).apply {
@@ -164,7 +170,7 @@ kotlin {
                 implementation(libs.koin.compose)
                 implementation(libs.koin.compose.viewmodel)
                 implementation(libs.koin.compose.viewmodel.navigation)
-                // Direct JSON support
+                // Direct JSON support & Serialization
                 implementation(libs.kotlinx.serialization.bom)
                 implementation(libs.kotlinx.serialization.core)
                 implementation(libs.kotlinx.serialization.json)
@@ -204,6 +210,8 @@ kotlin {
                 implementation(libs.koin.android)
                 // Networking & Serialization
                 implementation(libs.ktor.client.android)
+                // PocketBase Kotlin client
+                implementation(libs.pocketbase.kotlin)
                 // Coroutines
                 implementation(libs.kotlinx.coroutines.android)
                 // Preferences
@@ -250,6 +258,8 @@ kotlin {
             dependencies {
                 // Networking & Serialization
                 implementation(libs.ktor.client.darwin)
+                // PocketBase Kotlin client
+                implementation(libs.pocketbase.kotlin)
                 // Logging
                 api(libs.touchlab.kermit.simple)
                 // Conversion of enum, sealed classes and coroutines to native iOS
@@ -277,6 +287,8 @@ kotlin {
                 // Networking & Serialization
                 // Choose lightweight CIO engine, if not sufficient move to OkHttp
                 implementation(libs.ktor.client.cio)
+                // PocketBase Kotlin client
+                implementation(libs.pocketbase.kotlin)
             }
         }
         val desktopTest by getting
@@ -286,6 +298,8 @@ kotlin {
                 implementation(libs.kotlinx.browser)
                 // Networking & Serialization
                 implementation(libs.ktor.client.wasm)
+                // PocketBase JavaScript client
+                implementation(npm("pocketbase", "0.26.2"))
             }
         }
 
@@ -297,6 +311,8 @@ kotlin {
                 implementation(libs.kotlin.browser)
                 // Networking & Serialization
                 implementation(libs.ktor.client.js)
+                // PocketBase JavaScript client
+                implementation(npm("pocketbase", "0.26.2"))
             }
         }
 
@@ -365,8 +381,9 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_18
+        targetCompatibility = JavaVersion.VERSION_18
+        isCoreLibraryDesugaringEnabled = true
     }
     buildFeatures {
         compose = true
@@ -398,6 +415,10 @@ dependencies {
     add("kspIosX64", libs.koin.ksp.compiler)
     add("kspIosArm64", libs.koin.ksp.compiler)
     add("kspIosSimulatorArm64", libs.koin.ksp.compiler)
+
+    // Core library desugaring for Android running on lower java versions. AGP needs it at the
+    // highest level. Other platforms builds will ignore the dependency.
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
 }
 
 // Configure KSP tasks to depend on kspCommonMainKotlinMetadata,to be able to use annotations in

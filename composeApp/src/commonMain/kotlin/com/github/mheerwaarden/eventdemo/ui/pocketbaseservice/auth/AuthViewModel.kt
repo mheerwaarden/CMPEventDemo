@@ -2,13 +2,14 @@ package com.github.mheerwaarden.eventdemo.ui.pocketbaseservice.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.mheerwaarden.eventdemo.data.pocketbaseservice.PocketBaseService
+import com.github.mheerwaarden.eventdemo.data.pocketbaseservice.PocketBaseKtorService
+import com.github.mheerwaarden.eventdemo.data.pocketbaseservice.PocketBaseResult
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class AuthViewModel(private val pocketBase: PocketBaseService) : ViewModel() {
+class AuthViewModel(private val pocketBase: PocketBaseKtorService) : ViewModel() {
     private val _isAuthenticated = MutableStateFlow(false)
     val isAuthenticated = _isAuthenticated.asStateFlow()
 
@@ -30,27 +31,27 @@ class AuthViewModel(private val pocketBase: PocketBaseService) : ViewModel() {
     fun login(email: String, password: String) {
         viewModelScope.launch(coroutineExceptionHandler) {
             _isLoading.value = true
-            pocketBase.login(email, password).fold(
-                onSuccess = {
+            when (val result = pocketBase.login(email, password)) {
+                is PocketBaseResult.Success -> {
                     _isAuthenticated.value = true
                     _error.value = null
-                },
-                onFailure = { _error.value = it.message }
-            )
+                }
+                is PocketBaseResult.Error -> { _error.value = result.message }
+            }
             _isLoading.value = false
         }
     }
 
-    fun register(email: String, password: String, name: String) {
+    fun register(email: String, password: String, passwordConfirm: String, name: String) {
         viewModelScope.launch {
             _isLoading.value = true
-            pocketBase.register(email, password, name).fold(
-                onSuccess = {
-                    // Auto-login after registration
-                    login(email, password)
-                },
-                onFailure = { _error.value = it.message }
-            )
+            when (val result = pocketBase.register(email, password, passwordConfirm, name)) {
+                is PocketBaseResult.Success -> {
+                    _isAuthenticated.value = true
+                    _error.value = null
+                }
+                is PocketBaseResult.Error -> { _error.value = result.message }
+            }
             _isLoading.value = false
         }
     }

@@ -132,7 +132,7 @@ class WasmJsDateTimeFormatter : DateTimeFormatter, KoinComponent {
 /* js functions mut be top-level */
 
 @Suppress("UNUSED_PARAMETER")
-private fun toLocaleStringJs(millis: Long, locale: String?, optionsX: LocaleOptions?): String {
+private fun toLocaleStringJs(millis: Long, locale: String?, options: LocaleOptions?): String {
     js(
         """
     try {

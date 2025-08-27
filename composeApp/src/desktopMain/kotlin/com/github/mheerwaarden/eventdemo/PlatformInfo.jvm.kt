@@ -5,6 +5,7 @@ package com.github.mheerwaarden.eventdemo
  */
 class JVMPlatformInfo : PlatformInfo {
     override val name: String = "Java ${System.getProperty("java.version")}"
+    override val platformType: PlatformType = PlatformType.JVM
 
     /**
      * For JVM (Desktop):

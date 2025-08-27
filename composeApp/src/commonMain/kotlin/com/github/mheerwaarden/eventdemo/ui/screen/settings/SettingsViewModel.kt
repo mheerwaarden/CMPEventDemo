@@ -12,6 +12,7 @@ package com.github.mheerwaarden.eventdemo.ui.screen.settings
 import androidx.lifecycle.viewModelScope
 import com.github.mheerwaarden.eventdemo.data.preferences.DEFAULT_LOCALE
 import com.github.mheerwaarden.eventdemo.data.preferences.DEFAULT_LOCALE_FROM_PLATFORM
+import com.github.mheerwaarden.eventdemo.data.preferences.PocketBaseClientType
 import com.github.mheerwaarden.eventdemo.data.preferences.UserPreferences
 import com.github.mheerwaarden.eventdemo.data.preferences.UserPreferencesRepository
 import com.github.mheerwaarden.eventdemo.ui.screen.LoadingViewModel
@@ -42,6 +43,7 @@ class SettingsViewModel(
                 localeTag = preferences.localeTag,
                 usePocketBase = preferences.usePocketBase,
                 pocketBaseUrl = preferences.pocketBaseUrl,
+                pocketBaseClientType = preferences.pocketBaseClientType,
             )
         }.stateIn(
             scope = viewModelScope,
@@ -55,6 +57,7 @@ class SettingsViewModel(
                 localeTag = UserPreferences.DEFAULTS.localeTag,
                 usePocketBase = UserPreferences.DEFAULTS.usePocketBase,
                 pocketBaseUrl = UserPreferences.DEFAULTS.pocketBaseUrl,
+                pocketBaseClientType = UserPreferences.DEFAULTS.pocketBaseClientType,
             )
         )
 
@@ -104,6 +107,14 @@ class SettingsViewModel(
         }
     }
 
+    fun setPocketBaseClientType(pocketBaseClientType: PocketBaseClientType) {
+        println("setPocketBaseClientType: $pocketBaseClientType")
+        updatePreferenceJob?.cancel()
+        updatePreferenceJob = viewModelScope.launch {
+            userPreferencesRepository.savePocketBaseClientType(pocketBaseClientType)
+        }
+    }
+
     fun setLocale(localeTag: String?) {
         updatePreferenceJob?.cancel()
         updatePreferenceJob = viewModelScope.launch {
@@ -129,4 +140,5 @@ data class SettingsUiState(
     val localeTag: String = DEFAULT_LOCALE,
     val usePocketBase: Boolean = false,
     val pocketBaseUrl: String = "",
+    val pocketBaseClientType: PocketBaseClientType = PocketBaseClientType.KTOR_ONLY,
 )

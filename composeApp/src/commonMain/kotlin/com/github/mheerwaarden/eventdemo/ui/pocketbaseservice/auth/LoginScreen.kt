@@ -130,7 +130,7 @@ private fun LoginBody(
         Button(
             onClick = {
                 if (isRegistering) {
-                    authViewModel.register(email, password, name)
+                    authViewModel.register(email, password, password, name)
                 } else {
                     authViewModel.login(email, password)
                 }

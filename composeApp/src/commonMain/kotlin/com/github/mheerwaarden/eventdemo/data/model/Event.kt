@@ -13,35 +13,57 @@ import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.event
 import com.github.mheerwaarden.eventdemo.ui.util.HtmlColors
 import com.github.mheerwaarden.eventdemo.util.now
+import com.github.mheerwaarden.eventdemo.util.ofEpochMilli
 import com.github.mheerwaarden.eventdemo.util.plus
+import com.github.mheerwaarden.eventdemo.util.toEpochMilli
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDateTime
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+
+internal object LocalDateTimeEpochMillisSerializer : KSerializer<LocalDateTime> {
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("kotlinx.datetime.LocalDateTime", PrimitiveKind.LONG)
+
+    override fun serialize(encoder: Encoder, value: LocalDateTime) =
+        encoder.encodeLong(value.toEpochMilli())
+
+    override fun deserialize(decoder: Decoder): LocalDateTime = ofEpochMilli(decoder.decodeLong())
+}
 
 @Serializable
 data class Event(
     override val id: String = "",
-    val collectionId: String = "",
-    val collectionName: String = "",
-    val created: String = "",
-    val updated: String = "",
-    val title: String = "",
-    val description: String = "",
-    val startDateTime: LocalDateTime = now(),
-    val endDateTime: LocalDateTime = startDateTime.plus(1, DateTimeUnit.HOUR),
-    val location: String? = null,
-    val contact: String? = null,
-    val notes: String? = null,
-    val eventType: EventType = EventType.ACTIVITY,
-    val eventCategory: EventCategory = EventCategory.PRIVATE,
-    val isOnline: Boolean = false,
-    val htmlColor: HtmlColors = HtmlColors.OLIVE_DRAB,
-    val amount: Double? = null,
-    val price: Double? = null,
-    val owner: String = "",
-    val viewers: List<String> = emptyList(),
-    val isPrivate: Boolean = false
-) : ModelItem() {
+    override val collectionId: String = "",
+    override val collectionName: String = "",
+    override val created: String = "",
+    override val updated: String = "",
+    override val title: String = "",
+    override val description: String = "",
+    @Serializable(with = LocalDateTimeEpochMillisSerializer::class) @SerialName("startMillis") override val startDateTime: LocalDateTime = now(),
+    @Serializable(with = LocalDateTimeEpochMillisSerializer::class) @SerialName("endMillis") override val endDateTime: LocalDateTime = startDateTime.plus(1, DateTimeUnit.HOUR),
+    override val location: String? = null,
+    override val contact: String? = null,
+    override val notes: String? = null,
+    override val eventType: EventType = EventType.ACTIVITY,
+    override val eventCategory: EventCategory = EventCategory.PRIVATE,
+    override val isOnline: Boolean = false,
+    override val htmlColor: HtmlColors = HtmlColors.OLIVE_DRAB,
+    override val amount: Double? = null,
+    override val price: Double? = null,
+    override val owner: String = "",
+    override val viewers: List<String> = emptyList(),
+    override val isPrivate: Boolean = false
+) : ModelItem(), IEvent {
+
+    override fun toEvent() = this
+
     companion object {
         val typeNameResId = Res.string.event
     }

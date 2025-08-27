@@ -3,7 +3,9 @@ package com.github.mheerwaarden.eventdemo.ui.pocketbaseservice.eventscreen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.mheerwaarden.eventdemo.data.model.Event
-import com.github.mheerwaarden.eventdemo.data.pocketbaseservice.PocketBaseService
+import com.github.mheerwaarden.eventdemo.data.model.IEvent
+import com.github.mheerwaarden.eventdemo.data.pocketbaseservice.PocketBaseKtorService
+import com.github.mheerwaarden.eventdemo.data.pocketbaseservice.PocketBaseResult
 import com.github.mheerwaarden.eventdemo.data.pocketbaseservice.SubscriptionAction
 import com.github.mheerwaarden.eventdemo.data.pocketbaseservice.SubscriptionState
 import com.github.mheerwaarden.eventdemo.util.nowMillis
@@ -14,10 +16,10 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
 
-class EventsViewModel(private val pocketBase: PocketBaseService) : ViewModel() {
-     init {
-         println("EventsViewModel: init")
-     }
+class EventsViewModel(private val pocketBase: PocketBaseKtorService) : ViewModel() {
+    init {
+        println("EventsViewModel: init")
+    }
 
     private val _uiState = MutableStateFlow(EventsUiState())
     val uiState = _uiState.asStateFlow()
@@ -34,20 +36,20 @@ class EventsViewModel(private val pocketBase: PocketBaseService) : ViewModel() {
         println("EventsViewModel: Loading events...")
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
-            pocketBase.getEvents().fold(
-                onSuccess = { events ->
-                    _uiState.value = _uiState.value.copy(events = events, isLoading = false)
-                    println("EventsViewModel: Events loaded successfully: ${events.size} events")
-                },
-                onFailure = { error ->
+            when (val result = pocketBase.getEvents()) {
+                is PocketBaseResult.Success -> {
+                    _uiState.value = _uiState.value.copy(events = result.data, isLoading = false)
+                    println("EventsViewModel: Events loaded successfully: ${result.data.size} events")
+                }
+
+                is PocketBaseResult.Error -> {
                     _uiState.value = _uiState.value.copy(
-                        errorMessage = "Failed to load events: ${error.message}",
+                        errorMessage = "Failed to load events: ${result.message}",
                         isLoading = false
                     )
-                    println("EventsViewModel: Error loading events: ${error.message}")
-                    error.printStackTrace()
+                    println("EventsViewModel: Error loading events: ${result.message} (${result.code})")
                 }
-            )
+            }
         }
     }
 
@@ -61,7 +63,8 @@ class EventsViewModel(private val pocketBase: PocketBaseService) : ViewModel() {
             pocketBase.eventSubscriptionFlow
                 .catch { e -> // This will catch errors from emit or from handleSubscriptionStateChang
                     println("EventsViewModel: Error in eventSubscriptionFlow: ${e.message}")
-                    _uiState.value = _uiState.value.copy(errorMessage = "Realtime connection error: ${e.message}")
+                    _uiState.value =
+                        _uiState.value.copy(errorMessage = "Realtime connection error: ${e.message}")
                     e.printStackTrace()
                     // Optionally, you might want to retry starting the listener here after a delay
                     // or signal a persistent error to the UI.
@@ -75,7 +78,7 @@ class EventsViewModel(private val pocketBase: PocketBaseService) : ViewModel() {
 
     private var eventCountLastSecond = 0
     private var lastTimestamp = nowMillis()
-    private fun handleSubscriptionStateChange(subscriptionState: SubscriptionState<Event>) {
+    private fun handleSubscriptionStateChange(subscriptionState: SubscriptionState<IEvent>) {
         val currentTime = nowMillis()
         if (currentTime - lastTimestamp >= 1000) {
             println("EventsViewModel: Events processed in last second: $eventCountLastSecond")
@@ -84,46 +87,60 @@ class EventsViewModel(private val pocketBase: PocketBaseService) : ViewModel() {
         }
         eventCountLastSecond++
 
-        val currentEvents = _uiState.value.events.toMutableList() // Make it mutable for easier manipulation
+        val currentEvents =
+            _uiState.value.events.toMutableList() // Make it mutable for easier manipulation
         var updated = false
 
+        val currentId = subscriptionState.dataObject?.id
         when (subscriptionState.action) {
             SubscriptionAction.CREATE -> {
                 // Avoid duplicates if initial load races with SSE
-                if (currentEvents.none { it.id == subscriptionState.dataObject.id }) {
-                    currentEvents.add(subscriptionState.dataObject)
+                if (currentEvents.none { it.id == currentId }) {
+                    currentEvents.add(subscriptionState.dataObject!!.toEvent())
                     updated = true
-                    println("EventsViewModel: Event CREATED via SSE: ${subscriptionState.dataObject.id}")
+                    println("EventsViewModel: Event CREATED via SSE: $currentId")
                 } else {
-                    println("EventsViewModel: Event CREATED via SSE (already exists): ${subscriptionState.dataObject.id}")
+                    println("EventsViewModel: Event CREATED via SSE (already exists): $currentId")
                 }
             }
+
             SubscriptionAction.UPDATE -> {
-                val index = currentEvents.indexOfFirst { it.id == subscriptionState.dataObject.id }
+                val index = currentEvents.indexOfFirst { it.id == currentId }
                 if (index != -1) {
-                    currentEvents[index] = subscriptionState.dataObject
+                    currentEvents[index] = subscriptionState.dataObject!!.toEvent()
                     updated = true
-                    println("EventsViewModel: Event UPDATED via SSE: ${subscriptionState.dataObject.id}")
+                    println("EventsViewModel: Event UPDATED via SSE: $currentId")
                 } else {
                     // It's possible an update comes for an event not yet in the list (e.g., if initial load missed it)
                     // You might choose to add it here, or log it as unexpected.
-                    currentEvents.add(subscriptionState.dataObject) // Or handle as an error/log
+                    if (subscriptionState.dataObject != null) {
+                        currentEvents.add(subscriptionState.dataObject.toEvent()) // Or handle as an error/log
+                    }
                     updated = true
-                    println("EventsViewModel: Event UPDATED via SSE (was not in list, added): ${subscriptionState.dataObject.id}")
+                    println("EventsViewModel: Event UPDATED via SSE (was not in list, added): $currentId")
                 }
             }
+
             SubscriptionAction.DELETE -> {
-                if (currentEvents.removeAll { it.id == subscriptionState.dataObject.id }) {
+                if (currentEvents.removeAll { it.id == currentId }) {
                     updated = true
-                    println("EventsViewModel: Event DELETED via SSE: ${subscriptionState.dataObject.id}")
+                    println("EventsViewModel: Event DELETED via SSE: $currentId")
                 } else {
-                    println("EventsViewModel: Event DELETED via SSE (was not in list): ${subscriptionState.dataObject.id}")
+                    println("EventsViewModel: Event DELETED via SSE (was not in list): $currentId")
                 }
             }
+
             SubscriptionAction.NOOP -> {
-                println("EventsViewModel: Event NOOP via SSE: ${subscriptionState.dataObject.id}")
+                println("EventsViewModel: Event NOOP via SSE: $currentId")
+            }
+
+            is SubscriptionAction.ERROR -> {
+                val message = subscriptionState.action.message
+                println("EventsViewModel: Event ERROR via SSE for $currentId: $message")
+                _uiState.value = _uiState.value.copy(errorMessage = message)
             }
         }
+
 
         if (updated) {
             // Sort events if order matters, e.g., by date
@@ -156,36 +173,37 @@ class EventsViewModel(private val pocketBase: PocketBaseService) : ViewModel() {
                 owner = "" // PocketBase will likely set this based on authenticated user
             )
             _uiState.value = _uiState.value.copy(isLoading = true) // Indicate loading
-            pocketBase.createEvent(newEvent).fold(
-                onSuccess = { createdEvent ->
-                    println("EventsViewModel: Event created successfully via API: ${createdEvent.id}")
+            when (val result = pocketBase.createEvent(newEvent)) {
+                is PocketBaseResult.Success -> {
+                    println("EventsViewModel: Event created successfully via API: ${result.data.id}")
                     // Realtime should update the list, but you can add it here optimistically
                     // or rely on SSE. If relying on SSE, ensure no duplicate additions.
                     // The handleSubscriptionStateChange should handle it.
                     _uiState.value = _uiState.value.copy(isLoading = false)
-
-                },
-                onFailure = { error ->
-                    println("EventsViewModel: Error creating event: ${error.message}")
-                    _uiState.value = _uiState.value.copy(errorMessage = "Failed to create event: ${error.message}", isLoading = false)
-                    error.printStackTrace()
                 }
-            )
+                is PocketBaseResult.Error -> {
+                    println("EventsViewModel: Error creating event: ${result.message}")
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = "Failed to create event: ${result.message}",
+                        isLoading = false
+                    )
+                }
+           }
         }
     }
 
     fun updateEvent(event: Event) {
         viewModelScope.launch {
-            pocketBase.updateEvent(event).fold(
-                onSuccess = {
+            when (val result = pocketBase.updateEvent(event)) {
+                is PocketBaseResult.Success -> {
                     println("EventsViewModel: Event update request successful for ${event.id} (SSE will update list)")
                     /* Realtime subscription will update the list */
-                },
-                onFailure = { error ->
-                    println("Error updating event: ${error.message}")
-                    _uiState.value = _uiState.value.copy(errorMessage = error.message)
                 }
-            )
+                is PocketBaseResult.Error -> {
+                    println("EventsViewModel: Error updating event ${event.id}: ${result.message}")
+                    _uiState.value = _uiState.value.copy(errorMessage = "Failed to update event: ${result.message}")
+                }
+            }
         }
     }
 
@@ -193,17 +211,16 @@ class EventsViewModel(private val pocketBase: PocketBaseService) : ViewModel() {
         viewModelScope.launch {
             // Optimistically remove from UI or wait for SSE
             // For now, let SSE handle it as per your original code for delete
-            pocketBase.deleteEvent(eventId).fold( // Assuming deleteEvent exists in PocketBaseService
-                onSuccess = {
+            when (val result = pocketBase.deleteEvent(eventId)) {
+                is PocketBaseResult.Success -> {
                     println("EventsViewModel: Event delete request successful for $eventId (SSE will update list)")
                     // SSE should handle UI update
-                },
-                onFailure = { error ->
-                    println("EventsViewModel: Error deleting event $eventId: ${error.message}")
-                    _uiState.value = _uiState.value.copy(errorMessage = "Failed to delete event: ${error.message}")
-                    error.printStackTrace()
                 }
-            )
+                is PocketBaseResult.Error -> {
+                    println("EventsViewModel: Error deleting event $eventId: ${result.message}")
+                    _uiState.value = _uiState.value.copy(errorMessage = "Failed to delete event: ${result.message}")
+                }
+            }
         }
     }
 

@@ -7,6 +7,7 @@ import kotlinx.browser.window
  */
 class JsPlatformInfo : PlatformInfo {
     override val name: String = "JavaScript"
+    override val platformType: PlatformType = PlatformType.JS
 
     /*
      * For JavaScript (browser environments):

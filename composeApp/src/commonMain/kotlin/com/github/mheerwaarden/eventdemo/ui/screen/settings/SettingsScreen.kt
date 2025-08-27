@@ -11,18 +11,23 @@ package com.github.mheerwaarden.eventdemo.ui.screen.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.github.mheerwaarden.eventdemo.Dimensions
+import com.github.mheerwaarden.eventdemo.data.preferences.PocketBaseClientType
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.database_url
 import com.github.mheerwaarden.eventdemo.resources.language
@@ -59,13 +64,15 @@ fun SettingsScreen(
 
         SettingsBody(
             settingsUiState = settingsUiState,
-            language = AppLanguage.entries.firstOrNull { settingsUiState.localeTag.startsWith(it.code) } ?: AppLanguage.System,
+            language = AppLanguage.entries.firstOrNull { settingsUiState.localeTag.startsWith(it.code) }
+                ?: AppLanguage.System,
             setDatePickerUsesKeyboard = settingsViewModel::setDatePickerUsesKeyboard,
             setTimePickerUsesKeyboard = settingsViewModel::setTimePickerUsesKeyboard,
             setUseCraneCalendar = settingsViewModel::setUseCraneCalendar,
             setLanguage = settingsViewModel::setLocale,
             setUsesPocketBase = settingsViewModel::setUsePocketBase,
             setPocketBaseUrl = settingsViewModel::setPocketBaseUrl,
+            setPocketBaseClientType = settingsViewModel::setPocketBaseClientType,
             modifier = modifier.padding(Dimensions.padding_small)
         )
     }
@@ -81,6 +88,7 @@ fun SettingsBody(
     setLanguage: (String) -> Unit,
     setUsesPocketBase: (Boolean) -> Unit,
     setPocketBaseUrl: (String) -> Unit,
+    setPocketBaseClientType: (PocketBaseClientType) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -122,6 +130,10 @@ fun SettingsBody(
             onValueChange = setPocketBaseUrl,
             modifier = Modifier.fillMaxWidth(),
         )
+        PocketBaseClientTypeSelector(
+            selectedType = settingsUiState.pocketBaseClientType,
+            onTypeSelected = setPocketBaseClientType
+        )
         SelectionField(
             label = stringResource(Res.string.language),
             currentItem = language,
@@ -135,6 +147,38 @@ fun SettingsBody(
     }
 }
 
+@Composable
+fun PocketBaseClientTypeSelector(
+    selectedType: PocketBaseClientType,
+    onTypeSelected: (PocketBaseClientType) -> Unit
+) {
+    val implementedTypes = listOf(PocketBaseClientType.KTOR_ONLY)
+    Column {
+        Text("PocketBase Client Implementation:")
+
+        PocketBaseClientType.entries.forEach { type ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(
+                    selected = selectedType == type,
+                    onClick = { onTypeSelected(type) },
+                    enabled = implementedTypes.contains(type)
+                )
+                Text(
+                    text = when (type) {
+                        PocketBaseClientType.KTOR_ONLY -> "Ktor Only"
+                        PocketBaseClientType.POCKETBASE_KOTLIN_KTOR_WEB -> "PocketBase-Kotlin + Ktor Web"
+                        PocketBaseClientType.POCKETBASE_KOTLIN_JS_WEB -> "PocketBase-Kotlin + JS Web"
+                        PocketBaseClientType.POCKETBASE_KOTLIN_ONLY -> "PocketBase-Kotlin Only"
+                    },
+                    modifier = Modifier.padding(start = Dimensions.padding_small)
+                )
+            }
+        }
+    }
+}
+
 @Preview
 @Composable
 fun SettingsScreenPreview() {
@@ -142,7 +186,7 @@ fun SettingsScreenPreview() {
         SettingsBody(
             settingsUiState = SettingsUiState(
                 datePickerUsesKeyboard = true,
-                timePickerUsesKeyboard = false
+                timePickerUsesKeyboard = false,
             ),
             language = AppLanguage.English,
             setDatePickerUsesKeyboard = {},
@@ -151,6 +195,7 @@ fun SettingsScreenPreview() {
             setLanguage = {},
             setUsesPocketBase = {},
             setPocketBaseUrl = {},
+            setPocketBaseClientType = {},
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.LightGray) // showBackground = true

@@ -27,12 +27,11 @@ class JsPlatformLocaleManager : PlatformLocaleManager {
     override fun getPlatformLocaleTag(): String? {
         // Retrieve window.__customLocale using the custom handler installed in index.html
         val languages = window.navigator.languages
-        // Testing languages against null includes testing against undefined
-        if (languages != null && languages.isNotEmpty()) {
+        if (languages.isNotEmpty() && languages[0].isNotBlank()) {
             // languages[0] here is a JsString because languages is JsArray<JsString>
             // Calling toString() on JsString converts it to Kotlin String
             // Standardize for browsers that might return an underscore as separator
-            val language = languages[0].toString().replace('_', '-')
+            val language = languages[0].replace('_', '-')
             println("Web: Current platform locale: $language")
             return language
         }

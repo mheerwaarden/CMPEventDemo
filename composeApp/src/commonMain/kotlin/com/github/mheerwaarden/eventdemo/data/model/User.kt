@@ -12,6 +12,9 @@ data class User(
     val username: String = "",
     val name: String = "",
     val avatar: String? = null,
+    val verified: Boolean = false,
+    val created: String = "",
+    val updated: String = ""
 ) : ModelItem() {
     companion object {
         val typeNameResId = Res.string.user

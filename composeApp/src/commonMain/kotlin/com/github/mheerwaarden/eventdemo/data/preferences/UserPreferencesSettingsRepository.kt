@@ -28,6 +28,7 @@ class UserPreferencesSettingsRepository(
         private const val KEY_LOCALE_TAG = "locale_tag"
         private const val KEY_USE_POCKETBASE = "use_pocketbase"
         private const val KEY_POCKETBASE_URL = "pocketbase_url"
+        private const val KEY_POCKETBASE_CLIENT_TYPE = "pocketbase_client_type"
     }
     //endregion Keys
 
@@ -83,6 +84,12 @@ class UserPreferencesSettingsRepository(
             pocketBaseUrl = settings.getString(
                 KEY_POCKETBASE_URL, UserPreferences.DEFAULTS.pocketBaseUrl
             ),
+            pocketBaseClientType = enumValueOf(
+                settings.getString(
+                    KEY_POCKETBASE_CLIENT_TYPE,
+                    UserPreferences.DEFAULTS.pocketBaseClientType.name
+                )
+            )
         )
         _preferences.value = loadedPreferences
     }
@@ -159,6 +166,15 @@ class UserPreferencesSettingsRepository(
             updatePreferences { it.copy(pocketBaseUrl = url) }
         } catch (e: Exception) {
             logger.e(throwable = e) { "Error saving pocketBaseUrl preference" }
+        }
+    }
+
+    override suspend fun savePocketBaseClientType(pocketBaseClientType: PocketBaseClientType) {
+        try {
+            settings[KEY_POCKETBASE_CLIENT_TYPE] = pocketBaseClientType.name
+            updatePreferences { it.copy(pocketBaseClientType = pocketBaseClientType) }
+        } catch (e: Exception) {
+            logger.e(throwable = e) { "Error saving pocketBaseClientType preference" }
         }
     }
 

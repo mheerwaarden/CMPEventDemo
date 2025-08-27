@@ -1,3 +1,3 @@
 package com.github.mheerwaarden.eventdemo
 
-actual val currentPlatformInfo: PlatformInfo = PlatformInfo.NATIVE
+actual val currentPlatformInfo: PlatformInfo = AndroidPlatformInfo()
