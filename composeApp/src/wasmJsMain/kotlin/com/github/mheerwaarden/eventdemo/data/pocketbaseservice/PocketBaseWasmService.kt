@@ -131,7 +131,7 @@ class PocketBaseWasmService(baseUrl: String) : PocketBaseService {
     }
 
     override fun startListeningToEvents(collectionNames: List<String>) {
-        stopListeningToEvents() // Ensure any previous subscription is stopped
+        stopListeningToEvents(listOf("events")) // Ensure any previous subscription is stopped
 
         val targetCollection = collectionNames.firstOrNull() ?: "events"
 
@@ -204,7 +204,7 @@ class PocketBaseWasmService(baseUrl: String) : PocketBaseService {
         }
     }
 
-    override fun stopListeningToEvents() {
+    override fun stopListeningToEvents(collectionNames: List<String>) {
         try {
             unsubscribeRealtimeGlobal?.invoke()
             unsubscribeRealtimeGlobal = null
@@ -214,7 +214,7 @@ class PocketBaseWasmService(baseUrl: String) : PocketBaseService {
     }
 
     override fun cleanup() {
-        stopListeningToEvents()
+        stopListeningToEvents(listOf("events"))
         supervisorJob.cancel()
         pb.realtime().disconnect()
         pb.authStore.clear()

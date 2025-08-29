@@ -145,7 +145,7 @@ class PocketBaseKtorService(
 
     override fun subscribeToEvents(onUpdate: (IEvent) -> Unit): () -> Unit {
         startListeningToEvents()
-        return { stopListeningToEvents() }
+        return { stopListeningToEvents(listOf("events")) }
     }
 
     override fun startListeningToEvents(collectionNames: List<String>) {
@@ -315,7 +315,7 @@ class PocketBaseKtorService(
         }
     }
 
-    override fun stopListeningToEvents() {
+    override fun stopListeningToEvents(collectionNames: List<String>) {
         println("PocketBaseKtorService: stopListeningToEvents called. Cancelling job: $sseJob")
         sseJob?.cancel()
         sseJob = null
@@ -328,7 +328,7 @@ class PocketBaseKtorService(
     // Call when PocketBaseService is no longer needed (e.g. ViewModel onCleared)
     override fun cleanup() {
         println("PocketBaseKtorService: Cleaning up...")
-        stopListeningToEvents()
+        stopListeningToEvents(listOf("events"))
         if (realtimeScope.isActive) {
             realtimeScope.cancel("PocketBaseService cleanup initiated")
         }
@@ -386,7 +386,7 @@ class PocketBaseKtorService(
     private suspend fun clearAuthState() {
         settingsRepository.clearAuthToken()
         settingsRepository.clearUserId()
-        stopListeningToEvents()
+        stopListeningToEvents(listOf("events"))
         println("PocketBaseKtorService: Logged out (cleared local token).")
     }
 

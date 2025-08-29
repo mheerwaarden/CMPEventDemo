@@ -25,7 +25,7 @@ interface PocketBaseService {
      */
     fun subscribeToEvents(onUpdate: (IEvent) -> Unit): () -> Unit
     fun startListeningToEvents(collectionNames: List<String> = listOf("events"))
-    fun stopListeningToEvents()
+    fun stopListeningToEvents(collectionNames: List<String>)
 
     /**
      * Cleans up resources used by the PocketBaseService.
@@ -124,6 +124,7 @@ interface PocketBaseService {
      * @return `true` if the user is authenticated, `false` otherwise.
      */
     suspend fun isAuthenticated(): Boolean
+
     /**
      * Retrieves the currently authenticated user.
      *
@@ -136,6 +137,4 @@ interface PocketBaseService {
     suspend fun getCurrentUser(): PocketBaseResult<User?>
 }
 
-expect class PocketBaseServiceFactory {
-    fun create(baseUrl: String, clientType: PocketBaseClientType): PocketBaseService
-}
+expect fun createPocketBaseService(baseUrl: String, clientType: PocketBaseClientType): PocketBaseService

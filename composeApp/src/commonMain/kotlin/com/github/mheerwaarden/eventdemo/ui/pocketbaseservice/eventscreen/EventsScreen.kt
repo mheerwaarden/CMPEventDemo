@@ -36,7 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.github.mheerwaarden.eventdemo.data.model.Event
+import com.github.mheerwaarden.eventdemo.data.model.IEvent
 import com.github.mheerwaarden.eventdemo.localization.toLocalizedString
 import com.github.mheerwaarden.eventdemo.util.DEFAULT_DATE_TIME_FORMAT
 import kotlinx.datetime.LocalDateTime
@@ -120,9 +120,9 @@ fun EventsScreen(eventsViewModel: EventsViewModel, modifier: Modifier = Modifier
 
 @Composable
 fun EventCard(
-    event: Event,
-    onEdit: (Event) -> Unit,
-    onDelete: (Event) -> Unit
+    event: IEvent,
+    onEdit: (IEvent) -> Unit,
+    onDelete: (IEvent) -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
 

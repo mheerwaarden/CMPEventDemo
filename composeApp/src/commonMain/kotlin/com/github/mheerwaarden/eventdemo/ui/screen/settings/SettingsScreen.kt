@@ -152,7 +152,11 @@ fun PocketBaseClientTypeSelector(
     selectedType: PocketBaseClientType,
     onTypeSelected: (PocketBaseClientType) -> Unit
 ) {
-    val implementedTypes = listOf(PocketBaseClientType.KTOR_ONLY)
+    val implementedTypes = listOf(
+        PocketBaseClientType.KTOR_ONLY,
+        PocketBaseClientType.POCKETBASE_KOTLIN_KTOR_WEB,
+        PocketBaseClientType.POCKETBASE_KOTLIN_JS_WEB
+    )
     Column {
         Text("PocketBase Client Implementation:")
 

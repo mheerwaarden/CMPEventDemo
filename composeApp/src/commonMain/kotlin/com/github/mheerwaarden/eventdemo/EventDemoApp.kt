@@ -41,7 +41,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.github.mheerwaarden.eventdemo.data.pocketbaseservice.PocketBaseKtorService
 import com.github.mheerwaarden.eventdemo.resources.Res
 import com.github.mheerwaarden.eventdemo.resources.about
 import com.github.mheerwaarden.eventdemo.resources.app_name
@@ -68,6 +67,8 @@ import org.koin.compose.koinInject
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import com.github.mheerwaarden.eventdemo.data.pocketbaseservice.createPocketBaseService
+import com.github.mheerwaarden.eventdemo.data.preferences.PocketBaseClientType
 
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
@@ -103,7 +104,11 @@ fun DemoChooser(
     LoadingScreen(loadingViewModel = settingsViewModel, modifier = modifier) {
         val preferences by settingsViewModel.settingsUiState.collectAsState()
         if (preferences.usePocketBase) {
-            PocketBaseEvents(pocketBaseUrl = preferences.pocketBaseUrl, modifier = modifier)
+            PocketBaseEvents(
+                pocketBaseUrl = preferences.pocketBaseUrl,
+                newPocketBaseClientType = preferences.pocketBaseClientType,
+                modifier = modifier
+            )
         } else {
             ThemedLocalizedApp(
                 startDestination = startDestination,
@@ -115,11 +120,21 @@ fun DemoChooser(
 }
 
 @Composable
-fun PocketBaseEvents(pocketBaseUrl: String, modifier: Modifier = Modifier) {
-    val pocketBase = remember { PocketBaseKtorService(pocketBaseUrl) }
-    val authViewModel = remember { AuthViewModel(pocketBase) }
-    val eventsViewModel = remember { EventsViewModel(pocketBase) }
-
+fun PocketBaseEvents(
+    pocketBaseUrl: String,
+    newPocketBaseClientType: PocketBaseClientType,
+    modifier: Modifier = Modifier
+) {
+    val pocketBaseService = remember(key1 = pocketBaseUrl, key2 = newPocketBaseClientType) {
+        println("PocketBaseEvents: Create new PocketBaseService with type $newPocketBaseClientType and url $pocketBaseUrl")
+        createPocketBaseService(pocketBaseUrl, newPocketBaseClientType)
+    }
+    val authViewModel = remember(key1 = pocketBaseService) {
+        AuthViewModel(pocketBaseService)
+    }
+    val eventsViewModel = remember(key1 = pocketBaseService) {
+        EventsViewModel(pocketBaseService)
+    }
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
 
     if (isAuthenticated) {

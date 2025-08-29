@@ -125,7 +125,7 @@ class PocketBaseJsService(baseUrl: String) : PocketBaseService {
     }
 
     override fun startListeningToEvents(collectionNames: List<String>) {
-        stopListeningToEvents() // Ensure any previous subscription is stopped
+        stopListeningToEvents(listOf("events")) // Ensure any previous subscription is stopped
 
         // The PocketBase JS SDK's subscribe gives one callback for create, update, delete.
         // We will map these to our SubscriptionState.
@@ -188,7 +188,7 @@ class PocketBaseJsService(baseUrl: String) : PocketBaseService {
         }
     }
 
-    override fun stopListeningToEvents() {
+    override fun stopListeningToEvents(collectionNames: List<String>) {
         try {
             unsubscribeRealtimeGlobal?.invoke()
             unsubscribeRealtimeGlobal = null
@@ -200,7 +200,7 @@ class PocketBaseJsService(baseUrl: String) : PocketBaseService {
     }
 
     override fun cleanup() {
-        stopListeningToEvents()
+        stopListeningToEvents(listOf("events"))
         supervisorJob.cancel()
         pb.realtime().disconnect()
         pb.authStore.clear()

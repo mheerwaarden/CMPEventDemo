@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.mheerwaarden.eventdemo.data.model.Event
 import com.github.mheerwaarden.eventdemo.data.model.IEvent
-import com.github.mheerwaarden.eventdemo.data.pocketbaseservice.PocketBaseKtorService
 import com.github.mheerwaarden.eventdemo.data.pocketbaseservice.PocketBaseResult
+import com.github.mheerwaarden.eventdemo.data.pocketbaseservice.PocketBaseService
 import com.github.mheerwaarden.eventdemo.data.pocketbaseservice.SubscriptionAction
 import com.github.mheerwaarden.eventdemo.data.pocketbaseservice.SubscriptionState
 import com.github.mheerwaarden.eventdemo.util.nowMillis
@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
 
-class EventsViewModel(private val pocketBase: PocketBaseKtorService) : ViewModel() {
+class EventsViewModel(private val pocketBase: PocketBaseService) : ViewModel() {
     init {
         println("EventsViewModel: init")
     }
@@ -57,7 +57,8 @@ class EventsViewModel(private val pocketBase: PocketBaseKtorService) : ViewModel
     private fun startListeningToEvents() {
         eventListenerJob?.cancel() // Cancel any previous listener
         println("EventsViewModel: Starting to listen to events from PocketBase...")
-        pocketBase.startListeningToEvents(listOf("events")) // Start the SSE connection and subscription process
+        // Start the SSE connection and subscription process
+        pocketBase.startListeningToEvents(listOf("events"))
 
         eventListenerJob = viewModelScope.launch {
             pocketBase.eventSubscriptionFlow
@@ -154,7 +155,8 @@ class EventsViewModel(private val pocketBase: PocketBaseKtorService) : ViewModel
         println("EventsViewModel: Stopping event listener due to logout/viewmodel clear.")
         eventListenerJob?.cancel()
         eventListenerJob = null
-        pocketBase.stopListeningToEvents() // Tell the client to tear down its SSE connection
+        // Tell the client to tear down its SSE connection
+        pocketBase.stopListeningToEvents(listOf("events"))
     }
 
     // --- Other ViewModel methods (create, update, delete through PocketBaseService) ---
@@ -175,7 +177,7 @@ class EventsViewModel(private val pocketBase: PocketBaseKtorService) : ViewModel
             _uiState.value = _uiState.value.copy(isLoading = true) // Indicate loading
             when (val result = pocketBase.createEvent(newEvent)) {
                 is PocketBaseResult.Success -> {
-                    println("EventsViewModel: Event created successfully via API: ${result.data.id}")
+                    println("EventsViewModel: Event created successfully via API, id=: ${result.data.id}")
                     // Realtime should update the list, but you can add it here optimistically
                     // or rely on SSE. If relying on SSE, ensure no duplicate additions.
                     // The handleSubscriptionStateChange should handle it.
@@ -192,7 +194,7 @@ class EventsViewModel(private val pocketBase: PocketBaseKtorService) : ViewModel
         }
     }
 
-    fun updateEvent(event: Event) {
+    fun updateEvent(event: IEvent) {
         viewModelScope.launch {
             when (val result = pocketBase.updateEvent(event)) {
                 is PocketBaseResult.Success -> {
@@ -237,5 +239,5 @@ data class EventsUiState(
     val errorMessage: String? = null,
     val showLoginRequired: Boolean = false,
     val isLoading: Boolean = false,
-    val events: List<Event> = emptyList()
+    val events: List<IEvent> = emptyList()
 )

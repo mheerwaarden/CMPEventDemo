@@ -33,33 +33,13 @@ class SettingsViewModel(
 ) : LoadingViewModel(userPreferencesRepository), KoinComponent {
 
     var settingsUiState: StateFlow<SettingsUiState> =
-        userPreferencesRepository.preferences.map { preferences ->
-            SettingsUiState(
-                isReadOnly = preferences.isReadOnly,
-                datePickerUsesKeyboard = preferences.datePickerUsesKeyboard,
-                timePickerUsesKeyboard = preferences.timePickerUsesKeyboard,
-                isCalendarExpanded = preferences.isCalendarExpanded,
-                useCraneCalendar = preferences.useCraneCalendar,
-                localeTag = preferences.localeTag,
-                usePocketBase = preferences.usePocketBase,
-                pocketBaseUrl = preferences.pocketBaseUrl,
-                pocketBaseClientType = preferences.pocketBaseClientType,
+        userPreferencesRepository.preferences
+            .map { preferences -> SettingsUiState.fromPreferences(preferences) }
+            .stateIn(
+                scope = viewModelScope,
+                started = WhileSubscribed(TIMEOUT_MILLIS),
+                initialValue = SettingsUiState.fromPreferences(UserPreferences.DEFAULTS)
             )
-        }.stateIn(
-            scope = viewModelScope,
-            started = WhileSubscribed(TIMEOUT_MILLIS),
-            initialValue = SettingsUiState(
-                isReadOnly = UserPreferences.DEFAULTS.isReadOnly,
-                datePickerUsesKeyboard = UserPreferences.DEFAULTS.datePickerUsesKeyboard,
-                timePickerUsesKeyboard = UserPreferences.DEFAULTS.timePickerUsesKeyboard,
-                isCalendarExpanded = UserPreferences.DEFAULTS.isCalendarExpanded,
-                useCraneCalendar = UserPreferences.DEFAULTS.useCraneCalendar,
-                localeTag = UserPreferences.DEFAULTS.localeTag,
-                usePocketBase = UserPreferences.DEFAULTS.usePocketBase,
-                pocketBaseUrl = UserPreferences.DEFAULTS.pocketBaseUrl,
-                pocketBaseClientType = UserPreferences.DEFAULTS.pocketBaseClientType,
-            )
-        )
 
     // Prevent interference with an already running preference update
     private var updatePreferenceJob: Job? = null
@@ -141,4 +121,18 @@ data class SettingsUiState(
     val usePocketBase: Boolean = false,
     val pocketBaseUrl: String = "",
     val pocketBaseClientType: PocketBaseClientType = PocketBaseClientType.KTOR_ONLY,
-)
+) {
+    companion object {
+        fun fromPreferences(preferences: UserPreferences) = SettingsUiState(
+            isReadOnly = preferences.isReadOnly,
+            datePickerUsesKeyboard = preferences.datePickerUsesKeyboard,
+            timePickerUsesKeyboard = preferences.timePickerUsesKeyboard,
+            isCalendarExpanded = preferences.isCalendarExpanded,
+            useCraneCalendar = preferences.useCraneCalendar,
+            localeTag = preferences.localeTag,
+            usePocketBase = preferences.usePocketBase,
+            pocketBaseUrl = preferences.pocketBaseUrl,
+            pocketBaseClientType = preferences.pocketBaseClientType,
+        )
+    }
+}
