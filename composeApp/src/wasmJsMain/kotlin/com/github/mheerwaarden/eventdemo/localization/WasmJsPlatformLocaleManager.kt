@@ -52,7 +52,7 @@ class WasmJsPlatformLocaleManager : PlatformLocaleManager {
 // Functions defined by js() must be top-level
 @Suppress("UNUSED_PARAMETER")
 // Set window.__customLocale that effectively controls the navigator.languages property
-private fun setPlatformLocaleJs(localeTag: String?):Unit = js(
+private fun setPlatformLocaleJs(localeTag: String?): Unit = js(
     """
     { 
         try {

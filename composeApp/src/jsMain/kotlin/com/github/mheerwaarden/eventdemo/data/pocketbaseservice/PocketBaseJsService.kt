@@ -14,6 +14,7 @@ import com.github.mheerwaarden.eventdemo.util.toEpochMilli
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.await
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
@@ -31,13 +32,20 @@ class PocketBaseJsService(baseUrl: String) : PocketBaseService {
 
     private var unsubscribeRealtimeGlobal: (() -> Unit)? = null
 
+    private val emptyOptions = jsObject { }
+
     override suspend fun login(email: String, password: String): PocketBaseResult<AuthResult> {
         return try {
-            val response = pb.collection("users").authWithPassword(email, password)
+
+            val response =
+                pb.collection("users").authWithPassword(email, password, emptyOptions).await()
             val userRecord = response.record
+            console.log("PocketBaseJSService: Login successful. UserToken: ${response.token}")
+
             val user = userRecord.toUser()
             PocketBaseResult.Success(AuthResult(response.token, user))
         } catch (e: dynamic) {
+            console.error("PocketBaseJSService: Login failed", e)
             PocketBaseResult.Error(getExceptionMessage("Login failed", e))
         }
     }
@@ -53,9 +61,11 @@ class PocketBaseJsService(baseUrl: String) : PocketBaseService {
                 this.name = name
             }
 
-            pb.collection("users").create(userData)
+            println("PocketBaseJSService: Creating user with email: $email")
+            pb.collection("users").create(userData, emptyOptions).await()
 
             // Auto-login after registration
+            println("PocketBaseJSService: Auto-login user with email: $email")
             val loginResult = login(email, password)
             if (loginResult is PocketBaseResult.Success) {
                 loginResult
@@ -63,6 +73,7 @@ class PocketBaseJsService(baseUrl: String) : PocketBaseService {
                 PocketBaseResult.Error("Registration succeeded but auto-login failed. Reason: ${(loginResult as PocketBaseResult.Error).message}")
             }
         } catch (e: dynamic) {
+            console.error("PocketBaseJSService: Registration failed", e)
             PocketBaseResult.Error(getExceptionMessage("Registration failed", e))
         }
     }
@@ -72,26 +83,37 @@ class PocketBaseJsService(baseUrl: String) : PocketBaseService {
             pb.authStore.clear()
             PocketBaseResult.Success(Unit)
         } catch (e: dynamic) {
+            console.error("PocketBaseJSService: Logout failed", e)
             PocketBaseResult.Error(getExceptionMessage("Logout failed", e))
         }
     }
 
     override suspend fun getEvents(): PocketBaseResult<List<IEvent>> {
         return try {
-            val result = pb.collection("events").getList(1, 50)
-            val events = result.items.map { it.toEvent() }
+            console.log("PocketBaseJSService: Getting events")
+            val result = pb.collection("events").getList(1, 50).await()
+            val events = result.items.map { item -> item.unsafeCast<EventRecordJS>().toEvent() }
             PocketBaseResult.Success(events)
         } catch (e: dynamic) {
+            console.error("PocketBaseJSService: Failed to get events", e)
             PocketBaseResult.Error(getExceptionMessage("Failed to get events", e))
         }
     }
 
     override suspend fun createEvent(event: IEvent): PocketBaseResult<IEvent> {
+        val userResult = getCurrentUser()
+        if (userResult is PocketBaseResult.Error) return userResult
+        val user = (userResult as PocketBaseResult.Success).data
+            ?: return PocketBaseResult.Error("No current user")
+
         return try {
-            val eventDataJs = event.toJsDynamicForPocketBase()
-            val createdRecord = pb.collection("events").create(eventDataJs)
-            PocketBaseResult.Success(createdRecord.toEvent())
+            val eventWithOwner = event.toEvent().copy(owner = user.id)
+            val eventDataJs = eventWithOwner.toEventRecordJS()
+            console.log("PocketBaseJSService: Creating event")
+            val createdRecord = pb.collection("events").create(eventDataJs).await()
+            PocketBaseResult.Success(createdRecord.unsafeCast<EventRecordJS>().toEvent())
         } catch (e: dynamic) {
+            console.error("PocketBaseJSService: Failed to create event", e)
             PocketBaseResult.Error(getExceptionMessage("Failed to create event", e))
         }
     }
@@ -99,19 +121,23 @@ class PocketBaseJsService(baseUrl: String) : PocketBaseService {
     override suspend fun updateEvent(event: IEvent): PocketBaseResult<IEvent> {
         val eventId = event.id
         return try {
-            val eventDataJs = event.toJsDynamicForPocketBase()
-            val updatedRecord = pb.collection("events").update(eventId, eventDataJs)
-            PocketBaseResult.Success(updatedRecord.toEvent())
+            console.log("PocketBaseJSService: Updating event $eventId")
+            val eventDataJs = event.toEventRecordJS()
+            val updatedRecord = pb.collection("events").update(eventId, eventDataJs).await()
+            PocketBaseResult.Success(updatedRecord.unsafeCast<EventRecordJS>().toEvent())
         } catch (e: dynamic) {
+            console.error("PocketBaseJSService: Failed to update event $eventId", e)
             PocketBaseResult.Error(getExceptionMessage("Failed to update event", e))
         }
     }
 
     override suspend fun deleteEvent(eventId: String): PocketBaseResult<Boolean> {
         return try {
-            val success = pb.collection("events").delete(eventId)
+            console.log("PocketBaseJSService: Updating event $eventId")
+            val success = pb.collection("events").delete(eventId).await()
             PocketBaseResult.Success(success)
         } catch (e: dynamic) {
+            console.error("PocketBaseJSService: Failed to delete event $eventId", e)
             PocketBaseResult.Error(getExceptionMessage("Failed to delete event", e))
         }
     }
@@ -134,43 +160,12 @@ class PocketBaseJsService(baseUrl: String) : PocketBaseService {
         val targetCollection = collectionNames.firstOrNull() ?: "events"
 
         try {
-            unsubscribeRealtimeGlobal = pb.realtime().subscribe(targetCollection) { data ->
-                scope.launch {
-                    val actionType = data.action as? String // e.g., "create", "update", "delete"
-
-                    @Suppress("UNCHECKED_CAST_TO_EXTERNAL_INTERFACE") val record =
-                        data.record as? RecordJS
-
-                    if (actionType != null && record != null) {
-                        val commonEvent = record.toEvent()
-                        val subscriptionAction = when (actionType) {
-                            "create" -> SubscriptionAction.CREATE
-                            "update" -> SubscriptionAction.UPDATE
-                            "delete" -> SubscriptionAction.DELETE
-                            else -> null
-                        }
-
-                        if (subscriptionAction != null) {
-                            _eventSubscriptionFlow.emit(
-                                SubscriptionState(
-                                    action = subscriptionAction,
-                                    dataObject = commonEvent,
-                                    rawRecord = record // Keep the raw JS record
-                                )
-                            )
-                        }
-                    } else {
-                        _eventSubscriptionFlow.emit(
-                            SubscriptionState(
-                                action = SubscriptionAction.ERROR("Received malformed real-time event from JS SDK."),
-                                dataObject = null,
-                                rawRecord = data // Keep the raw JS record
-                            )
-                        )
-                        console.error("PocketBaseJsService: Malformed realtime event data", data)
-                    }
-                }
-            }
+            console.log("PocketBaseJSService: Subscribing to realtime events for $targetCollection")
+            unsubscribeRealtimeGlobal = pb.realtime.subscribe(
+                topic = targetCollection,
+                callback = ::handleRealTypeUpdate,
+                options = emptyOptions
+            )
         } catch (e: dynamic) {
             unsubscribeRealtimeGlobal = null
             console.error(
@@ -180,10 +175,70 @@ class PocketBaseJsService(baseUrl: String) : PocketBaseService {
             scope.launch {
                 _eventSubscriptionFlow.emit(
                     SubscriptionState(
-                        action = SubscriptionAction.ERROR(getExceptionMessage("Failed to start listening to events", e)),
+                        action = SubscriptionAction.ERROR(
+                            getExceptionMessage(
+                                "Failed to start listening to events",
+                                e
+                            )
+                        ),
                         dataObject = null
                     )
                 )
+            }
+        }
+    }
+
+    private fun handleRealTypeUpdate(eventData: RealtimeDataJS) {
+        scope.launch {
+            try {
+                val actionType = eventData.action as? String // e.g., "create", "update", "delete"
+                val realTimeRecord = eventData.record
+
+                console.log("PocketBaseJSService: Realtime update: $actionType - $realTimeRecord")
+
+                // Validate the record has required system fields
+                if (realTimeRecord.id.isBlank()) {
+                    console.log("PocketBaseJSService: Received realtime event with invalid record (missing ID)")
+                    return@launch
+                }
+
+                if (actionType != null) {
+                    val subscriptionAction = when (actionType) {
+                        "create" -> SubscriptionAction.CREATE
+                        "update" -> SubscriptionAction.UPDATE
+                        "delete" -> SubscriptionAction.DELETE
+                        else -> null
+                    }
+                    if (subscriptionAction != null) {
+                        val subscriptionState: SubscriptionState<IEvent> =
+                            when (realTimeRecord.collectionName) {
+                                "events" -> {
+                                    val commonEvent: IEvent =
+                                        realTimeRecord.unsafeCast<EventRecordJS>().toEvent()
+                                    SubscriptionState(
+                                        action = subscriptionAction,
+                                        dataObject = commonEvent,
+                                        rawRecord = realTimeRecord // Keep the raw JS record
+                                    )
+                                }
+                                // Other collections can be handled here
+                                else -> {
+                                    console.log("PocketBaseJSService: Received realtime event for unknown collection: ${realTimeRecord.collectionName}")
+                                    return@launch
+                                }
+                            }
+                        _eventSubscriptionFlow.emit(subscriptionState)
+                    }
+                }
+            } catch (e: dynamic) {
+                _eventSubscriptionFlow.emit(
+                    SubscriptionState(
+                        action = SubscriptionAction.ERROR("Received malformed real-time event from JS SDK."),
+                        dataObject = null,
+                        rawRecord = eventData // Keep the raw JS record
+                    )
+                )
+                console.error("PocketBaseJsService: Malformed realtime event data", eventData, e)
             }
         }
     }
@@ -202,7 +257,7 @@ class PocketBaseJsService(baseUrl: String) : PocketBaseService {
     override fun cleanup() {
         stopListeningToEvents(listOf("events"))
         supervisorJob.cancel()
-        pb.realtime().disconnect()
+        pb.realtime.disconnect()
         pb.authStore.clear()
         console.log("PocketBaseJsService: Cleaned up.")
     }
@@ -224,23 +279,19 @@ class PocketBaseJsService(baseUrl: String) : PocketBaseService {
 
     /* Helper/Mapping Functions */
 
-    private fun RecordJS.toEvent(): Event {
-        val dynamicRecord = this.asDynamic()
+    private fun EventRecordJS.toEvent(): Event {
+        val eventRecord = this
 
-        val startMillis =
-            dynamicRecord.startDateTime as? Number // Expect epoch millis (Number in JS)
-        val endMillis = dynamicRecord.endDateTime as? Number   // Expect epoch millis (Number in JS)
-
-        val parsedStartDateTime: LocalDateTime = if (startMillis != null) {
-            ofEpochMilli(startMillis.toLong()) // Use your utility function
-        } else {
+        val parsedStartDateTime: LocalDateTime = eventRecord.startMillis?.let {
+            ofEpochMilli(it.toLong())
+        } ?: run {
             console.warn("PocketBaseJsService: startDateTime is missing or not a number, using current time.")
             now()
         }
 
-        val parsedEndDateTime = if (endMillis != null) {
-            ofEpochMilli(endMillis.toLong()) // Use your utility function
-        } else {
+        val parsedEndDateTime = eventRecord.endMillis?.let {
+            ofEpochMilli(it.toLong())
+        } ?: run {
             console.warn("PocketBaseJsService: endDateTime is missing or not a number, using startDateTime + 1 hour.")
             parsedStartDateTime.plus(1, DateTimeUnit.HOUR)
         }
@@ -251,55 +302,53 @@ class PocketBaseJsService(baseUrl: String) : PocketBaseService {
             collectionName = this.collectionName,
             created = this.created,
             updated = this.updated,
-            title = dynamicRecord.title as? String ?: "",
-            description = dynamicRecord.description as? String ?: "",
+            title = eventRecord.title ?: "",
+            description = eventRecord.description ?: "",
             startDateTime = parsedStartDateTime, // Mapped LocalDateTime
             endDateTime = parsedEndDateTime,     // Mapped LocalDateTime
-            location = dynamicRecord.location as? String,
-            contact = dynamicRecord.contact as? String,
-            notes = dynamicRecord.notes as? String,
+            location = eventRecord.location,
+            contact = eventRecord.contact,
+            notes = eventRecord.notes,
             eventType = EventType.valueOf(
-                dynamicRecord.eventType as? String ?: EventType.ACTIVITY.name
+                eventRecord.eventType ?: EventType.ACTIVITY.name
             ),
             eventCategory = EventCategory.valueOf(
-                dynamicRecord.eventCategory as? String ?: EventCategory.PRIVATE.name
+                eventRecord.eventCategory ?: EventCategory.PRIVATE.name
             ),
-            isOnline = dynamicRecord.isOnline as? Boolean ?: false,
+            isOnline = eventRecord.isOnline ?: false,
             htmlColor = HtmlColors.valueOf(
-                dynamicRecord.htmlColor as? String ?: HtmlColors.OLIVE_DRAB.name
+                eventRecord.htmlColor ?: HtmlColors.OLIVE_DRAB.name
             ),
-            amount = dynamicRecord.amount as? Double,
-            price = dynamicRecord.price as? Double,
-            owner = dynamicRecord.owner as? String ?: "",
-            viewers = (dynamicRecord.viewers as? Array<String>)?.toList() ?: emptyList(),
-            isPrivate = dynamicRecord.isPrivate as? Boolean ?: false
+            amount = eventRecord.amount,
+            price = eventRecord.price,
+            owner = eventRecord.owner ?: "",
+            viewers = eventRecord.viewers?.toList() ?: emptyList(),
+            isPrivate = eventRecord.isPrivate ?: false
         )
     }
 
-    private fun RecordJS.toUser(): User {
-        val dynamicRecord = this.asDynamic()
-        val avatarFilename = dynamicRecord.avatar as? String
-
+    private fun UserRecordJS.toUser(): User {
+        val avatarFilename = this.avatar
         return User(
             id = this.id,
-            email = dynamicRecord.email as? String ?: "",
-            name = dynamicRecord.name as? String ?: "",
-            avatar = if (!avatarFilename.isNullOrBlank()) {
-                pb.getFileUrl(this, avatarFilename)
-            } else {
+            email = this.email,
+            name = this.name ?: "",
+            avatar = if (avatarFilename.isNullOrBlank()) {
                 null
+            } else {
+                pb.getFileUrl(this, avatarFilename)
             }
         )
     }
 
-    private fun IEvent.toJsDynamicForPocketBase(): dynamic {
+    private fun IEvent.toEventRecordJS(): dynamic {
         val commonEvent = this.toEvent() // Get the concrete Event data class
         return jsObject {
             this.title = commonEvent.title
             this.description = commonEvent.description
             // Send as epoch milliseconds (Number in JS)
-            this.startDateTime = commonEvent.startDateTime.toEpochMilli()
-            this.endDateTime = commonEvent.endDateTime.toEpochMilli()
+            this.startMillis = commonEvent.startDateTime.toEpochMilli().toDouble()
+            this.endMillis = commonEvent.endDateTime.toEpochMilli().toDouble()
             commonEvent.location?.let { this.location = it }
             commonEvent.contact?.let { this.contact = it }
             commonEvent.notes?.let { this.notes = it }
@@ -320,7 +369,7 @@ class PocketBaseJsService(baseUrl: String) : PocketBaseService {
 // Helper to create dynamic JS objects more easily from Kotlin
 fun jsObject(builder: dynamic.() -> Unit): dynamic {
     // Create an empty JS object
-    val obj = js("{}")
+    val obj = js("new Object()") //js("{}")
     builder(obj)
     return obj
 }

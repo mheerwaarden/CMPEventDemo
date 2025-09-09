@@ -62,10 +62,10 @@ class PocketBaseWasmService(baseUrl: String) : PocketBaseService {
             if (loginResult is PocketBaseResult.Success) {
                 loginResult
             } else {
-                PocketBaseResult.Error("PocketBaseWasmService: Registration succeeded but auto-login failed. Reason: ${(loginResult as PocketBaseResult.Error).message}")
+                PocketBaseResult.Error("Registration succeeded but auto-login failed. Reason: ${(loginResult as PocketBaseResult.Error).message}")
             }
         } catch (e: Throwable) {
-            PocketBaseResult.Error(getExceptionMessage("PocketBaseWasmService: Registration failed", e))
+            PocketBaseResult.Error(getExceptionMessage("Registration failed", e))
         }
     }
 
@@ -74,7 +74,7 @@ class PocketBaseWasmService(baseUrl: String) : PocketBaseService {
             pb.authStore.clear()
             PocketBaseResult.Success(Unit)
         } catch (e: Throwable) {
-            PocketBaseResult.Error(getExceptionMessage("PocketBaseWasmService: Logout failed", e))
+            PocketBaseResult.Error(getExceptionMessage("Logout failed", e))
         }
     }
 
@@ -92,8 +92,14 @@ class PocketBaseWasmService(baseUrl: String) : PocketBaseService {
     }
 
     override suspend fun createEvent(event: IEvent): PocketBaseResult<IEvent> {
+        val userResult = getCurrentUser()
+        if (userResult is PocketBaseResult.Error) return userResult
+        val user = (userResult as PocketBaseResult.Success).data
+            ?: return PocketBaseResult.Error("No current user")
+
         return try {
-            val eventData = event.toWasmObjectForPocketBase()
+            val eventWithOwner = event.toEvent().copy(owner = user.id)
+            val eventData = eventWithOwner.toWasmObjectForPocketBase()
             val createdRecord: RecordWasm = pb.collection("events").create(eventData).await()
             PocketBaseResult.Success(createdRecord.toEvent())
         } catch (e: Throwable) {
@@ -170,7 +176,7 @@ class PocketBaseWasmService(baseUrl: String) : PocketBaseService {
                             SubscriptionState(
                                 action = SubscriptionAction.ERROR(
                                     getExceptionMessage(
-                                        "PocketBaseWasmService: Error processing realtime event",
+                                        "Error processing realtime event",
                                         e
                                     )
                                 ),
@@ -193,7 +199,7 @@ class PocketBaseWasmService(baseUrl: String) : PocketBaseService {
                     SubscriptionState(
                         action = SubscriptionAction.ERROR(
                             getExceptionMessage(
-                                "PocketBaseWasmService: Failed to start listening to events",
+                                "Failed to start listening to events",
                                 e
                             )
                         ),
@@ -232,7 +238,7 @@ class PocketBaseWasmService(baseUrl: String) : PocketBaseService {
                 PocketBaseResult.Success(null)
             }
         } catch (e: Throwable) {
-            PocketBaseResult.Error(getExceptionMessage("PocketBaseWasmService: Failed to get current user", e))
+            PocketBaseResult.Error(getExceptionMessage("Failed to get current user", e))
         }
     }
 
@@ -389,8 +395,8 @@ private fun createEventObject(
         const obj = {
             title: title,
             description: description,
-            startMillis: startMillis, // Use the parameter name
-            endMillis: endMillis,     // Use the parameter name
+            startMillis: startMillis,
+            endMillis: endMillis,
             eventType: eventType,
             eventCategory: eventCategory,
             isOnline: isOnline,
@@ -398,7 +404,7 @@ private fun createEventObject(
             isPrivate: isPrivate
         };
 
-        if (viewers !== null) obj.viewers = viewers; // Assign if not null
+        if (viewers !== null) obj.viewers = viewers;
         if (location !== null && location !== undefined) obj.location = location;
         if (contact !== null && contact !== undefined) obj.contact = contact;
         if (notes !== null && notes !== undefined) obj.notes = notes;
@@ -410,17 +416,3 @@ private fun createEventObject(
     })() // End and execute IIFE
     """
 )
-
-//@Suppress("UNUSED_PARAMETER")
-//private fun toJsArrayJS(list: List<String>?): JsArray<JsString> = js(
-//    """
-//        if (list === null) {
-//            return null;
-//        }
-//        const jsArray = [];
-//        for (let i = 0; i < list.length; i++) {
-//            jsArray.push(list[i]);
-//        }
-//        return jsArray;
-//    """
-//)

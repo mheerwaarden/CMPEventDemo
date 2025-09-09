@@ -16,10 +16,15 @@ import kotlinx.browser.window
  */
 class JsPlatformLocaleManager : PlatformLocaleManager {
 
+    private var mustLogCurrentLocale = true
+
     // Set window.__customLocale that effectively controls the navigator.languages property
     override fun setPlatformLocale(localeTag: String?) {
-        println("Web: Setting platform locale to '$localeTag'")
-        setPlatformLocaleJs(localeTag)
+        val currentLocale = getPlatformLocaleTag()
+        if (currentLocale != localeTag) {println("Web: Setting platform locale to '$localeTag'")
+            setPlatformLocaleJs(localeTag)
+            mustLogCurrentLocale = true
+        }
     }
 
     // Get the navigator.languages property that will return window.__customLocale because of the
@@ -32,7 +37,10 @@ class JsPlatformLocaleManager : PlatformLocaleManager {
             // Calling toString() on JsString converts it to Kotlin String
             // Standardize for browsers that might return an underscore as separator
             val language = languages[0].replace('_', '-')
-            println("Web: Current platform locale: $language")
+            if (mustLogCurrentLocale) {
+                println("Web: Current platform locale: $language")
+                mustLogCurrentLocale = false
+            }
             return language
         }
         println("Web: No current platform language, returning null")

@@ -73,7 +73,7 @@ external interface EventRecordWasm : RecordWasm {
     val amount: Double?
     val price: Double?
     val owner: String?
-    val viewers: JsArray<JsString>? // Will be cast to JsArray<JsString>
+    val viewers: JsArray<JsString>?
     val isPrivate: Boolean?
 }
 
