@@ -5,13 +5,13 @@ import kotlin.js.Promise
 @JsModule("pocketbase")
 external class PocketBaseWasm(baseUrl: String) {
     val authStore: AuthStoreWasm
+    val realtime: RealtimeServiceWasm
     fun collection(name: String): CollectionWasm
-    fun realtime(): RealtimeServiceWasm
     fun getFileUrl(record: JsAny, filename: String, queryParams: JsAny? = definedExternally): String
 }
 
 external class CollectionWasm {
-    fun authWithPassword(email: String, password: String): Promise<AuthResponseWasm>
+    fun authWithPassword(email: String, password: String, options: JsAny? = definedExternally): Promise<AuthResponseWasm>
     fun getList(page: Int = definedExternally, perPage: Int = definedExternally, queryParams: JsAny? = definedExternally): Promise<RecordListWasm>
     fun create(data: JsAny, queryParams: JsAny? = definedExternally): Promise<RecordWasm>
     fun update(id: String, data: JsAny, queryParams: JsAny? = definedExternally): Promise<RecordWasm>
@@ -50,8 +50,7 @@ external interface AuthResponseWasm : JsAny {
 
 // Simplified RealtimeService for Wasm SDK
 external interface RealtimeServiceWasm : JsAny {
-    fun subscribe(collection: String, callback: (RealtimeDataWasm) -> Unit): () -> Unit // Returns an unsubscribe function
-    fun subscribe(collection: String, recordId: String, callback: (RealtimeDataWasm) -> Unit): () -> Unit
+    fun subscribe(topic: String, callback: (RealtimeDataWasm) -> Unit, options: JsAny? = definedExternally): () -> Unit // Returns an unsubscribe function
     fun unsubscribe(topic: String = definedExternally) // Unsubscribe from specific or all
     fun connect()
     fun disconnect()

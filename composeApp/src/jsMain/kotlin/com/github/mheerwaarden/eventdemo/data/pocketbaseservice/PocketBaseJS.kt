@@ -50,7 +50,7 @@ external interface AuthResponseJS {
 
 // Simplified RealtimeService for JS SDK
 external interface RealtimeServiceJS {
-    fun subscribe(topic: String, callback: (RealtimeDataJS) -> Unit, options: dynamic) : () -> Unit // Returns an unsubscribe function
+    fun subscribe(topic: String, callback: (RealtimeDataJS) -> Unit, options: dynamic = definedExternally) : () -> Unit // Returns an unsubscribe function
     fun unsubscribe(topic: String = definedExternally) // Unsubscribe from specific or all
     fun connect()
     fun disconnect()

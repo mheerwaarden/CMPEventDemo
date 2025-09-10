@@ -41,10 +41,11 @@ class PocketBaseWasmService(baseUrl: String) : PocketBaseService {
                 pb.collection("users").authWithPassword(email, password).await()
             val userRecord = response.record
             val user = userRecord.toUser()
-            println("PocketBaseWasmService: Login successful. UserToken: ${response.token}")
+            logMessage("PocketBaseWasmService: Login successful. UserToken: ${response.token}")
 
             PocketBaseResult.Success(AuthResult(response.token, user))
         } catch (e: Throwable) {
+            logError("PocketBaseWasmService: Login failed", e)
             PocketBaseResult.Error(getExceptionMessage("Login failed", e))
         }
     }
@@ -55,6 +56,7 @@ class PocketBaseWasmService(baseUrl: String) : PocketBaseService {
         return try {
             val userData = createUserData(email, password, passwordConfirm, name)
 
+            logMessage("PocketBaseWasmService: Creating user with email: $email")
             val newUser: JsAny = pb.collection("users").create(userData).await()
 
             // Auto-login after registration
@@ -65,6 +67,7 @@ class PocketBaseWasmService(baseUrl: String) : PocketBaseService {
                 PocketBaseResult.Error("Registration succeeded but auto-login failed. Reason: ${(loginResult as PocketBaseResult.Error).message}")
             }
         } catch (e: Throwable) {
+            logError("PocketBaseWasmService: Registration failed", e)
             PocketBaseResult.Error(getExceptionMessage("Registration failed", e))
         }
     }
@@ -74,12 +77,14 @@ class PocketBaseWasmService(baseUrl: String) : PocketBaseService {
             pb.authStore.clear()
             PocketBaseResult.Success(Unit)
         } catch (e: Throwable) {
+            logError("PocketBaseWasmService: Logout failed", e)
             PocketBaseResult.Error(getExceptionMessage("Logout failed", e))
         }
     }
 
     override suspend fun getEvents(): PocketBaseResult<List<IEvent>> {
         return try {
+            logMessage("PocketBaseWasmService: Getting events")
             val result: RecordListWasm = pb.collection("events").getList(1, 50).await()
             val itemsArray = result.items
             val events = (0 until itemsArray.length).map { index ->
@@ -87,6 +92,7 @@ class PocketBaseWasmService(baseUrl: String) : PocketBaseService {
             }
             PocketBaseResult.Success(events)
         } catch (e: Throwable) {
+            logError("PocketBaseWasmService: Failed to get events", e)
             PocketBaseResult.Error(getExceptionMessage("PocketBaseWasmService: Failed to get events", e))
         }
     }
@@ -100,9 +106,12 @@ class PocketBaseWasmService(baseUrl: String) : PocketBaseService {
         return try {
             val eventWithOwner = event.toEvent().copy(owner = user.id)
             val eventData = eventWithOwner.toWasmObjectForPocketBase()
+            logMessage("PocketBaseWasmService: Creating event")
             val createdRecord: RecordWasm = pb.collection("events").create(eventData).await()
+            logMessage("PocketBaseWasmService: Event created successfully. ID: ${createdRecord.id}")
             PocketBaseResult.Success(createdRecord.toEvent())
         } catch (e: Throwable) {
+            logError("PocketBaseWasmService: Failed to create event", e)
             PocketBaseResult.Error(getExceptionMessage("PocketBaseWasmService: Failed to create event", e))
         }
     }
@@ -110,20 +119,24 @@ class PocketBaseWasmService(baseUrl: String) : PocketBaseService {
     override suspend fun updateEvent(event: IEvent): PocketBaseResult<IEvent> {
         val eventId = event.id
         return try {
+            logMessage("PocketBaseWasmService: Updating event $eventId")
             val eventData = event.toWasmObjectForPocketBase()
             val updatedRecord: RecordWasm =
                 pb.collection("events").update(eventId, eventData).await()
             PocketBaseResult.Success(updatedRecord.toEvent())
         } catch (e: Throwable) {
+            logError("PocketBaseWasmService: Failed to update event $eventId", e)
             PocketBaseResult.Error(getExceptionMessage("PocketBaseWasmService: Failed to update event", e))
         }
     }
 
     override suspend fun deleteEvent(eventId: String): PocketBaseResult<Boolean> {
         return try {
+            logMessage("PocketBaseWasmService: Updating event $eventId")
             val success: JsBoolean = pb.collection("events").delete(eventId).await()
             PocketBaseResult.Success(success.toBoolean())
         } catch (e: Throwable) {
+            logError("PocketBaseWasmService: Failed to delete event $eventId", e)
             PocketBaseResult.Error(getExceptionMessage("PocketBaseWasmService: Failed to delete event", e))
         }
     }
@@ -142,52 +155,10 @@ class PocketBaseWasmService(baseUrl: String) : PocketBaseService {
         val targetCollection = collectionNames.firstOrNull() ?: "events"
 
         try {
-            unsubscribeRealtimeGlobal = pb.realtime().subscribe(targetCollection) { eventData ->
-                scope.launch {
-                    try {
-                        val actionType = eventData.action
-                        val eventRecord = eventData.record
-
-                        // Validate the record has required system fields
-                        if (eventRecord.id.isBlank()) {
-                            logWarning("PocketBaseWasmService: Received realtime event with invalid record (missing ID)")
-                            return@launch
-                        }
-
-                        val commonEvent = eventRecord.toEvent()
-                        val subscriptionAction = when (actionType) {
-                            "create" -> SubscriptionAction.CREATE
-                            "update" -> SubscriptionAction.UPDATE
-                            "delete" -> SubscriptionAction.DELETE
-                            else -> null
-                        }
-
-                        if (subscriptionAction != null) {
-                            _eventSubscriptionFlow.emit(
-                                SubscriptionState(
-                                    action = subscriptionAction,
-                                    dataObject = commonEvent,
-                                    rawRecord = eventRecord
-                                )
-                            )
-                        }
-                    } catch (e: Throwable) {
-                        _eventSubscriptionFlow.emit(
-                            SubscriptionState(
-                                action = SubscriptionAction.ERROR(
-                                    getExceptionMessage(
-                                        "Error processing realtime event",
-                                        e
-                                    )
-                                ),
-                                dataObject = null,
-                                rawRecord = eventData
-                            )
-                        )
-                        logError("PocketBaseWasmService: Error processing realtime event", e)
-                    }
-                }
-            }
+            unsubscribeRealtimeGlobal = pb.realtime.subscribe(
+                topic = targetCollection,
+                callback = ::handleRealTimeUpdate
+            )
         } catch (e: Throwable) {
             unsubscribeRealtimeGlobal = null
             logError(
@@ -210,6 +181,63 @@ class PocketBaseWasmService(baseUrl: String) : PocketBaseService {
         }
     }
 
+    private fun handleRealTimeUpdate(eventData: RealtimeDataWasm) {
+        scope.launch {
+            try {
+                val actionType = eventData.action
+                val eventRecord = eventData.record
+
+                logMessage("PocketBaseWasmService: Realtime update: $actionType - $eventRecord")
+
+                // Validate the record has required system fields
+                if (eventRecord.id.isBlank()) {
+                    logWarning("PocketBaseWasmService: Received realtime event with invalid record (missing ID)")
+                    return@launch
+                }
+
+                val subscriptionAction = when (actionType) {
+                    "create" -> SubscriptionAction.CREATE
+                    "update" -> SubscriptionAction.UPDATE
+                    "delete" -> SubscriptionAction.DELETE
+                    else -> null
+                }
+                if (subscriptionAction != null) {
+                    val subscriptionState: SubscriptionState<IEvent> =
+                        when (eventRecord.collectionName) {
+                            "events" -> {
+                                val commonEvent: IEvent = eventRecord.toEvent()
+                                SubscriptionState(
+                                    action = subscriptionAction,
+                                    dataObject = commonEvent,
+                                    rawRecord = eventRecord // Keep the raw record
+                                )
+                            }
+                            // Other collections can be handled here
+                            else -> {
+                                logMessage("PocketBaseJSService: Received realtime event for unknown collection: ${eventRecord.collectionName}")
+                                return@launch
+                            }
+                        }
+                    _eventSubscriptionFlow.emit(subscriptionState)
+                }
+            } catch (e: Throwable) {
+                _eventSubscriptionFlow.emit(
+                    SubscriptionState(
+                        action = SubscriptionAction.ERROR(
+                            getExceptionMessage(
+                                "Error processing realtime event",
+                                e
+                            )
+                        ),
+                        dataObject = null,
+                        rawRecord = eventData
+                    )
+                )
+                logError("PocketBaseWasmService: Error processing realtime event", e)
+            }
+        }
+    }
+
     override fun stopListeningToEvents(collectionNames: List<String>) {
         try {
             unsubscribeRealtimeGlobal?.invoke()
@@ -222,7 +250,7 @@ class PocketBaseWasmService(baseUrl: String) : PocketBaseService {
     override fun cleanup() {
         stopListeningToEvents(listOf("events"))
         supervisorJob.cancel()
-        pb.realtime().disconnect()
+        pb.realtime.disconnect()
         pb.authStore.clear()
         logMessage("PocketBaseWasmService: Cleaned up.")
     }
@@ -330,8 +358,8 @@ class PocketBaseWasmService(baseUrl: String) : PocketBaseService {
         return createEventObject(
             title = commonEvent.title,
             description = commonEvent.description,
-            startMillis = commonEvent.startDateTime.toEpochMilli(),
-            endMillis = commonEvent.endDateTime.toEpochMilli(),
+            startMillis = commonEvent.startDateTime.toEpochMilli().toDouble(),
+            endMillis = commonEvent.endDateTime.toEpochMilli().toDouble(),
             location = commonEvent.location,
             contact = commonEvent.contact,
             notes = commonEvent.notes,
@@ -375,8 +403,8 @@ private fun createUserData(
 private fun createEventObject(
     title: String,
     description: String,
-    startMillis: Long,
-    endMillis: Long,
+    startMillis: Double,
+    endMillis: Double,
     location: String?,
     contact: String?,
     notes: String?,

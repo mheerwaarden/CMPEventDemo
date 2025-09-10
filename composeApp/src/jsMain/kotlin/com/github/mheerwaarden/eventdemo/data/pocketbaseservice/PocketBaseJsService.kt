@@ -61,7 +61,7 @@ class PocketBaseJsService(baseUrl: String) : PocketBaseService {
                 this.name = name
             }
 
-            println("PocketBaseJSService: Creating user with email: $email")
+            console.log("PocketBaseJSService: Creating user with email: $email")
             pb.collection("users").create(userData, emptyOptions).await()
 
             // Auto-login after registration
@@ -163,8 +163,7 @@ class PocketBaseJsService(baseUrl: String) : PocketBaseService {
             console.log("PocketBaseJSService: Subscribing to realtime events for $targetCollection")
             unsubscribeRealtimeGlobal = pb.realtime.subscribe(
                 topic = targetCollection,
-                callback = ::handleRealTypeUpdate,
-                options = emptyOptions
+                callback = ::handleRealTimeUpdate,
             )
         } catch (e: dynamic) {
             unsubscribeRealtimeGlobal = null
@@ -188,7 +187,7 @@ class PocketBaseJsService(baseUrl: String) : PocketBaseService {
         }
     }
 
-    private fun handleRealTypeUpdate(eventData: RealtimeDataJS) {
+    private fun handleRealTimeUpdate(eventData: RealtimeDataJS) {
         scope.launch {
             try {
                 val actionType = eventData.action as? String // e.g., "create", "update", "delete"
@@ -233,7 +232,12 @@ class PocketBaseJsService(baseUrl: String) : PocketBaseService {
             } catch (e: dynamic) {
                 _eventSubscriptionFlow.emit(
                     SubscriptionState(
-                        action = SubscriptionAction.ERROR("Received malformed real-time event from JS SDK."),
+                        action = SubscriptionAction.ERROR(
+                            getExceptionMessage(
+                                "Received malformed real-time event from JS SDK.",
+                                e
+                            )
+                        ),
                         dataObject = null,
                         rawRecord = eventData // Keep the raw JS record
                     )
