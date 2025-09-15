@@ -36,6 +36,7 @@ mkdir -p "$SCRIPT_DIR/pb_hooks"
 # Start pocketbase with external configuration
 cd "$POCKETBASE_HOME" || exit 1
 ./pocketbase serve \
+    --dir="$POCKETBASE_HOME/pb_data/event-demo" \
     --migrationsDir="$SCRIPT_DIR/pb_migrations" \
     --publicDir="$SCRIPT_DIR/pb_public" \
     --hooksDir="$SCRIPT_DIR/pb_hooks" \
