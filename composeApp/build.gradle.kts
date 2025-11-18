@@ -9,8 +9,9 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.androidApplication)
+    alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.composeHotReload)
     alias(libs.plugins.skie)
 }
 
@@ -189,6 +190,11 @@ kotlin {
                 implementation(libs.multiplatform.settings)
                 // DateTime
                 implementation(libs.kotlinx.dateTime)
+                // File System
+                implementation(libs.filekit.core)
+                implementation(libs.filekit.dialogs.compose)
+                implementation(libs.kotlinx.io.core)
+
                 // Logging
                 api(libs.touchlab.kermit)
             }
