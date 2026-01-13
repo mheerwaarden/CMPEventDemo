@@ -2,21 +2,59 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlinSerialization)
-    alias(libs.plugins.composeCompiler)
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
     alias(libs.plugins.skie)
 }
 
 ksp {
     arg("KOIN_CONFIG_CHECK", "true")
+}
+
+val appId = "com.truepineapps.photouploader"
+// App version from libs.versions.toml
+val versionCode: Int = libs.versions.appVersionCode.get().toInt()
+val versionName: String = libs.versions.appVersionName.get()
+
+val generateBuildProperties by tasks.registering {
+    val outputDir = layout.buildDirectory.dir("generated/resources/custom")
+    val propsFile = outputDir.map { it.file("build-info.properties") }
+
+    // 1. Define inputs strongly so Gradle can cache them
+    // We capture the values into the task's state, breaking the link to the script scope
+    val vName = versionName
+    val vCode = versionCode
+    val aId = appId
+
+    inputs.property("version_name", vName)
+    inputs.property("version_code", vCode)
+    inputs.property("app_id", aId)
+
+    // 2. Define the output file
+    outputs.file(propsFile)
+
+    // 3. The action
+    doLast {
+        val file = propsFile.get().asFile
+        file.parentFile.mkdirs()
+
+        // Use the local variables which are now safely captured by the closure's copy,
+        // instead of referencing the script-level properties directly.
+        file.writeText(
+            """
+            version_name=$vName
+            version_code=$vCode
+            app_id=$aId
+            """.trimIndent()
+        )
+    }
 }
 
 kotlin {
@@ -27,14 +65,6 @@ kotlin {
         compilerOptions {
             // Bytecode version for Android
             jvmTarget.set(JvmTarget.JVM_18)
-            freeCompilerArgs.addAll(
-                listOf(
-                    // Generate metadata classes for enabling certain recomposition optimizations
-                    // in Compose.
-                    "-P",
-                    "plugin:org.jetbrains.compose.compiler:generateFunctionKeyMetaClass=true",
-                )
-            )
         }
     }
 
@@ -47,30 +77,12 @@ kotlin {
             baseName = "ComposeApp"
             isStatic = true
         }
-        iosTarget.compilations.all {
-            compileTaskProvider.configure {
-                compilerOptions.freeCompilerArgs.addAll(
-                    listOf(
-                        "-P",
-                        "plugin:org.jetbrains.compose.compiler:generateFunctionKeyMetaClass=true",
-                    )
-                )
-            }
-        }
     }
 
     jvm("desktop") {
         compilerOptions {
             // Bytecode version for desktop - PocketBase-kotlin lib needs Java 18
             jvmTarget.set(JvmTarget.JVM_18)
-            freeCompilerArgs.addAll(
-                listOf(
-                    // Generate metadata classes for enabling certain recomposition optimizations
-                    // in Compose.
-                    "-P",
-                    "plugin:org.jetbrains.compose.compiler:generateFunctionKeyMetaClass=true",
-                )
-            )
         }
     }
 
@@ -97,8 +109,6 @@ kotlin {
                     freeCompilerArgs.addAll(
                         listOf(
                             "-Xir-per-module",
-                            "-P",
-                            "plugin:org.jetbrains.compose.compiler:generateFunctionKeyMetaClass=true",
                             "-opt-in=kotlin.ExperimentalStdlibApi"
                         )
                     )
@@ -136,8 +146,6 @@ kotlin {
                 compilerOptions.freeCompilerArgs.addAll(
                     listOf(
                         "-Xir-per-module",
-                        "-P",
-                        "plugin:org.jetbrains.compose.compiler:generateFunctionKeyMetaClass=true",
                         "-Xwasm-attach-js-exception",
                     )
                 )
@@ -156,8 +164,6 @@ kotlin {
                 implementation(compose.ui)
                 implementation(compose.components.resources)
                 implementation(compose.components.uiToolingPreview)
-                implementation(libs.androidx.lifecycle.viewmodel)
-                implementation(libs.androidx.lifecycle.runtime.compose)
 
                 // Window size calculation
                 implementation(libs.screen.size)
@@ -167,7 +173,7 @@ kotlin {
 
                 // Dependency injection
                 implementation(libs.koin.core)
-                api(libs.koin.annotations)
+                implementation(libs.koin.annotations)
                 implementation(libs.koin.compose)
                 implementation(libs.koin.compose.viewmodel)
                 implementation(libs.koin.compose.viewmodel.navigation)
@@ -211,6 +217,9 @@ kotlin {
             dependencies {
                 implementation(compose.preview)
                 implementation(libs.androidx.activity.compose)
+                // Android lifecycle
+                implementation(libs.androidx.lifecycle.viewmodelCompose)
+                implementation(libs.androidx.lifecycle.runtimeCompose)
 
                 // Dependency injection
                 implementation(libs.koin.android)
@@ -237,7 +246,7 @@ kotlin {
                 implementation(libs.androidx.datastore.preferences)
                 implementation(libs.androidx.preference.ktx)
                 // ViewModel
-                implementation(libs.androidx.lifecycle.viewmodel)
+                implementation(libs.androidx.lifecycle.viewmodelCompose)
             }
         }
         val androidInstrumentedTest by getting {
@@ -254,12 +263,9 @@ kotlin {
                 implementation(libs.androidx.datastore.preferences)
                 implementation(libs.androidx.preference.ktx)
                 // ViewModel
-                implementation(libs.androidx.lifecycle.viewmodel)
+                implementation(libs.androidx.lifecycle.viewmodelCompose)
             }
         }
-        val iosX64Main by getting
-        val iosArm64Main by getting
-        val iosSimulatorArm64Main by getting
         val iosMain by getting {
             dependencies {
                 // Networking & Serialization
@@ -274,9 +280,6 @@ kotlin {
                 implementation(libs.touchlab.skie.annotations)
             }
         }
-        val iosX64Test by getting
-        val iosArm64Test by getting
-        val iosSimulatorArm64Test by getting
         val iosTest by getting {
             dependencies {
                 // Logging
@@ -348,12 +351,6 @@ kotlin {
 }
 
 
-// App configuration
-val appId: String = "com.github.mheerwaarden.eventdemo"
-// App version from libs.versions.toml
-val versionCode: Int = libs.versions.appVersionCode.get().toInt()
-val versionName: String = libs.versions.appVersionName.get()
-
 android {
     namespace = "com.github.mheerwaarden.eventdemo"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -369,6 +366,8 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "META-INF/INDEX.LIST"
         }
     }
     dependencies {
@@ -434,6 +433,11 @@ dependencies {
 //         "kspDebugKotlinAndroid",
 //         "kspReleaseKotlinAndroid",
 //         "kspKotlinDesktop",
+//         "kspKotlinDesktopApp",
+//         "kspKotlinWindows",
+//         "kspKotlinMacos",
+//         "kspKotlinMacosArm",
+//         "kspKotlinLinux",
 //         "kspKotlinIosX64",
 //         "kspKotlinIosArm64",
 //         "kspKotlinIosSimulatorArm64",
@@ -477,13 +481,6 @@ tasks.matching { it.name.startsWith("ksp") }.configureEach {
     }
 }
 
-// Task kspCommonMainKotlinMetadata is not automatically triggered, it needs a manual instruction to do so
-tasks.withType<KotlinCompile>().all {
-    if (name != "kspCommonMainKotlinMetadata") {
-        dependsOn("kspCommonMainKotlinMetadata")
-    }
-}
-
 compose.desktop {
     application {
         mainClass = "com.github.mheerwaarden.eventdemo.MainKt"
@@ -495,7 +492,7 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "Event Demo"
+            packageName = "com.github.mheerwaarden.eventdemo"
             packageVersion = versionName
             description = "Compose Multiplatform Demo with an Event Calendar"
             linux {
