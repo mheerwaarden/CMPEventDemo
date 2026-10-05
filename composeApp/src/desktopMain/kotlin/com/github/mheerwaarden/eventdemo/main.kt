@@ -13,9 +13,23 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 fun main() = application {
+    // Although running earlier, I now get:
+    // Exception in thread "main" java.lang.UnsatisfiedLinkError: 'void org.jetbrains.skiko.OpenGLApi.glFlush()'
+    //	at org.jetbrains.skiko.OpenGLApi.glFlush(Native Method)
+    //  ...
+    // Updating OpenGL libs on Ubuntu did not help.
+    // Fall back to software rendering, bypass OpenGL completely
+    System.setProperty("skiko.renderApi", "SOFTWARE_COMPAT")
+
     initKoin(module {
         // define desktop dependencies here
         single<PlatformAppInfo> {
+            /*
+            This does not work: Exception in thread "AWT-EventQueue-0"
+            org.koin.core.error.NoDefinitionFoundException: No definition found for type
+            'com.github.mheerwaarden.eventdemo.AppInfo'. Check your Modules configuration and add
+            missing type and/or qualifier!
+             */
             PlatformAppInfo(
                 appId = get(named("appId")),
                 versionName = get(named("versionName")),

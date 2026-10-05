@@ -72,3 +72,6 @@ local.properties
 
 # Web generated files
 *.lock
+
+# NodeJS
+node_modules/

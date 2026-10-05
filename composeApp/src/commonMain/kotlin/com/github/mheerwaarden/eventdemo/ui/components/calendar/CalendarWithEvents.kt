@@ -148,7 +148,7 @@ fun CalendarWithEvents(
                     modifier = Modifier.weight(1f)
                 )
 
-                // Display events for selected date at the bottom
+                // Display events for selected date to the right
                 EventList(
                     selectedDay = selectedDay,
                     currentMonth = currentMonth,

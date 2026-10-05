@@ -137,4 +137,32 @@
     <string name="use_database">Gebruik database</string>
     <string name="database_url">Database URL</string>
     <string name="event_not_found">Event niet gevonden"</string>
+    <string name="license_title">SaaS Licentie – Lorca-zorg</string>
+    <string name="license_content">
+        1. Licentie en gebruik
+        - U ontvangt een niet-exclusief, niet-overdraagbaar recht om de software te gebruiken.
+        - Alleen te gebruiken voor legitieme doeleinden.
+
+        2. Abonnement en betaling
+        - Betaling vooraf verschuldigd. Toegang kan worden opgeschort bij niet-betaling.
+
+        3. Intellectueel eigendom
+        - Alle rechten blijven bij Lorca-zorg.
+
+        4. Aansprakelijkheid
+        - Software geleverd "zoals deze is".
+        - Aansprakelijkheid beperkt tot betaalde abonnementsgelden.
+
+        5. Privacy en gegevens
+        - Persoonsgegevens worden verwerkt volgens AVG.
+
+        6. Duur en beëindiging
+        - Licentie geldig zolang abonnement actief is.
+
+        7. Toepasselijk recht
+        - Nederlands recht.
+    </string>
+    <string name="i_agree">Ik ga akkoord met de voorwaarden</string>
+    <string name="accept">Akkoord</string>
+    <string name="accepted_at">Geaccepteerd op</string>
 </resources>

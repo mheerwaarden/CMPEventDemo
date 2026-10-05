@@ -11,8 +11,8 @@ package com.github.mheerwaarden.eventdemo.data.model
 
 import org.jetbrains.compose.resources.StringResource
 
-abstract class ModelItem {
-    abstract val id: String
+abstract class ModelItem: IBaseModel {
+    abstract override val id: String
     abstract fun getTypeNameResId(): StringResource
     abstract fun getDisplayName(): String
 }

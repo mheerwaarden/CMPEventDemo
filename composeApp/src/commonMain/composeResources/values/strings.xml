@@ -137,4 +137,32 @@
     <string name="use_database">Use database</string>
     <string name="database_url">Database URL</string>
     <string name="event_not_found">Event not found"</string>
+    <string name="license_title">SaaS License – Lorca-zorg</string>
+    <string name="license_content">
+        1. License and Use
+        - You receive a non-exclusive, non-transferable right to use the software.
+        - Use only for legitimate purposes.
+
+        2. Subscription and Payment
+        - Payment due in advance. Access may be suspended for non-payment.
+
+        3. Intellectual Property
+        - All rights remain with Lorca-zorg.
+
+        4. Liability
+        - Software provided "as is".
+        - Liability limited to subscription fees paid.
+
+        5. Privacy and Data
+        - Personal data processed according to GDPR.
+
+        6. Duration and Termination
+        - License valid while subscription active.
+
+        7. Governing Law
+        - Dutch law applies.
+    </string>
+    <string name="i_agree">I agree to the terms and conditions</string>
+    <string name="accept">Accept</string>
+    <string name="accepted_at">Accepted at</string>
 </resources>

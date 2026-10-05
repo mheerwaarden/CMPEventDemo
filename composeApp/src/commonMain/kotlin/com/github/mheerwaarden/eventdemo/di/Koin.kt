@@ -27,7 +27,7 @@ fun initKoin(platformModule: Module): KoinApplication {
         modules(
             // Platform info
             // Platform dependent, not in Kotlin
-            platformModule,
+           platformModule,
             // Localization info: locale handling; date, time and number formatting
             // Platform dependent, partly in Kotlin
             platformLocalizationModule,
